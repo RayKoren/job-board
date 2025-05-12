@@ -1,6 +1,7 @@
 import { Switch, Route } from "wouter";
 import Home from "@/pages/Home";
 import NotFound from "@/pages/not-found";
+import PostJob from "@/pages/PostJob";
 import Pricing from "@/components/Pricing";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
@@ -26,6 +27,7 @@ function App() {
           </div>
         );
       }} />
+      <Route path="/post-job" component={PostJob} />
       <Route component={NotFound} />
     </Switch>
   );

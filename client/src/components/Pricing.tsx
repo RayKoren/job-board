@@ -73,6 +73,7 @@ const PricingTier = ({
       
       <Button 
         className={`w-full ${highlighted ? 'bg-clay' : 'bg-forest'} hover:bg-opacity-90`}
+        onClick={() => window.location.href = '/post-job'}
       >
         {buttonText}
       </Button>

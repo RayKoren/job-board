@@ -7,6 +7,8 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [location] = useLocation();
   const isHomePage = location === "/";
+  const isPricingPage = location === "/pricing";
+  const isPostJobPage = location === "/post-job";
 
   // Handle scroll event to add shadow to navbar when scrolled
   useEffect(() => {
@@ -44,7 +46,8 @@ const Navbar = () => {
           <a href={isHomePage ? "#about" : "/#about"} className="font-medium text-brown hover:text-forest transition duration-300">About</a>
           <a href={isHomePage ? "#services" : "/#services"} className="font-medium text-brown hover:text-forest transition duration-300">Services</a>
           <a href={isHomePage ? "#contact" : "/#contact"} className="font-medium text-brown hover:text-forest transition duration-300">Contact</a>
-          <a href="/pricing" className={`font-medium ${location === "/pricing" ? "text-forest font-semibold" : "text-clay"} hover:text-forest transition duration-300`}>Pricing</a>
+          <a href="/pricing" className={`font-medium ${isPricingPage ? "text-forest font-semibold" : "text-clay"} hover:text-forest transition duration-300`}>Pricing</a>
+          <a href="/post-job" className={`font-medium ${isPostJobPage ? "text-forest font-semibold" : "text-brown"} hover:text-forest transition duration-300`}>Post Job</a>
         </nav>
         
         {/* Mobile Menu Button */}
@@ -92,10 +95,17 @@ const Navbar = () => {
           </a>
           <a 
             href="/pricing" 
-            className={`font-medium ${location === "/pricing" ? "text-forest font-semibold" : "text-clay"} hover:text-forest transition duration-300`}
+            className={`font-medium ${isPricingPage ? "text-forest font-semibold" : "text-clay"} hover:text-forest transition duration-300`}
             onClick={closeMobileMenu}
           >
             Pricing
+          </a>
+          <a 
+            href="/post-job" 
+            className={`font-medium ${isPostJobPage ? "text-forest font-semibold" : "text-brown"} hover:text-forest transition duration-300`}
+            onClick={closeMobileMenu}
+          >
+            Post Job
           </a>
         </nav>
       </div>
