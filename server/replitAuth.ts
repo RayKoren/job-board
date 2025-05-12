@@ -87,7 +87,11 @@ export async function setupAuth(app: Express) {
     updateUserSession(user, tokens);
     
     // Check if user already exists
-    const userId = tokens.claims().sub;
+    const claims = tokens.claims();
+    const userId = claims?.sub;
+    if (!userId) {
+      throw new Error("User ID not found in token claims");
+    }
     const existingUser = await storage.getUser(userId);
     
     if (existingUser) {
@@ -97,8 +101,8 @@ export async function setupAuth(app: Express) {
       // New user, needs role selection
       user.isNewUser = true;
       
-      // Create user with null role to indicate role selection needed
-      await upsertUser(tokens.claims(), null);
+      // Create user with undefined role to indicate role selection needed
+      await upsertUser(tokens.claims(), undefined);
     }
     
     verified(null, user);

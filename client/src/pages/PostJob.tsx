@@ -598,7 +598,7 @@ export default function PostJob() {
                         <CardContent className="space-y-4">
                           <div
                             className={`relative p-4 rounded-lg border-2 cursor-pointer ${selectedPlan === "basic" ? "border-forest bg-white" : "border-gray-200 bg-gray-50"}`}
-                            onClick={() => handlePlanChange("basic")}
+                            onClick={() => handlePlanChange("basic" as const)}
                           >
                             <div className="flex justify-between items-center">
                               <div>
@@ -618,7 +618,7 @@ export default function PostJob() {
 
                           <div
                             className={`relative p-4 rounded-lg border-2 cursor-pointer ${selectedPlan === "standard" ? "border-forest bg-white" : "border-gray-200 bg-gray-50"}`}
-                            onClick={() => handlePlanChange("standard")}
+                            onClick={() => handlePlanChange("standard" as const)}
                           >
                             <div className="flex justify-between items-center">
                               <div>
@@ -638,7 +638,7 @@ export default function PostJob() {
 
                           <div
                             className={`relative p-4 rounded-lg border-2 cursor-pointer ${selectedPlan === "featured" ? "border-forest bg-white" : "border-gray-200 bg-gray-50"}`}
-                            onClick={() => handlePlanChange("featured")}
+                            onClick={() => handlePlanChange("featured" as const)}
                           >
                             <div className="flex justify-between items-center">
                               <div>
@@ -667,7 +667,7 @@ export default function PostJob() {
 
                           <div
                             className={`relative p-4 rounded-lg border-2 cursor-pointer ${selectedPlan === "unlimited" ? "border-forest bg-white" : "border-gray-200 bg-gray-50"}`}
-                            onClick={() => handlePlanChange("unlimited")}
+                            onClick={() => handlePlanChange("unlimited" as const)}
                           >
                             <div className="flex justify-between items-center">
                               <div>
