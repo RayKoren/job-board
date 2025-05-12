@@ -9,6 +9,7 @@ const Navbar = () => {
   const isHomePage = location === "/";
   const isPricingPage = location === "/pricing";
   const isPostJobPage = location === "/post-job";
+  const isJobListingsPage = location === "/jobs";
 
   // Handle scroll event to add shadow to navbar when scrolled
   useEffect(() => {
@@ -46,6 +47,7 @@ const Navbar = () => {
           <a href={isHomePage ? "#about" : "/#about"} className="font-medium text-brown hover:text-forest transition duration-300">About</a>
           <a href={isHomePage ? "#services" : "/#services"} className="font-medium text-brown hover:text-forest transition duration-300">Services</a>
           <a href={isHomePage ? "#contact" : "/#contact"} className="font-medium text-brown hover:text-forest transition duration-300">Contact</a>
+          <a href="/jobs" className={`font-medium ${isJobListingsPage ? "text-forest font-semibold" : "text-brown"} hover:text-forest transition duration-300`}>Jobs</a>
           <a href="/pricing" className={`font-medium ${isPricingPage ? "text-forest font-semibold" : "text-clay"} hover:text-forest transition duration-300`}>Pricing</a>
           <a href="/post-job" className={`font-medium ${isPostJobPage ? "text-forest font-semibold" : "text-brown"} hover:text-forest transition duration-300`}>Post Job</a>
         </nav>
@@ -92,6 +94,13 @@ const Navbar = () => {
             onClick={closeMobileMenu}
           >
             Contact
+          </a>
+          <a 
+            href="/jobs" 
+            className={`font-medium ${isJobListingsPage ? "text-forest font-semibold" : "text-brown"} hover:text-forest transition duration-300`}
+            onClick={closeMobileMenu}
+          >
+            Jobs
           </a>
           <a 
             href="/pricing" 

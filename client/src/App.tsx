@@ -2,6 +2,7 @@ import { Switch, Route } from "wouter";
 import Home from "@/pages/Home";
 import NotFound from "@/pages/not-found";
 import PostJob from "@/pages/PostJob";
+import JobListings from "@/pages/JobListings";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import Pricing from "@/components/Pricing";
@@ -30,6 +31,7 @@ function App() {
         );
       }} />
       <Route path="/post-job" component={PostJob} />
+      <Route path="/jobs" component={JobListings} />
       <Route path="/terms" component={TermsOfService} />
       <Route path="/privacy" component={PrivacyPolicy} />
       <Route component={NotFound} />

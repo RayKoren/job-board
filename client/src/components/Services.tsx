@@ -49,7 +49,7 @@ const Services = () => {
         "Browse full-time and part-time opportunities with Sheridan's best employers.",
       icon: <Briefcase className="h-6 w-6" />,
       buttonText: "Browse Jobs",
-      buttonLink: "#",
+      buttonLink: "/jobs",
       buttonVariant: "primary" as const,
     },
     {
@@ -58,7 +58,7 @@ const Services = () => {
         "Discover short-term work, freelance opportunities, and quick projects in Sheridan.",
       icon: <Bolt className="h-6 w-6" />,
       buttonText: "Explore Gigs",
-      buttonLink: "#",
+      buttonLink: "/jobs",
       buttonVariant: "primary" as const,
     },
     {
