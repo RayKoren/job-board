@@ -75,7 +75,7 @@ export function LoginButton() {
   
   return (
     <Button variant="default" size="sm" asChild>
-      <a href="/login" className="flex items-center gap-2">
+      <a href="/api/login" className="flex items-center gap-2">
         <LogIn className="w-4 h-4" />
         <span>Login</span>
       </a>
