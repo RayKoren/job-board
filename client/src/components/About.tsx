@@ -2,13 +2,13 @@ import { Users, Handshake } from "lucide-react";
 
 const About = () => {
   return (
-    <section id="about" className="py-20 bg-white">
+    <section id="about" className="py-20 bg-sand">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center gap-12">
           <div className="md:w-1/2">
             <img 
-              src="https://images.pexels.com/photos/2754200/pexels-photo-2754200.jpeg?auto=compress&cs=tinysrgb&w=1600" 
-              alt="Sheridan Wyoming landscape" 
+              src="https://images.unsplash.com/photo-1527489377706-5bf97e608852?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80" 
+              alt="Bighorn Mountains landscape" 
               className="rounded-xl shadow-lg w-full h-auto"
             />
           </div>

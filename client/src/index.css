@@ -13,11 +13,11 @@
   --card-foreground: 20 14.3% 4.1%;
   --border: 20 5.9% 90%;
   --input: 20 5.9% 90%;
-  --primary: 120 52% 28%; /* forest */
+  --primary: 136 42% 25%; /* darker earth green */
   --primary-foreground: 211 100% 99%;
   --secondary: 60 4.8% 95.9%;
   --secondary-foreground: 24 9.8% 10%;
-  --accent: 0 56% 55%; /* clay */
+  --accent: 24 42% 48%; /* rustic terracotta */
   --accent-foreground: 0 0% 100%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 60 9.1% 97.8%;
@@ -25,11 +25,11 @@
   --radius: 0.5rem;
 
   /* Custom colors */
-  --forest: 120 52% 28%;
-  --clay: 0 56% 55%;
-  --brown: 23 21% 40%;
-  --sand: 33 29% 85%;
-  --sky: 207 57% 76%;
+  --forest: 136 42% 25%;
+  --clay: 24 42% 48%;
+  --brown: 28 27% 30%;
+  --sand: 40 38% 92%;
+  --sky: 206 40% 80%;
 }
 
 .dark {

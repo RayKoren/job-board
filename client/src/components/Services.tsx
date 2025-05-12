@@ -12,8 +12,6 @@ interface ServiceCardProps {
   icon: React.ReactNode;
   buttonText: string;
   buttonLink: string;
-  imageSrc: string;
-  imageAlt: string;
   buttonVariant?: "primary" | "secondary";
 }
 
@@ -23,28 +21,23 @@ const ServiceCard = ({
   icon, 
   buttonText, 
   buttonLink, 
-  imageSrc, 
-  imageAlt,
   buttonVariant = "primary"
 }: ServiceCardProps) => {
   return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden transition duration-300 hover:shadow-xl">
-      <img 
-        src={imageSrc} 
-        alt={imageAlt} 
-        className="w-full h-48 object-cover"
-      />
-      <div className="p-6">
-        <div className="flex items-center mb-4">
-          <span className="text-clay mr-3">{icon}</span>
-          <h3 className="text-xl font-bold text-forest">{title}</h3>
+    <div className="bg-white rounded-lg shadow-lg transition duration-300 hover:shadow-xl">
+      <div className="p-8">
+        <div className="flex flex-col items-center text-center mb-6">
+          <div className={`${buttonVariant === "primary" ? "bg-forest" : "bg-clay"} text-white p-4 rounded-full mb-4`}>
+            {icon}
+          </div>
+          <h3 className="text-xl font-bold text-forest mb-2">{title}</h3>
         </div>
-        <p className="text-brown mb-6">
+        <p className="text-brown mb-6 text-center">
           {description}
         </p>
         <Button 
           asChild
-          className={`${buttonVariant === "primary" ? "bg-forest" : "bg-clay"} hover:bg-opacity-90 text-white font-medium px-6 py-2 rounded-lg transition duration-300`}
+          className={`${buttonVariant === "primary" ? "bg-forest" : "bg-clay"} hover:bg-opacity-90 text-white font-medium px-6 py-2 rounded-lg transition duration-300 w-full`}
         >
           <a href={buttonLink}>{buttonText}</a>
         </Button>
@@ -58,47 +51,39 @@ const Services = () => {
     {
       title: "Find a Job",
       description: "Browse full-time and part-time opportunities with Sheridan's best employers.",
-      icon: <Briefcase className="h-5 w-5" />,
+      icon: <Briefcase className="h-6 w-6" />,
       buttonText: "Browse Jobs",
       buttonLink: "#",
-      imageSrc: "https://images.unsplash.com/photo-1521737711867-e3b97375f902?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=500",
-      imageAlt: "Find a Job",
       buttonVariant: "primary" as const
     },
     {
       title: "Find a Gig",
       description: "Discover short-term work, freelance opportunities, and quick projects in Sheridan.",
-      icon: <Bolt className="h-5 w-5" />,
+      icon: <Bolt className="h-6 w-6" />,
       buttonText: "Explore Gigs",
       buttonLink: "#",
-      imageSrc: "https://images.unsplash.com/photo-1498758536662-35b82cd15e29?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=500",
-      imageAlt: "Find a Gig",
       buttonVariant: "primary" as const
     },
     {
       title: "Post a Job",
       description: "Employers can post full-time or part-time positions to reach qualified local candidates.",
-      icon: <Building className="h-5 w-5" />,
+      icon: <Building className="h-6 w-6" />,
       buttonText: "Post Job",
       buttonLink: "#",
-      imageSrc: "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=500",
-      imageAlt: "Post a Job",
       buttonVariant: "secondary" as const
     },
     {
       title: "Post a Gig",
       description: "Need temporary help? Post short-term projects and find skilled local talent.",
-      icon: <ClipboardList className="h-5 w-5" />,
+      icon: <ClipboardList className="h-6 w-6" />,
       buttonText: "Post Gig",
       buttonLink: "#",
-      imageSrc: "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=500",
-      imageAlt: "Post a Gig",
       buttonVariant: "secondary" as const
     }
   ];
 
   return (
-    <section id="services" className="py-20 bg-gray-50">
+    <section id="services" className="py-20 bg-sand">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-forest mb-4">Our Services</h2>
@@ -116,8 +101,6 @@ const Services = () => {
               icon={service.icon}
               buttonText={service.buttonText}
               buttonLink={service.buttonLink}
-              imageSrc={service.imageSrc}
-              imageAlt={service.imageAlt}
               buttonVariant={service.buttonVariant}
             />
           ))}
