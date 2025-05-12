@@ -60,7 +60,7 @@ async function upsertUser(
   claims: any,
   role?: string,
 ) {
-  const userRole = role || "job_seeker"; // Default to job_seeker if not specified
+  const userRole = role; // Don't default to any role, let user select
   
   await storage.upsertUser({
     id: claims["sub"],
