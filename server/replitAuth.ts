@@ -60,15 +60,16 @@ async function upsertUser(
   claims: any,
   role?: string,
 ) {
-  const userRole = role; // Don't default to any role, let user select
+  // We explicitly use null for new users so they can select their role
+  const userRole = role ? (role === 'business' || role === 'job_seeker' ? role : null) : null;
   
   await storage.upsertUser({
     id: claims["sub"],
-    email: claims["email"],
+    email: claims["email"], 
     firstName: claims["first_name"],
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
-    role: userRole as any,
+    role: userRole, // Use null if no valid role provided
   });
 }
 
@@ -139,9 +140,42 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/callback", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
+    passport.authenticate(`replitauth:${req.hostname}`, async (err: any, user: any) => {
+      if (err) {
+        return res.redirect("/api/login");
+      }
+      
+      if (!user) {
+        return res.redirect("/api/login");
+      }
+      
+      // Log the user in
+      req.login(user, async (err: any) => {
+        if (err) {
+          return next(err);
+        }
+        
+        try {
+          // Check if user has a role
+          const userId = user.claims.sub;
+          const dbUser = await storage.getUser(userId);
+          
+          // If no user or user has no role, redirect to role selection
+          if (!dbUser || !dbUser.role) {
+            return res.redirect("/select-role");
+          }
+          
+          // Otherwise, redirect to home or intended destination
+          // Use custom property from session
+          const customSession = req.session as any;
+          const returnTo = customSession.returnTo || "/";
+          delete customSession.returnTo;
+          return res.redirect(returnTo);
+        } catch (error) {
+          console.error("Error in auth callback:", error);
+          return res.redirect("/");
+        }
+      });
     })(req, res, next);
   });
 
