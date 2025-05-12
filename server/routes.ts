@@ -369,6 +369,169 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Payment endpoints
+  app.post('/api/create-payment-intent', isAuthenticated, isBusinessUser, async (req: any, res) => {
+    try {
+      const { planTier, addons } = req.body;
+      
+      if (!planTier) {
+        return res.status(400).json({ error: 'Plan tier is required' });
+      }
+      
+      // Calculate the total amount based on the plan tier and any addons
+      const amount = calculateJobPostingPrice(planTier, addons || []);
+      
+      // Free tier doesn't need payment processing
+      if (amount === 0) {
+        return res.json({ 
+          clientSecret: null,
+          amount: 0,
+          free: true
+        });
+      }
+      
+      // Create a payment intent with Stripe
+      const paymentData = await createPaymentIntent({ 
+        amount,
+        metadata: { 
+          userId: req.user.claims.sub,
+          planTier,
+          addons: addons ? JSON.stringify(addons) : '[]'
+        }
+      });
+      
+      res.json({
+        clientSecret: paymentData.clientSecret,
+        amount,
+        free: false
+      });
+    } catch (error: any) {
+      console.error('Payment intent creation error:', error);
+      res.status(500).json({ 
+        error: 'Failed to create payment intent',
+        message: error.message 
+      });
+    }
+  });
+  
+  // Get pricing information for plans and addons
+  app.get('/api/pricing', async (req, res) => {
+    try {
+      // Pricing information for all plan tiers
+      const plans = {
+        basic: {
+          name: 'Basic',
+          price: getPriceForPlan('basic'),
+          features: [
+            'Single job posting',
+            'Basic listing visibility',
+            'Available for 30 days',
+            'Standard search placement'
+          ]
+        },
+        standard: {
+          name: 'Standard',
+          price: getPriceForPlan('standard'),
+          features: [
+            'Enhanced job listing',
+            'Better search visibility',
+            'Available for 30 days',
+            'Company logo display',
+            'Email support'
+          ]
+        },
+        featured: {
+          name: 'Featured',
+          price: getPriceForPlan('featured'),
+          features: [
+            'Premium job listing',
+            'Top search placement',
+            'Available for 45 days',
+            'Featured on homepage',
+            'Company profile highlight',
+            'Priority email support'
+          ]
+        },
+        unlimited: {
+          name: 'Unlimited',
+          price: getPriceForPlan('unlimited'),
+          features: [
+            'Up to 10 active job listings',
+            'Highest search visibility',
+            'Available for 60 days',
+            'Featured on homepage',
+            'Dedicated company profile page',
+            'Priority support',
+            'Applicant tracking'
+          ]
+        }
+      };
+      
+      // Pricing information for addons
+      const addons = {
+        boost: {
+          name: 'Visibility Boost',
+          price: getPriceForAddon('boost'),
+          description: 'Boosted search placement for 7 days'
+        },
+        highlight: {
+          name: 'Listing Highlight',
+          price: getPriceForAddon('highlight'),
+          description: 'Highlight your listing with a colored border'
+        },
+        urgent: {
+          name: 'Urgent Hiring',
+          price: getPriceForAddon('urgent'),
+          description: 'Mark as "Urgent Hiring" with special badge'
+        },
+        extended: {
+          name: 'Extended Duration',
+          price: getPriceForAddon('extended'),
+          description: 'Extend listing duration by 30 days'
+        }
+      };
+      
+      res.json({ plans, addons });
+    } catch (error: any) {
+      console.error('Error fetching pricing information:', error);
+      res.status(500).json({ 
+        error: 'Failed to retrieve pricing information',
+        message: error.message 
+      });
+    }
+  });
+  
+  // Verify a payment was successful
+  app.get('/api/verify-payment/:paymentIntentId', isAuthenticated, async (req, res) => {
+    try {
+      const { paymentIntentId } = req.params;
+      
+      if (!paymentIntentId) {
+        return res.status(400).json({ error: 'Payment intent ID is required' });
+      }
+      
+      const paymentIntent = await retrievePaymentIntent(paymentIntentId);
+      
+      if (paymentIntent.status === 'succeeded') {
+        return res.json({ 
+          success: true,
+          status: paymentIntent.status
+        });
+      } else {
+        return res.json({ 
+          success: false,
+          status: paymentIntent.status
+        });
+      }
+    } catch (error: any) {
+      console.error('Payment verification error:', error);
+      res.status(500).json({ 
+        error: 'Failed to verify payment',
+        message: error.message 
+      });
+    }
+  });
+  
   const httpServer = createServer(app);
   return httpServer;
 }
