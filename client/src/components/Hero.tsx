@@ -6,7 +6,7 @@ const Hero = () => {
       id="home" 
       className="relative h-screen bg-cover bg-center"
       style={{ 
-        backgroundImage: "url('https://images.unsplash.com/photo-1602788034509-f07ae0730382?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80')" 
+        backgroundImage: "url('https://images.pexels.com/photos/4064432/pexels-photo-4064432.jpeg?auto=compress&cs=tinysrgb&w=1600')" 
       }}
     >
       <div className="absolute inset-0 bg-black bg-opacity-40"></div>
