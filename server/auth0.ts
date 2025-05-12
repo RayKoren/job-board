@@ -48,6 +48,16 @@ export function setupAuth(app: Express) {
 
   // Initialize auth router
   app.use(auth(config));
+  
+  // Add custom login route for API compatibility
+  app.get('/api/login', (req, res) => {
+    res.oidc.login({ returnTo: '/' });
+  });
+  
+  // Add custom logout route for API compatibility
+  app.get('/api/logout', (req, res) => {
+    res.oidc.logout({ returnTo: '/' });
+  });
 
   // Handle profile route - this is where users are redirected after login
   app.get('/callback', async (req: Request, res: Response) => {
