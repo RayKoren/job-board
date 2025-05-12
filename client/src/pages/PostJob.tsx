@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, Info, X } from "lucide-react";
+import { Check, Info, X, LogIn } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -94,10 +95,23 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function PostJob() {
+  const { isAuthenticated, isLoading, user } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState("standard");
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  
+  // Redirect to login if user is not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to post a job.",
+        variant: "destructive",
+      });
+      setLocation('/login');
+    }
+  }, [isAuthenticated, isLoading, setLocation, toast]);
 
   // Initialize the form with default values
   const form = useForm<FormValues>({
