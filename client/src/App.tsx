@@ -14,6 +14,7 @@ import BusinessProfile from "@/pages/BusinessProfile";
 import JobSeekerProfile from "@/pages/JobSeekerProfile";
 import BusinessDashboard from "@/pages/BusinessDashboard";
 import JobSeekerDashboard from "@/pages/JobSeekerDashboard";
+import LoginPage from "@/pages/LoginPage";
 
 // Components
 import Pricing from "@/components/Pricing";
@@ -60,6 +61,7 @@ function App() {
       <AuthProvider>
         <Switch>
           <Route path="/" component={Home} />
+          <Route path="/login" component={LoginPage} />
           <Route path="/pricing" component={() => {
             return (
               <div className="min-h-screen flex flex-col">
