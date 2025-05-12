@@ -1,7 +1,5 @@
-import { useState } from "react";
 import { Briefcase, Bolt, Building, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ApplyJobModal } from "@/components/ApplyJobModal";
 
 interface ServiceCardProps {
   title: string;
@@ -44,13 +42,6 @@ const ServiceCard = ({
 };
 
 const Services = () => {
-  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
-  const [selectedJobType, setSelectedJobType] = useState('');
-
-  const handleQuickApply = (jobType: string) => {
-    setSelectedJobType(jobType);
-    setIsApplyModalOpen(true);
-  };
   
   const services = [
     {
@@ -117,37 +108,7 @@ const Services = () => {
             />
           ))}
         </div>
-
-        {/* Quick Apply buttons */}
-        <div className="mt-12 flex flex-col sm:flex-row justify-center gap-4">
-          <Button 
-            className="bg-forest hover:bg-forest/90 text-white"
-            onClick={() => handleQuickApply("Job")}
-          >
-            Quick Apply for Jobs
-          </Button>
-          <Button 
-            className="bg-clay hover:bg-clay/90 text-white"
-            onClick={() => handleQuickApply("Gig")}
-          >
-            Quick Apply for Gigs
-          </Button>
-        </div>
       </div>
-
-      {/* Apply Job Modal */}
-      {isApplyModalOpen && (
-        <ApplyJobModal 
-          job={{
-            id: 0,
-            title: `Quick ${selectedJobType} Application`,
-            company: "Multiple Companies",
-            location: "Sheridan, WY"
-          }}
-          isOpen={isApplyModalOpen}
-          onClose={() => setIsApplyModalOpen(false)}
-        />
-      )}
     </section>
   );
 };
