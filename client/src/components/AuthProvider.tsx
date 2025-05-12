@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { RoleSelection } from "@/components/RoleSelection";
 import { Link } from "wouter";
@@ -12,11 +12,22 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const { user, isLoading, isAuthenticated } = useAuth();
   const [showRoleSelection, setShowRoleSelection] = useState(false);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   
   // If user is authenticated but has no role selected, show role selection
   const needsRoleSelection = isAuthenticated && user && !user.role;
+
+  // Mark initial load as complete after a brief delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setInitialLoadComplete(true);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, []);
   
-  if (isLoading) {
+  // Show loading indicator only during initial load
+  if (isLoading && !initialLoadComplete) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin w-8 h-8 border-4 border-forest border-t-transparent rounded-full"></div>

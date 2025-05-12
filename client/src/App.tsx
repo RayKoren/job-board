@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect, useLocation } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
@@ -20,6 +20,39 @@ import Pricing from "@/components/Pricing";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { AuthProvider, LoginButton } from "@/components/AuthProvider";
+import { useAuth } from "@/hooks/useAuth";
+
+// Protected route wrapper
+function ProtectedRoute({ 
+  component: Component, 
+  requiredRole 
+}: { 
+  component: React.ComponentType<any>, 
+  requiredRole?: 'business' | 'job_seeker' 
+}) {
+  const { isAuthenticated, isBusinessUser, isJobSeeker } = useAuth();
+  const [, setLocation] = useLocation();
+
+  if (!isAuthenticated) {
+    // Redirect to login if not authenticated
+    setLocation('/');
+    return null;
+  }
+
+  if (requiredRole === 'business' && !isBusinessUser) {
+    // Redirect if not a business user
+    setLocation('/');
+    return null;
+  }
+
+  if (requiredRole === 'job_seeker' && !isJobSeeker) {
+    // Redirect if not a job seeker
+    setLocation('/');
+    return null;
+  }
+
+  return <Component />;
+}
 
 function App() {
   return (
@@ -49,13 +82,25 @@ function App() {
           <Route path="/terms" component={TermsOfService} />
           <Route path="/privacy" component={PrivacyPolicy} />
 
-          {/* Business Routes */}
-          <Route path="/business/profile" component={BusinessProfile} />
-          <Route path="/business/dashboard" component={BusinessDashboard} />
+          {/* Business Routes (Protected) */}
+          <Route 
+            path="/business/profile" 
+            component={() => <ProtectedRoute component={BusinessProfile} requiredRole="business" />} 
+          />
+          <Route 
+            path="/business/dashboard" 
+            component={() => <ProtectedRoute component={BusinessDashboard} requiredRole="business" />} 
+          />
           
-          {/* Job Seeker Routes */}
-          <Route path="/job-seeker/profile" component={JobSeekerProfile} />
-          <Route path="/job-seeker/dashboard" component={JobSeekerDashboard} />
+          {/* Job Seeker Routes (Protected) */}
+          <Route 
+            path="/job-seeker/profile" 
+            component={() => <ProtectedRoute component={JobSeekerProfile} requiredRole="job_seeker" />} 
+          />
+          <Route 
+            path="/job-seeker/dashboard" 
+            component={() => <ProtectedRoute component={JobSeekerDashboard} requiredRole="job_seeker" />} 
+          />
           
           <Route component={NotFound} />
         </Switch>
