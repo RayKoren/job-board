@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useLocation } from "wouter";
-import { Building2, UserRound } from "lucide-react";
+import { useLocation, Link } from "wouter";
+import { Building2, UserRound, Home } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -41,6 +41,14 @@ export default function RoleSelection() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="absolute top-4 left-4">
+        <Button variant="ghost" size="icon" asChild>
+          <Link href="/">
+            <Home className="h-5 w-5" />
+            <span className="sr-only">Home</span>
+          </Link>
+        </Button>
+      </div>
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-extrabold text-forest">Welcome to Sheridan Jobs</h2>
