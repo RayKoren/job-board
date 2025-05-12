@@ -34,7 +34,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 export function LoginButton() {
   const { isAuthenticated, user } = useAuth();
   
-  if (isAuthenticated) {
+  if (isAuthenticated && user) {
     return (
       <div className="flex items-center gap-4">
         {user.profileImageUrl && (
