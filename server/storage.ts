@@ -171,9 +171,10 @@ export class DatabaseStorage implements IStorage {
   
   // Job seeker profile operations
   async getJobSeekerProfile(userId: string): Promise<IJobSeekerProfile | null> {
-    return await JobSeekerProfile.findOne({
+    const profile = await JobSeekerProfile.findOne({
       where: { userId }
     });
+    return profile ? profile.toJSON() as IJobSeekerProfile : null;
   }
 
   async upsertJobSeekerProfile(profileData: IJobSeekerProfile): Promise<IJobSeekerProfile> {
@@ -183,15 +184,17 @@ export class DatabaseStorage implements IStorage {
 
     if (existingProfile) {
       await existingProfile.update(profileData);
-      return existingProfile;
+      return existingProfile.toJSON() as IJobSeekerProfile;
     } else {
-      return await JobSeekerProfile.create(profileData);
+      const newProfile = await JobSeekerProfile.create(profileData);
+      return newProfile.toJSON() as IJobSeekerProfile;
     }
   }
   
   // Job posting operations
   async getJobPosting(id: number): Promise<IJobPosting | null> {
-    return await JobPosting.findByPk(id);
+    const posting = await JobPosting.findByPk(id);
+    return posting ? posting.toJSON() as IJobPosting : null;
   }
 
   async getJobPostings(options: { 
@@ -210,7 +213,7 @@ export class DatabaseStorage implements IStorage {
       whereClause.featured = options.featured;
     }
     
-    return await JobPosting.findAll({
+    const postings = await JobPosting.findAll({
       where: whereClause,
       limit: options.limit,
       offset: options.offset,
@@ -219,10 +222,13 @@ export class DatabaseStorage implements IStorage {
         ['createdAt', 'DESC']
       ]
     });
+    
+    return postings.map(posting => posting.toJSON() as IJobPosting);
   }
 
   async createJobPosting(postingData: IJobPosting): Promise<IJobPosting> {
-    return await JobPosting.create(postingData);
+    const posting = await JobPosting.create(postingData);
+    return posting.toJSON() as IJobPosting;
   }
 
   async updateJobPosting(id: number, postingData: Partial<IJobPosting>): Promise<IJobPosting> {
@@ -232,7 +238,7 @@ export class DatabaseStorage implements IStorage {
     }
     
     await posting.update(postingData);
-    return posting;
+    return posting.toJSON() as IJobPosting;
   }
 
   async deleteJobPosting(id: number): Promise<void> {
@@ -244,25 +250,29 @@ export class DatabaseStorage implements IStorage {
   
   // Job application operations
   async getJobApplication(id: number): Promise<IJobApplication | null> {
-    return await JobApplication.findByPk(id);
+    const application = await JobApplication.findByPk(id);
+    return application ? application.toJSON() as IJobApplication : null;
   }
 
   async getJobApplicationsForJob(jobId: number): Promise<IJobApplication[]> {
-    return await JobApplication.findAll({
+    const applications = await JobApplication.findAll({
       where: { jobId },
       order: [['createdAt', 'DESC']]
     });
+    return applications.map(app => app.toJSON() as IJobApplication);
   }
 
   async getJobApplicationsForUser(userId: string): Promise<IJobApplication[]> {
-    return await JobApplication.findAll({
+    const applications = await JobApplication.findAll({
       where: { userId },
       order: [['createdAt', 'DESC']]
     });
+    return applications.map(app => app.toJSON() as IJobApplication);
   }
 
   async createJobApplication(applicationData: IJobApplication): Promise<IJobApplication> {
-    return await JobApplication.create(applicationData);
+    const application = await JobApplication.create(applicationData);
+    return application.toJSON() as IJobApplication;
   }
 
   async updateJobApplicationStatus(id: number, status: string): Promise<IJobApplication> {
@@ -272,7 +282,7 @@ export class DatabaseStorage implements IStorage {
     }
     
     await application.update({ status });
-    return application;
+    return application.toJSON() as IJobApplication;
   }
 }
 
