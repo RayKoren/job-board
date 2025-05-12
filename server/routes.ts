@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, isBusinessUser, isJobSeeker } from "./localAuth"; // Using local auth for now
+import { setupAuth, isAuthenticated, isBusinessUser, isJobSeeker } from "./auth0"; // Using Auth0 authentication
 import { z } from "zod";
 import { initDatabase } from "./db";
 import { createPaymentIntent, retrievePaymentIntent } from "./services/stripe";
@@ -11,15 +11,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize database
   await initDatabase();
   
-  // Set up authentication
+  // Set up authentication with Auth0
   await setupAuth(app);
-
-  // Auth routes are now handled by localAuth.ts
   
   // Business profile routes
   app.post('/api/business/profile', isBusinessUser, async (req: any, res) => {
     try {
-      const userId = req.session.user.id;
+      const userId = req.oidc.user.sub;
       
       // Validate profile data
       const profileData = insertBusinessProfileSchema.parse({
@@ -37,7 +35,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get('/api/business/profile', isBusinessUser, async (req: any, res) => {
     try {
-      const userId = req.session.user.id;
+      const userId = req.oidc.user.sub;
       const profile = await storage.getBusinessProfile(userId);
       
       if (!profile) {
@@ -54,7 +52,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Job seeker profile routes
   app.post('/api/job-seeker/profile', isJobSeeker, async (req: any, res) => {
     try {
-      const userId = req.session.user.id;
+      const userId = req.oidc.user.sub;
       
       // Validate profile data
       const profileData = insertJobSeekerProfileSchema.parse({
@@ -72,7 +70,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get('/api/job-seeker/profile', isJobSeeker, async (req: any, res) => {
     try {
-      const userId = req.session.user.id;
+      const userId = req.oidc.user.sub;
       const profile = await storage.getJobSeekerProfile(userId);
       
       if (!profile) {
@@ -89,7 +87,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Job posting routes
   app.post('/api/jobs', isBusinessUser, async (req: any, res) => {
     try {
-      const userId = req.session.user.id;
+      const userId = req.oidc.user.sub;
       
       // Validate job posting data
       const jobData = insertJobPostingSchema.parse({
@@ -132,7 +130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get business job postings
   app.get('/api/business/jobs', isBusinessUser, async (req: any, res) => {
     try {
-      const userId = req.session.user.id;
+      const userId = req.oidc.user.sub;
       const jobs = await storage.getJobPostings({ businessUserId: userId });
       res.json(jobs);
     } catch (error) {
@@ -162,7 +160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/jobs/:id', isBusinessUser, async (req: any, res) => {
     try {
       const jobId = parseInt(req.params.id);
-      const userId = req.session.user.id;
+      const userId = req.oidc.user.sub;
       
       // Verify job belongs to this business
       const job = await storage.getJobPosting(jobId);
@@ -187,7 +185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/jobs/:id', isBusinessUser, async (req: any, res) => {
     try {
       const jobId = parseInt(req.params.id);
-      const userId = req.session.user.id;
+      const userId = req.oidc.user.sub;
       
       // Verify job belongs to this business
       const job = await storage.getJobPosting(jobId);
@@ -212,7 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/jobs/:jobId/apply', isAuthenticated, async (req: any, res) => {
     try {
       const jobId = parseInt(req.params.jobId);
-      const userId = req.session.user.id;
+      const userId = req.oidc.user.sub;
       
       // Verify job exists
       const job = await storage.getJobPosting(jobId);
@@ -239,7 +237,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/jobs/:id/applications', isBusinessUser, async (req: any, res) => {
     try {
       const jobId = parseInt(req.params.id);
-      const userId = req.session.user.id;
+      const userId = req.oidc.user.sub;
       
       // Verify job belongs to this business
       const job = await storage.getJobPosting(jobId);
@@ -265,7 +263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const applicationId = parseInt(req.params.id);
       const { status } = req.body;
-      const userId = req.session.user.id;
+      const userId = req.oidc.user.sub;
       
       // Validate status
       if (!['pending', 'reviewed', 'contacted', 'rejected'].includes(status)) {
@@ -296,7 +294,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's job applications (job seeker only)
   app.get('/api/my-applications', isJobSeeker, async (req: any, res) => {
     try {
-      const userId = req.session.user.id;
+      const userId = req.oidc.user.sub;
       const applications = await storage.getJobApplicationsForUser(userId);
       res.json(applications);
     } catch (error) {
@@ -357,7 +355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const paymentData = await createPaymentIntent({ 
         amount,
         metadata: { 
-          userId: req.session.user.id,
+          userId: req.oidc.user.sub,
           planTier,
           addons: addons ? JSON.stringify(addons) : '[]'
         }

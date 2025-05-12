@@ -18,10 +18,11 @@ export function setupAuth(app: Express) {
     return 'http://localhost:5000';
   };
 
-  // Ensure issuerBaseURL is a valid URL
-  const issuerBaseURL = process.env.AUTH0_ISSUER_BASE_URL;
-  if (!issuerBaseURL || !issuerBaseURL.startsWith('https://')) {
-    console.warn('Auth0 issuerBaseURL is not set correctly or missing https:// protocol');
+  // Ensure issuerBaseURL is a valid URL with https:// protocol
+  let issuerBaseURL = process.env.AUTH0_ISSUER_BASE_URL || '';
+  if (issuerBaseURL && !issuerBaseURL.startsWith('https://')) {
+    issuerBaseURL = 'https://' + issuerBaseURL;
+    console.log('Added https:// protocol to issuerBaseURL:', issuerBaseURL);
   }
 
   // Log auth config for debugging
