@@ -6,6 +6,7 @@ import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
+import { Session } from "./db";
 import { storage } from "./storage";
 import { userRoleEnum } from "@shared/schema";
 

@@ -4,8 +4,12 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isBusinessUser, isJobSeeker } from "./replitAuth";
 import { z } from "zod";
 import { insertBusinessProfileSchema, insertJobSeekerProfileSchema, insertJobPostingSchema, insertJobApplicationSchema } from "@shared/schema";
+import { initDatabase } from "./db";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize database
+  await initDatabase();
+  
   // Set up authentication
   await setupAuth(app);
 

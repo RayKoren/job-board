@@ -1,218 +1,272 @@
-import { eq, and } from "drizzle-orm";
-import { db } from "./db";
-import {
-  users,
-  businessProfiles,
-  jobSeekerProfiles,
-  jobPostings,
-  jobApplications,
-  type User,
-  type UpsertUser,
-  type BusinessProfile,
-  type UpsertBusinessProfile,
-  type JobSeekerProfile, 
-  type UpsertJobSeekerProfile,
-  type JobPosting,
-  type UpsertJobPosting,
-  type JobApplication,
-  type UpsertJobApplication
-} from "@shared/schema";
+import { 
+  User, 
+  BusinessProfile, 
+  JobSeekerProfile, 
+  JobPosting, 
+  JobApplication 
+} from './db';
+import { Op } from 'sequelize';
+
+// Define types for our storage operations
+export interface IUser {
+  id: string;
+  email: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  profileImageUrl: string | null;
+  role: 'business' | 'job_seeker' | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface IBusinessProfile {
+  id?: number;
+  userId: string;
+  companyName: string;
+  companySize?: string | null;
+  industry?: string | null;
+  location?: string | null;
+  website?: string | null;
+  description?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  logoUrl?: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface IJobSeekerProfile {
+  id?: number;
+  userId: string;
+  title?: string | null;
+  bio?: string | null;
+  skills?: string[] | null;
+  experience?: any | null;
+  education?: any | null;
+  location?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  resumeUrl?: string | null;
+  availableForWork?: boolean;
+  preferredJobTypes?: string[] | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface IJobPosting {
+  id?: number;
+  businessUserId: string;
+  title: string;
+  company: string;
+  location: string;
+  type: string;
+  description: string;
+  requirements: string;
+  benefits?: string | null;
+  compensationType: string;
+  salaryRange?: string | null;
+  hourlyRate?: string | null;
+  contactEmail?: string | null;
+  applicationUrl?: string | null;
+  contactPhone?: string | null;
+  status?: string;
+  plan: string;
+  addons?: string[];
+  featured?: boolean;
+  expiresAt?: Date | null;
+  tags?: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface IJobApplication {
+  id?: number;
+  jobId: number;
+  userId: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  coverLetter?: string | null;
+  resume?: string | null;
+  status?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 export interface IStorage {
   // User operations
-  getUser(id: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
-  upsertUser(user: UpsertUser): Promise<User>;
+  getUser(id: string): Promise<IUser | null>;
+  getUserByEmail(email: string): Promise<IUser | null>;
+  upsertUser(user: IUser): Promise<IUser>;
   
   // Business profile operations
-  getBusinessProfile(userId: string): Promise<BusinessProfile | undefined>;
-  upsertBusinessProfile(profile: UpsertBusinessProfile): Promise<BusinessProfile>;
+  getBusinessProfile(userId: string): Promise<IBusinessProfile | null>;
+  upsertBusinessProfile(profile: IBusinessProfile): Promise<IBusinessProfile>;
   
   // Job seeker profile operations
-  getJobSeekerProfile(userId: string): Promise<JobSeekerProfile | undefined>;
-  upsertJobSeekerProfile(profile: UpsertJobSeekerProfile): Promise<JobSeekerProfile>;
+  getJobSeekerProfile(userId: string): Promise<IJobSeekerProfile | null>;
+  upsertJobSeekerProfile(profile: IJobSeekerProfile): Promise<IJobSeekerProfile>;
   
   // Job posting operations
-  getJobPosting(id: number): Promise<JobPosting | undefined>;
+  getJobPosting(id: number): Promise<IJobPosting | null>;
   getJobPostings(options?: { 
     businessUserId?: string;
     featured?: boolean;
     limit?: number;
     offset?: number;
-  }): Promise<JobPosting[]>;
-  createJobPosting(posting: UpsertJobPosting): Promise<JobPosting>;
-  updateJobPosting(id: number, posting: Partial<UpsertJobPosting>): Promise<JobPosting>;
+  }): Promise<IJobPosting[]>;
+  createJobPosting(posting: IJobPosting): Promise<IJobPosting>;
+  updateJobPosting(id: number, posting: Partial<IJobPosting>): Promise<IJobPosting>;
   deleteJobPosting(id: number): Promise<void>;
   
   // Job application operations
-  getJobApplication(id: number): Promise<JobApplication | undefined>;
-  getJobApplicationsForJob(jobId: number): Promise<JobApplication[]>;
-  getJobApplicationsForUser(userId: string): Promise<JobApplication[]>;
-  createJobApplication(application: UpsertJobApplication): Promise<JobApplication>;
-  updateJobApplicationStatus(id: number, status: string): Promise<JobApplication>;
+  getJobApplication(id: number): Promise<IJobApplication | null>;
+  getJobApplicationsForJob(jobId: number): Promise<IJobApplication[]>;
+  getJobApplicationsForUser(userId: string): Promise<IJobApplication[]>;
+  createJobApplication(application: IJobApplication): Promise<IJobApplication>;
+  updateJobApplicationStatus(id: number, status: string): Promise<IJobApplication>;
 }
 
 export class DatabaseStorage implements IStorage {
   // User operations
-  async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+  async getUser(id: string): Promise<IUser | null> {
+    return await User.findByPk(id);
   }
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user;
+  async getUserByEmail(email: string): Promise<IUser | null> {
+    return await User.findOne({
+      where: { email }
+    });
   }
 
-  async upsertUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values(userData)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
+  async upsertUser(userData: IUser): Promise<IUser> {
+    const [user, created] = await User.upsert(userData);
     return user;
   }
   
   // Business profile operations
-  async getBusinessProfile(userId: string): Promise<BusinessProfile | undefined> {
-    const [profile] = await db.select().from(businessProfiles).where(eq(businessProfiles.userId, userId));
-    return profile;
+  async getBusinessProfile(userId: string): Promise<IBusinessProfile | null> {
+    return await BusinessProfile.findOne({
+      where: { userId }
+    });
   }
-  
-  async upsertBusinessProfile(profileData: UpsertBusinessProfile): Promise<BusinessProfile> {
-    const [profile] = await db
-      .insert(businessProfiles)
-      .values(profileData)
-      .onConflictDoUpdate({
-        target: [businessProfiles.userId],
-        set: {
-          ...profileData,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-    return profile;
+
+  async upsertBusinessProfile(profileData: IBusinessProfile): Promise<IBusinessProfile> {
+    const existingProfile = await BusinessProfile.findOne({
+      where: { userId: profileData.userId }
+    });
+
+    if (existingProfile) {
+      await existingProfile.update(profileData);
+      return existingProfile;
+    } else {
+      return await BusinessProfile.create(profileData);
+    }
   }
   
   // Job seeker profile operations
-  async getJobSeekerProfile(userId: string): Promise<JobSeekerProfile | undefined> {
-    const [profile] = await db.select().from(jobSeekerProfiles).where(eq(jobSeekerProfiles.userId, userId));
-    return profile;
+  async getJobSeekerProfile(userId: string): Promise<IJobSeekerProfile | null> {
+    return await JobSeekerProfile.findOne({
+      where: { userId }
+    });
   }
-  
-  async upsertJobSeekerProfile(profileData: UpsertJobSeekerProfile): Promise<JobSeekerProfile> {
-    const [profile] = await db
-      .insert(jobSeekerProfiles)
-      .values(profileData)
-      .onConflictDoUpdate({
-        target: [jobSeekerProfiles.userId],
-        set: {
-          ...profileData,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-    return profile;
+
+  async upsertJobSeekerProfile(profileData: IJobSeekerProfile): Promise<IJobSeekerProfile> {
+    const existingProfile = await JobSeekerProfile.findOne({
+      where: { userId: profileData.userId }
+    });
+
+    if (existingProfile) {
+      await existingProfile.update(profileData);
+      return existingProfile;
+    } else {
+      return await JobSeekerProfile.create(profileData);
+    }
   }
   
   // Job posting operations
-  async getJobPosting(id: number): Promise<JobPosting | undefined> {
-    const [posting] = await db.select().from(jobPostings).where(eq(jobPostings.id, id));
-    return posting;
+  async getJobPosting(id: number): Promise<IJobPosting | null> {
+    return await JobPosting.findByPk(id);
   }
-  
+
   async getJobPostings(options: { 
     businessUserId?: string;
     featured?: boolean;
     limit?: number;
     offset?: number;
-  } = {}): Promise<JobPosting[]> {
-    let conditions = [];
+  } = {}): Promise<IJobPosting[]> {
+    const whereClause: any = {};
     
-    // Apply filters
     if (options.businessUserId) {
-      conditions.push(eq(jobPostings.businessUserId, options.businessUserId));
+      whereClause.businessUserId = options.businessUserId;
     }
     
     if (options.featured !== undefined) {
-      conditions.push(eq(jobPostings.featured, options.featured));
+      whereClause.featured = options.featured;
     }
     
-    // Build query
-    let query = db.select().from(jobPostings);
-    
-    // Apply where conditions if any exist
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
-    
-    // Apply pagination
-    if (options.limit) {
-      query = query.limit(options.limit);
-    }
-    
-    if (options.offset) {
-      query = query.offset(options.offset);
-    }
-    
-    return await query;
+    return await JobPosting.findAll({
+      where: whereClause,
+      limit: options.limit,
+      offset: options.offset,
+      order: [
+        ['featured', 'DESC'],
+        ['createdAt', 'DESC']
+      ]
+    });
   }
-  
-  async createJobPosting(postingData: UpsertJobPosting): Promise<JobPosting> {
-    const [posting] = await db
-      .insert(jobPostings)
-      .values(postingData)
-      .returning();
+
+  async createJobPosting(postingData: IJobPosting): Promise<IJobPosting> {
+    return await JobPosting.create(postingData);
+  }
+
+  async updateJobPosting(id: number, postingData: Partial<IJobPosting>): Promise<IJobPosting> {
+    const posting = await JobPosting.findByPk(id);
+    if (!posting) {
+      throw new Error(`Job posting with ID ${id} not found`);
+    }
+    
+    await posting.update(postingData);
     return posting;
   }
-  
-  async updateJobPosting(id: number, postingData: Partial<UpsertJobPosting>): Promise<JobPosting> {
-    const [posting] = await db
-      .update(jobPostings)
-      .set(postingData)
-      .where(eq(jobPostings.id, id))
-      .returning();
-    return posting;
-  }
-  
+
   async deleteJobPosting(id: number): Promise<void> {
-    await db.delete(jobPostings).where(eq(jobPostings.id, id));
+    const posting = await JobPosting.findByPk(id);
+    if (posting) {
+      await posting.destroy();
+    }
   }
   
   // Job application operations
-  async getJobApplication(id: number): Promise<JobApplication | undefined> {
-    const [application] = await db.select().from(jobApplications).where(eq(jobApplications.id, id));
-    return application;
+  async getJobApplication(id: number): Promise<IJobApplication | null> {
+    return await JobApplication.findByPk(id);
   }
-  
-  async getJobApplicationsForJob(jobId: number): Promise<JobApplication[]> {
-    return await db.select().from(jobApplications).where(eq(jobApplications.jobId, jobId));
+
+  async getJobApplicationsForJob(jobId: number): Promise<IJobApplication[]> {
+    return await JobApplication.findAll({
+      where: { jobId },
+      order: [['createdAt', 'DESC']]
+    });
   }
-  
-  async getJobApplicationsForUser(userId: string): Promise<JobApplication[]> {
-    return await db.select().from(jobApplications).where(eq(jobApplications.userId, userId));
+
+  async getJobApplicationsForUser(userId: string): Promise<IJobApplication[]> {
+    return await JobApplication.findAll({
+      where: { userId },
+      order: [['createdAt', 'DESC']]
+    });
   }
-  
-  async createJobApplication(applicationData: UpsertJobApplication): Promise<JobApplication> {
-    const [application] = await db
-      .insert(jobApplications)
-      .values(applicationData)
-      .returning();
-    return application;
+
+  async createJobApplication(applicationData: IJobApplication): Promise<IJobApplication> {
+    return await JobApplication.create(applicationData);
   }
-  
-  async updateJobApplicationStatus(id: number, status: string): Promise<JobApplication> {
-    const [application] = await db
-      .update(jobApplications)
-      .set({ status })
-      .where(eq(jobApplications.id, id))
-      .returning();
+
+  async updateJobApplicationStatus(id: number, status: string): Promise<IJobApplication> {
+    const application = await JobApplication.findByPk(id);
+    if (!application) {
+      throw new Error(`Job application with ID ${id} not found`);
+    }
+    
+    await application.update({ status });
     return application;
   }
 }
