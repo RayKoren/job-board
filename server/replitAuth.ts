@@ -86,11 +86,19 @@ export async function setupAuth(app: Express) {
     const user: any = {};
     updateUserSession(user, tokens);
     
-    // Store role selection if it's in the session
-    if (user.selectedRole) {
-      await upsertUser(tokens.claims(), user.selectedRole);
+    // Check if user already exists
+    const userId = tokens.claims().sub;
+    const existingUser = await storage.getUser(userId);
+    
+    if (existingUser) {
+      // User exists, use existing role
+      user.databaseUser = existingUser;
     } else {
-      await upsertUser(tokens.claims());
+      // New user, needs role selection
+      user.isNewUser = true;
+      
+      // Create user with null role to indicate role selection needed
+      await upsertUser(tokens.claims(), null);
     }
     
     verified(null, user);
