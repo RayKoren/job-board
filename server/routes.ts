@@ -296,7 +296,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's job applications (job seeker only)
   app.get('/api/my-applications', isJobSeeker, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.user.id;
       const applications = await storage.getJobApplicationsForUser(userId);
       res.json(applications);
     } catch (error) {
@@ -357,7 +357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const paymentData = await createPaymentIntent({ 
         amount,
         metadata: { 
-          userId: req.user.claims.sub,
+          userId: req.session.user.id,
           planTier,
           addons: addons ? JSON.stringify(addons) : '[]'
         }

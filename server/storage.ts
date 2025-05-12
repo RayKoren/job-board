@@ -131,25 +131,28 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: string): Promise<IUser | null> {
-    return await User.findByPk(id);
+    const user = await User.findByPk(id);
+    return user ? user.toJSON() as IUser : null;
   }
 
   async getUserByEmail(email: string): Promise<IUser | null> {
-    return await User.findOne({
+    const user = await User.findOne({
       where: { email }
     });
+    return user ? user.toJSON() as IUser : null;
   }
 
   async upsertUser(userData: IUser): Promise<IUser> {
     const [user, created] = await User.upsert(userData);
-    return user;
+    return user.toJSON() as IUser;
   }
   
   // Business profile operations
   async getBusinessProfile(userId: string): Promise<IBusinessProfile | null> {
-    return await BusinessProfile.findOne({
+    const profile = await BusinessProfile.findOne({
       where: { userId }
     });
+    return profile ? profile.toJSON() as IBusinessProfile : null;
   }
 
   async upsertBusinessProfile(profileData: IBusinessProfile): Promise<IBusinessProfile> {
@@ -159,9 +162,10 @@ export class DatabaseStorage implements IStorage {
 
     if (existingProfile) {
       await existingProfile.update(profileData);
-      return existingProfile;
+      return existingProfile.toJSON() as IBusinessProfile;
     } else {
-      return await BusinessProfile.create(profileData);
+      const newProfile = await BusinessProfile.create(profileData);
+      return newProfile.toJSON() as IBusinessProfile;
     }
   }
   
