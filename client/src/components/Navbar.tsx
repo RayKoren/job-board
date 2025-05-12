@@ -41,6 +41,7 @@ const Navbar = () => {
           <a href="#about" className="font-medium text-brown hover:text-forest transition duration-300">About</a>
           <a href="#services" className="font-medium text-brown hover:text-forest transition duration-300">Services</a>
           <a href="#contact" className="font-medium text-brown hover:text-forest transition duration-300">Contact</a>
+          <a href="#" onClick={() => alert("Coming soon: Pricing page for job posting plans!")} className="font-medium text-clay hover:text-forest transition duration-300">Pricing</a>
         </nav>
         
         {/* Mobile Menu Button */}
