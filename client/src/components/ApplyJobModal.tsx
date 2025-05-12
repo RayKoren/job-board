@@ -1,9 +1,11 @@
-import { useState } from 'react';
-import { X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useAuth } from '@/hooks/useAuth';
+import { useLocation } from 'wouter';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,6 +62,21 @@ interface ApplyJobModalProps {
 export function ApplyJobModal({ job, isOpen, onClose }: ApplyJobModalProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { isAuthenticated, isLoading } = useAuth();
+  const [, setLocation] = useLocation();
+  
+  // Check if user is authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated && isOpen) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to apply for jobs.",
+        variant: "destructive",
+      });
+      onClose();
+      setLocation('/login');
+    }
+  }, [isAuthenticated, isLoading, isOpen, onClose, setLocation, toast]);
   
   // Initialize the form
   const form = useForm<ApplicationValues>({
@@ -76,6 +93,18 @@ export function ApplyJobModal({ job, isOpen, onClose }: ApplyJobModalProps) {
   
   // Handle form submission
   const onSubmit = async (data: ApplicationValues) => {
+    // Double-check authentication before submitting
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to apply for jobs.",
+        variant: "destructive",
+      });
+      onClose();
+      setLocation('/login');
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
