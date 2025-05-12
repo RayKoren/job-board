@@ -43,7 +43,9 @@ const Navbar = () => {
         
         {/* Desktop Navigation */}
         <nav className="hidden md:flex space-x-8">
-          <a href={isHomePage ? "#home" : "/"} className="font-medium text-brown hover:text-forest transition duration-300">Home</a>
+          {!isHomePage && (
+            <a href="/" className="font-medium text-brown hover:text-forest transition duration-300">Home</a>
+          )}
           <a href={isHomePage ? "#about" : "/#about"} className="font-medium text-brown hover:text-forest transition duration-300">About</a>
           <a href={isHomePage ? "#services" : "/#services"} className="font-medium text-brown hover:text-forest transition duration-300">Services</a>
           <a href={isHomePage ? "#contact" : "/#contact"} className="font-medium text-brown hover:text-forest transition duration-300">Contact</a>
@@ -67,13 +69,15 @@ const Navbar = () => {
       {/* Mobile Navigation Menu */}
       <div className={`md:hidden bg-white py-4 px-4 shadow-inner ${isMobileMenuOpen ? '' : 'hidden'}`}>
         <nav className="flex flex-col space-y-4">
-          <a 
-            href={isHomePage ? "#home" : "/"} 
-            className="font-medium text-brown hover:text-forest transition duration-300"
-            onClick={closeMobileMenu}
-          >
-            Home
-          </a>
+          {!isHomePage && (
+            <a 
+              href="/" 
+              className="font-medium text-brown hover:text-forest transition duration-300"
+              onClick={closeMobileMenu}
+            >
+              Home
+            </a>
+          )}
           <a 
             href={isHomePage ? "#about" : "/#about"} 
             className="font-medium text-brown hover:text-forest transition duration-300"
