@@ -60,7 +60,11 @@ const formSchema = z.object({
   jobType: z.enum(["full-time", "part-time", "contract", "gig", "internship"], {
     message: "Please select a valid job type."
   }),
-  salary: z.string().optional(),
+  compensationType: z.enum(["salary", "hourly", "both", "unspecified"], {
+    message: "Please select a compensation type."
+  }),
+  salaryRange: z.string().optional(),
+  hourlyRate: z.string().optional(),
   description: z.string().min(50, {
     message: "Description must be at least 50 characters long."
   }),
@@ -97,7 +101,9 @@ export default function PostJob() {
       companyName: "",
       location: "Sheridan, WY",
       jobType: "full-time",
-      salary: "",
+      compensationType: "unspecified",
+      salaryRange: "",
+      hourlyRate: "",
       description: "",
       requirements: "",
       applicationEmail: "",
@@ -280,20 +286,71 @@ export default function PostJob() {
                         
                         <FormField
                           control={form.control}
-                          name="salary"
+                          name="compensationType"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Salary (Optional)</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g. $50,000 - $70,000" {...field} />
-                              </FormControl>
-                              <FormDescription>
-                                Adding a salary range can increase visibility
-                              </FormDescription>
+                              <FormLabel>Compensation Type*</FormLabel>
+                              <Select 
+                                onValueChange={field.onChange} 
+                                defaultValue={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select compensation type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="salary">Salary</SelectItem>
+                                  <SelectItem value="hourly">Hourly</SelectItem>
+                                  <SelectItem value="both">Both</SelectItem>
+                                  <SelectItem value="unspecified">Unspecified</SelectItem>
+                                </SelectContent>
+                              </Select>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
+                      </div>
+                      
+                      {/* Conditional compensation fields based on selection */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {(form.watch("compensationType") === "salary" || form.watch("compensationType") === "both") && (
+                          <FormField
+                            control={form.control}
+                            name="salaryRange"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Salary Range</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g. $50,000 - $70,000/year" {...field} />
+                                </FormControl>
+                                <FormDescription>
+                                  Adding a salary range increases visibility
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
+                        
+                        {(form.watch("compensationType") === "hourly" || form.watch("compensationType") === "both") && (
+                          <FormField
+                            control={form.control}
+                            name="hourlyRate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Hourly Rate</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g. $15 - $25/hour" {...field} />
+                                </FormControl>
+                                <FormDescription>
+                                  Hourly rate increases interest in the position
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
                       </div>
                       
                       <FormField
@@ -615,6 +672,10 @@ export default function PostJob() {
                     <div>
                       <h4 className="font-semibold">How do I receive applications?</h4>
                       <p className="text-sm">Applications will be sent directly to the email address you provide. You can also specify an application URL if you prefer candidates to apply through your website.</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">Should I specify salary or hourly rate?</h4>
+                      <p className="text-sm">Job listings with compensation information receive 30% more applications. You can specify salary, hourly rate, or both depending on your flexibility.</p>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
