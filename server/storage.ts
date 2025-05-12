@@ -6,6 +6,7 @@ import {
   JobApplication 
 } from './db';
 import { Op } from 'sequelize';
+import { Model } from 'sequelize';
 
 // Define types for our storage operations
 export interface IUser {

@@ -1,11 +1,11 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, isBusinessUser, isJobSeeker } from "./replitAuth";
+import { setupAuth, isAuthenticated, isBusinessUser, isJobSeeker } from "./localAuth"; // Using local auth for now
 import { z } from "zod";
-import { insertBusinessProfileSchema, insertJobSeekerProfileSchema, insertJobPostingSchema, insertJobApplicationSchema } from "@shared/schema";
 import { initDatabase } from "./db";
 import { createPaymentIntent, retrievePaymentIntent } from "./services/stripe";
+import { insertBusinessProfileSchema, insertJobSeekerProfileSchema, insertJobPostingSchema, insertJobApplicationSchema } from "@shared/zodSchema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize database
@@ -14,76 +14,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
   await setupAuth(app);
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
-      // Fetch additional profile data based on user role
-      let profileData = null;
-      if (user?.role === 'business') {
-        profileData = await storage.getBusinessProfile(userId);
-      } else if (user?.role === 'job_seeker') {
-        profileData = await storage.getJobSeekerProfile(userId);
-      }
-      
-      res.json({ user, profile: profileData });
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
-  
-  // Check if user needs role selection
-  app.get('/api/auth/check-role', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
-      if (!user || !user.role) {
-        return res.json({ needsRoleSelection: true });
-      }
-      
-      res.json({ 
-        needsRoleSelection: false,
-        role: user.role,
-        dashboardUrl: user.role === 'business' ? '/business/dashboard' : '/jobseeker/dashboard'
-      });
-    } catch (error) {
-      console.error("Error checking user role:", error);
-      res.status(500).json({ message: "Failed to check user role" });
-    }
-  });
-  
-  // Role selection
-  app.get('/api/auth/select-role/:role', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { role } = req.params;
-      
-      // Validate role
-      if (role !== 'business' && role !== 'job_seeker') {
-        return res.status(400).json({ message: "Invalid role" });
-      }
-      
-      // Update user role
-      const updatedUser = await storage.upsertUser({
-        id: userId,
-        role: role as any,
-      });
-      
-      res.json({ success: true, user: updatedUser });
-    } catch (error) {
-      console.error("Error updating user role:", error);
-      res.status(500).json({ message: "Failed to update user role" });
-    }
-  });
+  // Auth routes are now handled by localAuth.ts
   
   // Business profile routes
   app.post('/api/business/profile', isBusinessUser, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.user.id;
       
       // Validate profile data
       const profileData = insertBusinessProfileSchema.parse({
@@ -101,7 +37,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get('/api/business/profile', isBusinessUser, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.user.id;
       const profile = await storage.getBusinessProfile(userId);
       
       if (!profile) {
@@ -118,7 +54,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Job seeker profile routes
   app.post('/api/job-seeker/profile', isJobSeeker, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.user.id;
       
       // Validate profile data
       const profileData = insertJobSeekerProfileSchema.parse({
@@ -136,7 +72,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get('/api/job-seeker/profile', isJobSeeker, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.user.id;
       const profile = await storage.getJobSeekerProfile(userId);
       
       if (!profile) {
@@ -153,7 +89,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Job posting routes
   app.post('/api/jobs', isBusinessUser, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.user.id;
       
       // Validate job posting data
       const jobData = insertJobPostingSchema.parse({
@@ -196,7 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get business job postings
   app.get('/api/business/jobs', isBusinessUser, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.user.id;
       const jobs = await storage.getJobPostings({ businessUserId: userId });
       res.json(jobs);
     } catch (error) {
@@ -226,7 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/jobs/:id', isBusinessUser, async (req: any, res) => {
     try {
       const jobId = parseInt(req.params.id);
-      const userId = req.user.claims.sub;
+      const userId = req.session.user.id;
       
       // Verify job belongs to this business
       const job = await storage.getJobPosting(jobId);
@@ -251,7 +187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/jobs/:id', isBusinessUser, async (req: any, res) => {
     try {
       const jobId = parseInt(req.params.id);
-      const userId = req.user.claims.sub;
+      const userId = req.session.user.id;
       
       // Verify job belongs to this business
       const job = await storage.getJobPosting(jobId);
@@ -276,7 +212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/jobs/:jobId/apply', isAuthenticated, async (req: any, res) => {
     try {
       const jobId = parseInt(req.params.jobId);
-      const userId = req.user.claims.sub;
+      const userId = req.session.user.id;
       
       // Verify job exists
       const job = await storage.getJobPosting(jobId);
@@ -303,7 +239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/jobs/:id/applications', isBusinessUser, async (req: any, res) => {
     try {
       const jobId = parseInt(req.params.id);
-      const userId = req.user.claims.sub;
+      const userId = req.session.user.id;
       
       // Verify job belongs to this business
       const job = await storage.getJobPosting(jobId);
@@ -329,7 +265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const applicationId = parseInt(req.params.id);
       const { status } = req.body;
-      const userId = req.user.claims.sub;
+      const userId = req.session.user.id;
       
       // Validate status
       if (!['pending', 'reviewed', 'contacted', 'rejected'].includes(status)) {
