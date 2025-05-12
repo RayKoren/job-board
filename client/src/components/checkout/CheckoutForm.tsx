@@ -1,137 +1,109 @@
-import { useState, useEffect } from 'react';
-import {
-  PaymentElement,
-  useStripe,
-  useElements
-} from '@stripe/react-stripe-js';
+import { useState } from 'react';
+import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useToast } from '@/hooks/use-toast';
 
 interface CheckoutFormProps {
-  onSuccess?: (paymentIntentId: string) => void;
+  price: number;
+  onPaymentSuccess?: (paymentIntentId: string) => void;
   onCancel?: () => void;
-  amount: number;
 }
 
-export function CheckoutForm({ onSuccess, onCancel, amount }: CheckoutFormProps) {
+export function CheckoutForm({ price, onPaymentSuccess, onCancel }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!stripe) {
-      return;
-    }
-
-    // Get payment intent client secret from URL query params
-    const clientSecret = new URLSearchParams(window.location.search).get(
-      'payment_intent_client_secret'
-    );
-
-    if (!clientSecret) {
-      return;
-    }
-
-    // Retrieve the payment intent using the client secret
-    stripe.retrievePaymentIntent(clientSecret).then(({ paymentIntent }) => {
-      if (!paymentIntent) return;
-
-      switch (paymentIntent.status) {
-        case 'succeeded':
-          setMessage('Payment succeeded!');
-          onSuccess?.(paymentIntent.id);
-          break;
-        case 'processing':
-          setMessage('Your payment is processing.');
-          break;
-        case 'requires_payment_method':
-          setMessage('Please provide your payment information.');
-          break;
-        default:
-          setMessage('Something went wrong.');
-          break;
-      }
-    });
-  }, [stripe, onSuccess]);
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
     if (!stripe || !elements) {
-      // Stripe.js hasn't yet loaded.
+      // Stripe.js hasn't loaded yet
       return;
     }
 
-    setIsLoading(true);
+    setIsProcessing(true);
+    setPaymentError(null);
 
-    const { error } = await stripe.confirmPayment({
+    const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
+      redirect: 'if_required',
       confirmParams: {
         return_url: `${window.location.origin}/payment-success`,
-      },
-      redirect: 'if_required'
+      }
     });
 
     if (error) {
-      if (error.type === 'card_error' || error.type === 'validation_error') {
-        setMessage(error.message || 'An unexpected error occurred');
-        toast({
-          variant: 'destructive',
-          title: 'Payment Failed',
-          description: error.message || 'An unexpected error occurred'
-        });
-      } else {
-        setMessage('An unexpected error occurred');
-        toast({
-          variant: 'destructive',
-          title: 'Payment Failed',
-          description: 'An unexpected error occurred'
-        });
+      setPaymentError(error.message || 'An error occurred during payment processing.');
+      toast({
+        variant: 'destructive',
+        title: 'Payment Failed',
+        description: error.message || 'Your payment could not be processed.'
+      });
+      setIsProcessing(false);
+    } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+      // Payment successful
+      toast({
+        title: 'Payment Successful',
+        description: 'Your payment has been successfully processed.'
+      });
+      if (onPaymentSuccess) {
+        onPaymentSuccess(paymentIntent.id);
       }
     }
-
-    setIsLoading(false);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-6">
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-1">Payment Information</h3>
-        <p className="text-gray-500 text-sm">
-          Total amount: ${amount.toFixed(2)}
+    <form onSubmit={handleSubmit}>
+      <PaymentElement className="mb-6" />
+      
+      {paymentError && (
+        <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4 text-sm">
+          {paymentError}
+        </div>
+      )}
+      
+      <div className="mb-4">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm text-gray-600">Total Amount:</span>
+          <span className="text-xl font-semibold">${price.toFixed(2)}</span>
+        </div>
+        <p className="text-xs text-gray-500">
+          Your payment is processed securely through Stripe. We do not store your payment details.
         </p>
       </div>
       
-      <PaymentElement />
-      
-      <div className="flex justify-between mt-6">
-        <Button 
-          type="button" 
-          variant="outline" 
-          disabled={isLoading} 
-          onClick={onCancel}
-        >
-          Cancel
-        </Button>
+      <div className="flex flex-col-reverse sm:flex-row gap-3 mt-6">
+        {onCancel && (
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="w-full"
+            onClick={onCancel}
+            disabled={isProcessing}
+          >
+            Cancel
+          </Button>
+        )}
+        
         <Button 
           type="submit" 
-          disabled={isLoading || !stripe || !elements}
+          className="w-full bg-clay hover:bg-clay/90 text-white"
+          disabled={isProcessing || !stripe || !elements}
         >
-          {isLoading ? (
-            <span className="flex items-center gap-2">
-              <Spinner className="h-4 w-4" /> Processing...
+          {isProcessing ? (
+            <span className="flex items-center justify-center">
+              <Spinner className="h-5 w-5 mr-2" />
+              Processing...
             </span>
           ) : (
-            `Pay $${amount.toFixed(2)}`
+            `Pay $${price.toFixed(2)}`
           )}
         </Button>
       </div>
-      
-      {message && <div className="mt-4 text-sm text-center text-gray-600">{message}</div>}
     </form>
   );
 }
