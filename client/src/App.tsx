@@ -15,6 +15,7 @@ import JobSeekerProfile from "@/pages/JobSeekerProfile";
 import BusinessDashboard from "@/pages/BusinessDashboard";
 import JobSeekerDashboard from "@/pages/JobSeekerDashboard";
 import LoginPage from "@/pages/LoginPage";
+import RoleSelection from "@/pages/RoleSelection";
 
 // Components
 import Pricing from "@/components/Pricing";
@@ -62,6 +63,7 @@ function App() {
         <Switch>
           <Route path="/" component={Home} />
           <Route path="/login" component={LoginPage} />
+          <Route path="/select-role" component={RoleSelection} />
           <Route path="/pricing" component={() => {
             return (
               <div className="min-h-screen flex flex-col">
