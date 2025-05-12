@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { ApplyJobModal } from '@/components/ApplyJobModal';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -503,101 +504,118 @@ export default function JobListings() {
 // Job Card Component
 function JobCard({ job }: { job: Job }) {
   const [expanded, setExpanded] = useState(false);
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  
+  const handleApplyClick = () => {
+    setIsApplyModalOpen(true);
+  };
   
   return (
-    <motion.div 
-      className={`bg-white rounded-lg shadow-sm overflow-hidden ${job.featured ? 'border-l-4 border-clay' : ''}`}
-      whileHover={{ y: -3, boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' }}
-      transition={{ duration: 0.2 }}
-    >
-      <div className="p-6">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
-          {/* Job info */}
-          <div className="flex-grow">
-            <div className="flex items-start justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-forest">{job.title}</h2>
-                <div className="flex items-center text-gray-600 mt-1">
-                  <Building className="h-4 w-4 mr-1" />
-                  <span>{job.company}</span>
+    <>
+      <motion.div 
+        className={`bg-white rounded-lg shadow-sm overflow-hidden ${job.featured ? 'border-l-4 border-clay' : ''}`}
+        whileHover={{ y: -3, boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' }}
+        transition={{ duration: 0.2 }}
+      >
+        <div className="p-6">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+            {/* Job info */}
+            <div className="flex-grow">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-forest">{job.title}</h2>
+                  <div className="flex items-center text-gray-600 mt-1">
+                    <Building className="h-4 w-4 mr-1" />
+                    <span>{job.company}</span>
+                  </div>
                 </div>
+                {job.featured && (
+                  <Badge className="bg-clay">Featured</Badge>
+                )}
               </div>
-              {job.featured && (
-                <Badge className="bg-clay">Featured</Badge>
-              )}
-            </div>
-            
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-4 text-sm text-gray-600">
-              <div className="flex items-center">
-                <MapPin className="h-4 w-4 mr-2 text-clay" />
-                <span>{job.location}</span>
-              </div>
-              <div className="flex items-center">
-                <Briefcase className="h-4 w-4 mr-2 text-clay" />
-                <span>{job.type}</span>
-              </div>
-              {(job.salaryRange || job.hourlyRate) && (
+              
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-4 text-sm text-gray-600">
                 <div className="flex items-center">
-                  <DollarSign className="h-4 w-4 mr-2 text-clay" />
-                  <span>{job.salaryRange || job.hourlyRate}</span>
+                  <MapPin className="h-4 w-4 mr-2 text-clay" />
+                  <span>{job.location}</span>
                 </div>
-              )}
-              <div className="flex items-center">
-                <CalendarRange className="h-4 w-4 mr-2 text-clay" />
-                <span>Posted {job.posted}</span>
+                <div className="flex items-center">
+                  <Briefcase className="h-4 w-4 mr-2 text-clay" />
+                  <span>{job.type}</span>
+                </div>
+                {(job.salaryRange || job.hourlyRate) && (
+                  <div className="flex items-center">
+                    <DollarSign className="h-4 w-4 mr-2 text-clay" />
+                    <span>{job.salaryRange || job.hourlyRate}</span>
+                  </div>
+                )}
+                <div className="flex items-center">
+                  <CalendarRange className="h-4 w-4 mr-2 text-clay" />
+                  <span>Posted {job.posted}</span>
+                </div>
               </div>
+              
+              {/* Tags */}
+              <div className="mt-4 flex flex-wrap gap-2">
+                {job.tags.map((tag, index) => (
+                  <Badge key={index} variant="outline" className="text-brown border-brown">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+              
+              {/* Expanded content */}
+              {expanded && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="mt-4 pt-4 border-t border-gray-100"
+                >
+                  <p className="text-gray-700 mb-4">
+                    {job.description}
+                  </p>
+                  <Button 
+                    className="bg-forest hover:bg-opacity-90"
+                    onClick={handleApplyClick}
+                  >
+                    Apply Now
+                  </Button>
+                </motion.div>
+              )}
             </div>
-            
-            {/* Tags */}
-            <div className="mt-4 flex flex-wrap gap-2">
-              {job.tags.map((tag, index) => (
-                <Badge key={index} variant="outline" className="text-brown border-brown">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-            
-            {/* Expanded content */}
-            {expanded && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-                className="mt-4 pt-4 border-t border-gray-100"
-              >
-                <p className="text-gray-700 mb-4">
-                  {job.description}
-                </p>
-                <Button className="bg-forest">
-                  Apply Now
-                </Button>
-              </motion.div>
-            )}
+          </div>
+          
+          {/* View details button */}
+          <div className="mt-4 text-right">
+            <Button 
+              variant="ghost" 
+              className="text-forest font-medium"
+              onClick={() => setExpanded(!expanded)}
+            >
+              {expanded ? (
+                <>
+                  <span>View Less</span>
+                  <ChevronUp className="ml-1 h-4 w-4" />
+                </>
+              ) : (
+                <>
+                  <span>View Details</span>
+                  <ChevronDown className="ml-1 h-4 w-4" />
+                </>
+              )}
+            </Button>
           </div>
         </div>
-        
-        {/* View details button */}
-        <div className="mt-4 text-right">
-          <Button 
-            variant="ghost" 
-            className="text-forest font-medium"
-            onClick={() => setExpanded(!expanded)}
-          >
-            {expanded ? (
-              <>
-                <span>View Less</span>
-                <ChevronUp className="ml-1 h-4 w-4" />
-              </>
-            ) : (
-              <>
-                <span>View Details</span>
-                <ChevronDown className="ml-1 h-4 w-4" />
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-    </motion.div>
+      </motion.div>
+      
+      {/* Apply Job Modal */}
+      <ApplyJobModal 
+        job={job}
+        isOpen={isApplyModalOpen}
+        onClose={() => setIsApplyModalOpen(false)}
+      />
+    </>
   );
 }
