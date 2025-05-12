@@ -1,0 +1,151 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 20 14.3% 4.1%;
+  --muted: 60 4.8% 95.9%;
+  --muted-foreground: 25 5.3% 44.7%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 20 14.3% 4.1%;
+  --card: 0 0% 100%;
+  --card-foreground: 20 14.3% 4.1%;
+  --border: 20 5.9% 90%;
+  --input: 20 5.9% 90%;
+  --primary: 120 52% 28%; /* forest */
+  --primary-foreground: 211 100% 99%;
+  --secondary: 60 4.8% 95.9%;
+  --secondary-foreground: 24 9.8% 10%;
+  --accent: 0 56% 55%; /* clay */
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 60 9.1% 97.8%;
+  --ring: 20 14.3% 4.1%;
+  --radius: 0.5rem;
+
+  /* Custom colors */
+  --forest: 120 52% 28%;
+  --clay: 0 56% 55%;
+  --brown: 23 21% 40%;
+  --sand: 33 29% 85%;
+  --sky: 207 57% 76%;
+}
+
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --primary: 120 52% 28%; /* forest */
+  --primary-foreground: 211 100% 99%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --accent: 0 56% 55%; /* clay */
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 240 4.9% 83.9%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-opensans antialiased bg-sand text-brown;
+    scroll-behavior: smooth;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-cabin;
+  }
+}
+
+@layer utilities {
+  .font-cabin {
+    font-family: 'Cabin', sans-serif;
+  }
+  
+  .font-opensans {
+    font-family: 'Open Sans', sans-serif;
+  }
+  
+  .bg-forest {
+    background-color: hsl(var(--forest));
+  }
+  
+  .bg-clay {
+    background-color: hsl(var(--clay));
+  }
+  
+  .bg-brown {
+    background-color: hsl(var(--brown));
+  }
+  
+  .bg-sand {
+    background-color: hsl(var(--sand));
+  }
+  
+  .bg-sky {
+    background-color: hsl(var(--sky));
+  }
+  
+  .text-forest {
+    color: hsl(var(--forest));
+  }
+  
+  .text-clay {
+    color: hsl(var(--clay));
+  }
+  
+  .text-brown {
+    color: hsl(var(--brown));
+  }
+  
+  .hover\:text-forest:hover {
+    color: hsl(var(--forest));
+  }
+  
+  .hover\:text-clay:hover {
+    color: hsl(var(--clay));
+  }
+  
+  .hover\:bg-clay:hover {
+    background-color: hsl(var(--clay));
+  }
+  
+  .hover\:bg-forest:hover {
+    background-color: hsl(var(--forest));
+  }
+  
+  .hover\:bg-opacity-90:hover {
+    --tw-bg-opacity: 0.9;
+  }
+  
+  .border-clay {
+    border-color: hsl(var(--clay));
+  }
+  
+  .focus\:ring-clay:focus {
+    --tw-ring-color: hsl(var(--clay));
+  }
+  
+  .focus\:border-clay:focus {
+    border-color: hsl(var(--clay));
+  }
+  
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
