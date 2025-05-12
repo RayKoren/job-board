@@ -25,24 +25,35 @@ export function setupAuth(app: Express) {
     console.log('Added https:// protocol to issuerBaseURL:', issuerBaseURL);
   }
 
+  // Get the base URL for the application
+  const baseURL = getBaseUrl();
+  const callbackURL = `${baseURL}/callback`;
+  
   // Log auth config for debugging
   console.log('Auth0 Configuration:');
-  console.log('- baseURL:', getBaseUrl());
+  console.log('- baseURL:', baseURL);
+  console.log('- callbackURL:', callbackURL);
   console.log('- clientID:', process.env.AUTH0_CLIENT_ID ? '[PROVIDED]' : '[MISSING]');
   console.log('- issuerBaseURL:', issuerBaseURL || '[MISSING]');
   console.log('- clientSecret:', process.env.AUTH0_CLIENT_SECRET ? '[PROVIDED]' : '[MISSING]');
-
+  
   const config = {
     authRequired: false,
     auth0Logout: true,
     secret: process.env.SESSION_SECRET || 'a-long-random-string',
-    baseURL: getBaseUrl(),
+    baseURL: baseURL,
     clientID: process.env.AUTH0_CLIENT_ID,
     issuerBaseURL: issuerBaseURL || 'https://example.auth0.com',
     clientSecret: process.env.AUTH0_CLIENT_SECRET,
+    routes: {
+      callback: '/callback', // Auth0 will redirect here after login
+      login: '/login',       // Auth0 login route (will be accessed via /api/login)
+      logout: '/logout'      // Auth0 logout route (will be accessed via /api/logout)
+    },
     authorizationParams: {
       response_type: 'code',
-      scope: 'openid profile email'
+      scope: 'openid profile email',
+      redirect_uri: `${baseURL}/callback` // Explicitly set the callback URL
     },
   };
 
