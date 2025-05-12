@@ -133,15 +133,23 @@ export class DatabaseStorage implements IStorage {
     limit?: number;
     offset?: number;
   } = {}): Promise<JobPosting[]> {
-    let query = db.select().from(jobPostings);
+    let conditions = [];
     
     // Apply filters
     if (options.businessUserId) {
-      query = query.where(eq(jobPostings.businessUserId, options.businessUserId));
+      conditions.push(eq(jobPostings.businessUserId, options.businessUserId));
     }
     
     if (options.featured !== undefined) {
-      query = query.where(eq(jobPostings.featured, options.featured));
+      conditions.push(eq(jobPostings.featured, options.featured));
+    }
+    
+    // Build query
+    let query = db.select().from(jobPostings);
+    
+    // Apply where conditions if any exist
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
     }
     
     // Apply pagination
