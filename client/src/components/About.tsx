@@ -18,10 +18,10 @@ const About = () => {
               <span className="absolute bottom-0 left-0 w-20 h-1 bg-clay"></span>
             </h2>
             <p className="text-lg text-brown mb-6 leading-relaxed">
-              Founded with a mission to strengthen our community, Sheridan Jobs connects local businesses and residents throughout Sheridan County. We believe in the power of local economies and helping neighbors find work opportunities close to home.
+              We're just folks from Sheridan who want to help our neighbors find good work and good help. Sheridan Jobs brings together local businesses and workers right here in our corner of Wyoming.
             </p>
             <p className="text-lg text-brown mb-8 leading-relaxed">
-              Whether you're a business looking for skilled workers or a resident seeking employment, our platform makes it easy to post and find jobs in Sheridan and the surrounding areas.
+              Need a hand on your ranch? Looking for weekend work? Just moved to town and need a job? We've built this simple site to connect people who need work with people who need workers - no complicated stuff, just good old-fashioned community support.
             </p>
             <div className="flex items-center space-x-6">
               <div className="flex items-center">
