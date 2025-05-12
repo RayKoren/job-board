@@ -16,6 +16,8 @@ import BusinessDashboard from "@/pages/BusinessDashboard";
 import JobSeekerDashboard from "@/pages/JobSeekerDashboard";
 import LoginPage from "@/pages/LoginPage";
 import RoleSelection from "@/pages/RoleSelection";
+import PaymentPage from "@/pages/PaymentPage";
+import PaymentSuccess from "@/pages/PaymentSuccess";
 
 // Components
 import Pricing from "@/components/Pricing";
@@ -111,6 +113,13 @@ function App() {
             path="/job-seeker/dashboard" 
             component={() => <ProtectedRoute component={JobSeekerDashboard} requiredRole="job_seeker" />} 
           />
+          
+          {/* Payment Routes */}
+          <Route 
+            path="/payment" 
+            component={() => <ProtectedRoute component={PaymentPage} requiredRole="business" />} 
+          />
+          <Route path="/payment-success" component={PaymentSuccess} />
           
           <Route component={NotFound} />
         </Switch>

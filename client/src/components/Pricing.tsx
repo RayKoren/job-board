@@ -9,6 +9,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 interface PlanFeature {
   name: string;
@@ -36,6 +39,45 @@ const PricingTier = ({
   buttonText,
   icon
 }: PricingTier) => {
+  const [_, setLocation] = useLocation();
+  const { isAuthenticated, isBusinessUser } = useAuth();
+  const { toast } = useToast();
+  
+  // Determine the plan tier ID from the name
+  const getPlanTierId = (planName: string) => {
+    const nameToTier: Record<string, string> = {
+      'Basic': 'basic',
+      'Standard': 'standard',
+      'Featured': 'featured',
+      'Unlimited': 'unlimited'
+    };
+    return nameToTier[planName] || 'basic';
+  };
+  
+  const handleSelectPlan = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to post a job with this plan.",
+      });
+      setLocation('/login');
+      return;
+    }
+    
+    if (!isBusinessUser) {
+      toast({
+        title: "Business Account Required",
+        description: "Only business users can post jobs. Please select the Business role in your profile settings.",
+      });
+      setLocation('/select-role');
+      return;
+    }
+    
+    // Redirect to payment page with plan information
+    const planTier = getPlanTierId(name);
+    setLocation(`/payment?plan=${planTier}`);
+  };
+  
   return (
     <motion.div
       whileHover={{ y: -5 }}
@@ -73,7 +115,7 @@ const PricingTier = ({
       
       <Button 
         className={`w-full ${highlighted ? 'bg-clay' : 'bg-forest'} hover:bg-opacity-90`}
-        onClick={() => window.location.href = '/post-job'}
+        onClick={handleSelectPlan}
       >
         {buttonText}
       </Button>
