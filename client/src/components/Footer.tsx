@@ -27,10 +27,10 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-bold mb-4">Quick Links</h4>
             <ul className="space-y-2">
-              <li><a href="#home" className="text-gray-300 hover:text-white transition duration-300">Home</a></li>
-              <li><a href="#about" className="text-gray-300 hover:text-white transition duration-300">About</a></li>
-              <li><a href="#services" className="text-gray-300 hover:text-white transition duration-300">Services</a></li>
-              <li><a href="#contact" className="text-gray-300 hover:text-white transition duration-300">Contact</a></li>
+              <li><a href="/" className="text-gray-300 hover:text-white transition duration-300">Home</a></li>
+              <li><a href="/#about" className="text-gray-300 hover:text-white transition duration-300">About</a></li>
+              <li><a href="/#services" className="text-gray-300 hover:text-white transition duration-300">Services</a></li>
+              <li><a href="/#contact" className="text-gray-300 hover:text-white transition duration-300">Contact</a></li>
             </ul>
           </div>
           
@@ -39,8 +39,8 @@ const Footer = () => {
             <ul className="space-y-2">
               <li><a href="#" className="text-gray-300 hover:text-white transition duration-300">Find a Job</a></li>
               <li><a href="#" className="text-gray-300 hover:text-white transition duration-300">Find a Gig</a></li>
+              <li><a href="/pricing" className="text-gray-300 hover:text-white transition duration-300">Pricing</a></li>
               <li><a href="#" className="text-gray-300 hover:text-white transition duration-300">Post a Job</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-white transition duration-300">Post a Gig</a></li>
             </ul>
           </div>
           
