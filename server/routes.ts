@@ -5,7 +5,7 @@ import { setupAuth, isAuthenticated, isBusinessUser, isJobSeeker } from "./repli
 import { z } from "zod";
 import { insertBusinessProfileSchema, insertJobSeekerProfileSchema, insertJobPostingSchema, insertJobApplicationSchema } from "@shared/schema";
 import { initDatabase } from "./db";
-import { createPaymentIntent, calculateJobPostingPrice, retrievePaymentIntent } from "./services/stripe";
+import { createPaymentIntent, retrievePaymentIntent } from "./services/stripe";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize database
@@ -370,7 +370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Payment endpoints
-  app.post('/api/create-payment-intent', isAuthenticated, isBusinessUser, async (req: any, res) => {
+  app.post('/api/payments/create-intent', isAuthenticated, isBusinessUser, async (req: any, res) => {
     try {
       const { planTier, addons } = req.body;
       
@@ -379,14 +379,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Calculate the total amount based on the plan tier and any addons
-      const amount = calculateJobPostingPrice(planTier, addons || []);
+      // Use getPriceForPlan and getPriceForAddon defined inline
+      const getPriceForPlan = (plan: string): number => {
+        switch (plan) {
+          case 'basic': return 0;
+          case 'standard': return 20.00;
+          case 'featured': return 50.00;
+          case 'unlimited': return 150.00;
+          default: return 0;
+        }
+      };
+      
+      const getPriceForAddon = (addon: string): number => {
+        switch (addon) {
+          case 'boost': return 10.00;
+          case 'highlight': return 5.00;
+          case 'urgent': return 15.00;
+          case 'extended': return 20.00;
+          default: return 0;
+        }
+      };
+      
+      // Calculate total price
+      let amount = getPriceForPlan(planTier);
+      if (addons && addons.length > 0) {
+        for (const addon of addons) {
+          amount += getPriceForAddon(addon);
+        }
+      }
       
       // Free tier doesn't need payment processing
       if (amount === 0) {
         return res.json({ 
           clientSecret: null,
           amount: 0,
-          free: true
+          freeProduct: true
         });
       }
       
@@ -403,12 +430,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         clientSecret: paymentData.clientSecret,
         amount,
-        free: false
+        freeProduct: false
       });
     } catch (error: any) {
       console.error('Payment intent creation error:', error);
       res.status(500).json({ 
         error: 'Failed to create payment intent',
+        message: error.message 
+      });
+    }
+  });
+  
+  // Get payment intent details
+  app.get('/api/payments/:paymentIntentId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { paymentIntentId } = req.params;
+      
+      if (!paymentIntentId) {
+        return res.status(400).json({ error: 'Payment intent ID is required' });
+      }
+      
+      const paymentIntent = await retrievePaymentIntent(paymentIntentId);
+      
+      // Return payment details
+      res.json({
+        id: paymentIntent.id,
+        amount: paymentIntent.amount,
+        status: paymentIntent.status,
+        created: paymentIntent.created,
+        metadata: paymentIntent.metadata
+      });
+    } catch (error: any) {
+      console.error('Error retrieving payment intent:', error);
+      res.status(500).json({ 
+        error: 'Failed to retrieve payment details',
         message: error.message 
       });
     }
@@ -421,7 +476,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const plans = {
         basic: {
           name: 'Basic',
-          price: getPriceForPlan('basic'),
+          price: 0, // Free tier
           features: [
             'Single job posting',
             'Basic listing visibility',
@@ -431,7 +486,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         standard: {
           name: 'Standard',
-          price: getPriceForPlan('standard'),
+          price: 20.00,
           features: [
             'Enhanced job listing',
             'Better search visibility',
@@ -442,7 +497,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         featured: {
           name: 'Featured',
-          price: getPriceForPlan('featured'),
+          price: 50.00,
           features: [
             'Premium job listing',
             'Top search placement',
@@ -454,7 +509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         unlimited: {
           name: 'Unlimited',
-          price: getPriceForPlan('unlimited'),
+          price: 150.00,
           features: [
             'Up to 10 active job listings',
             'Highest search visibility',
@@ -471,22 +526,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const addons = {
         boost: {
           name: 'Visibility Boost',
-          price: getPriceForAddon('boost'),
+          price: 10.00,
           description: 'Boosted search placement for 7 days'
         },
         highlight: {
           name: 'Listing Highlight',
-          price: getPriceForAddon('highlight'),
+          price: 5.00,
           description: 'Highlight your listing with a colored border'
         },
         urgent: {
           name: 'Urgent Hiring',
-          price: getPriceForAddon('urgent'),
+          price: 15.00,
           description: 'Mark as "Urgent Hiring" with special badge'
         },
         extended: {
           name: 'Extended Duration',
-          price: getPriceForAddon('extended'),
+          price: 20.00,
           description: 'Extend listing duration by 30 days'
         }
       };
