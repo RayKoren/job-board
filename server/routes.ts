@@ -5,6 +5,7 @@ import { setupAuth, isAuthenticated, isBusinessUser, isJobSeeker } from "./repli
 import { z } from "zod";
 import { insertBusinessProfileSchema, insertJobSeekerProfileSchema, insertJobPostingSchema, insertJobApplicationSchema } from "@shared/schema";
 import { initDatabase } from "./db";
+import { createPaymentIntent, calculateJobPostingPrice, retrievePaymentIntent } from "./services/stripe";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize database
