@@ -34,7 +34,7 @@ export default function LoginPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <Button className="w-full flex items-center justify-center gap-2" asChild>
-                  <a href="/api/login?newUser=true">
+                  <a href="/api/login">
                     <UserPlus className="h-5 w-5" />
                     Create Account
                   </a>

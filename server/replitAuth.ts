@@ -135,37 +135,8 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/callback", (req, res, next) => {
     passport.authenticate(`replitauth:${req.hostname}`, {
+      successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
-    }, async (err, user) => {
-      if (err) {
-        return next(err);
-      }
-      if (!user) {
-        return res.redirect('/api/login');
-      }
-      
-      req.logIn(user, async (err) => {
-        if (err) {
-          return next(err);
-        }
-        
-        const userId = user.claims.sub;
-        const existingUser = await storage.getUser(userId);
-        
-        // Check if it's a new user or user without role
-        if (!existingUser || !existingUser.role) {
-          return res.redirect('/select-role');
-        }
-        
-        // Redirect based on role
-        if (existingUser.role === 'business') {
-          return res.redirect('/business/dashboard');
-        } else if (existingUser.role === 'job_seeker') {
-          return res.redirect('/jobseeker/dashboard');
-        }
-        
-        return res.redirect('/');
-      });
     })(req, res, next);
   });
 

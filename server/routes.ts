@@ -30,6 +30,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Check if user needs role selection
+  app.get('/api/auth/check-role', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.role) {
+        return res.json({ needsRoleSelection: true });
+      }
+      
+      res.json({ 
+        needsRoleSelection: false,
+        role: user.role,
+        dashboardUrl: user.role === 'business' ? '/business/dashboard' : '/jobseeker/dashboard'
+      });
+    } catch (error) {
+      console.error("Error checking user role:", error);
+      res.status(500).json({ message: "Failed to check user role" });
+    }
+  });
+  
   // Role selection
   app.get('/api/auth/select-role/:role', isAuthenticated, async (req: any, res) => {
     try {

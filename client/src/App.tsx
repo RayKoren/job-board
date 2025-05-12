@@ -32,12 +32,18 @@ function ProtectedRoute({
   component: React.ComponentType<any>, 
   requiredRole?: 'business' | 'job_seeker' 
 }) {
-  const { isAuthenticated, isBusinessUser, isJobSeeker } = useAuth();
+  const { isAuthenticated, isBusinessUser, isJobSeeker, user } = useAuth();
   const [, setLocation] = useLocation();
 
   if (!isAuthenticated) {
     // Redirect to login if not authenticated
-    setLocation('/');
+    setLocation('/login');
+    return null;
+  }
+  
+  // Check if user needs to select a role
+  if (user && !user.role) {
+    setLocation('/select-role');
     return null;
   }
 
