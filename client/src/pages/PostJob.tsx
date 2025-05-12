@@ -642,7 +642,7 @@ export default function PostJob() {
                               I agree to the terms and conditions
                             </FormLabel>
                             <FormDescription>
-                              By posting this job, you agree to our <a href="#" className="underline text-forest">Terms of Service</a> and <a href="#" className="underline text-forest">Privacy Policy</a>.
+                              By posting this job, you agree to our <a href="/terms" className="underline text-forest">Terms of Service</a> and <a href="/privacy" className="underline text-forest">Privacy Policy</a>.
                             </FormDescription>
                             <FormMessage />
                           </div>
