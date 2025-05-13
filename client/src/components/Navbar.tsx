@@ -56,7 +56,6 @@ const Navbar = () => {
           <a href={isHomePage ? "#services" : "/#services"} className="font-medium text-brown hover:text-forest transition duration-300">Services</a>
           <a href={isHomePage ? "#contact" : "/#contact"} className="font-medium text-brown hover:text-forest transition duration-300">Contact</a>
           <a href="/jobs" className={`font-medium ${isJobListingsPage ? "text-forest font-semibold" : "text-brown"} hover:text-forest transition duration-300`}>Jobs</a>
-          <a href="/pricing" className={`font-medium ${isPricingPage ? "text-forest font-semibold" : "text-clay"} hover:text-forest transition duration-300`}>Pricing</a>
           <a href="/post-job" className={`font-medium ${isPostJobPage ? "text-forest font-semibold" : "text-brown"} hover:text-forest transition duration-300`}>Post Job</a>
           
           {isAuthenticated && isBusinessUser && (
@@ -139,13 +138,6 @@ const Navbar = () => {
             onClick={closeMobileMenu}
           >
             Jobs
-          </a>
-          <a 
-            href="/pricing" 
-            className={`font-medium ${isPricingPage ? "text-forest font-semibold" : "text-clay"} hover:text-forest transition duration-300`}
-            onClick={closeMobileMenu}
-          >
-            Pricing
           </a>
           <a 
             href="/post-job" 
