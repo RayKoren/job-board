@@ -28,6 +28,7 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
+  Loader2,
 } from 'lucide-react';
 import {
   Accordion,
@@ -36,193 +37,34 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
+import { formatDistanceToNow } from 'date-fns';
 
-// Mock data for job listings
-const MOCK_JOBS = [
-  {
-    id: 1,
-    title: 'Marketing Manager',
-    company: 'Sheridan Digital',
-    location: 'Sheridan, WY',
-    type: 'Full-time',
-    compensationType: 'salary',
-    salaryRange: '$60,000 - $80,000/year',
-    hourlyRate: null,
-    posted: '2 days ago',
-    featured: true,
-    description: 'We are seeking a Marketing Manager to lead our digital marketing efforts...',
-    tags: ['Marketing', 'Management', 'Digital Media'],
-  },
-  {
-    id: 2,
-    title: 'Barista',
-    company: 'Mountain Brew Coffee',
-    location: 'Sheridan, WY',
-    type: 'Part-time',
-    compensationType: 'hourly',
-    salaryRange: null,
-    hourlyRate: '$15 - $18/hour',
-    posted: '1 day ago',
-    featured: false,
-    description: 'Join our team as a barista in our busy downtown location...',
-    tags: ['Food Service', 'Customer Service'],
-  },
-  {
-    id: 3,
-    title: 'Ranch Hand',
-    company: 'Diamond Ranch',
-    location: 'Dayton, WY',
-    type: 'Full-time',
-    compensationType: 'both',
-    salaryRange: '$40,000 - $50,000/year',
-    hourlyRate: '$18 - $22/hour',
-    posted: '5 days ago',
-    featured: false,
-    description: 'Experienced ranch hand needed for cattle operations and general maintenance...',
-    tags: ['Agriculture', 'Outdoor', 'Physical Labor'],
-  },
-  {
-    id: 4,
-    title: 'Web Developer',
-    company: 'Tech Innovations',
-    location: 'Remote (Wyoming-based)',
-    type: 'Contract',
-    compensationType: 'hourly',
-    salaryRange: null,
-    hourlyRate: '$30 - $45/hour',
-    posted: '3 days ago',
-    featured: true,
-    description: 'Looking for a frontend developer with React experience for a 6-month project...',
-    tags: ['IT', 'Developer', 'Remote'],
-  },
-  {
-    id: 5,
-    title: 'Retail Associate',
-    company: 'Main Street Boutique',
-    location: 'Sheridan, WY',
-    type: 'Part-time',
-    compensationType: 'hourly',
-    salaryRange: null,
-    hourlyRate: '$14 - $16/hour',
-    posted: '1 week ago',
-    featured: false,
-    description: 'Customer-focused retail associate needed for women\'s clothing boutique...',
-    tags: ['Retail', 'Customer Service', 'Sales'],
-  },
-  {
-    id: 6,
-    title: 'Construction Worker',
-    company: 'Mountain Build Co.',
-    location: 'Sheridan, WY',
-    type: 'Full-time',
-    compensationType: 'hourly',
-    salaryRange: null,
-    hourlyRate: '$22 - $28/hour',
-    posted: '4 days ago',
-    featured: false,
-    description: 'Experienced construction worker for residential and commercial projects...',
-    tags: ['Construction', 'Physical Labor', 'Skilled Trade'],
-  },
-  {
-    id: 7,
-    title: 'Administrative Assistant',
-    company: 'Sheridan Legal',
-    location: 'Sheridan, WY',
-    type: 'Full-time',
-    compensationType: 'salary',
-    salaryRange: '$35,000 - $45,000/year',
-    hourlyRate: null,
-    posted: '3 days ago',
-    featured: false,
-    description: 'Administrative assistant for busy law office. Legal experience preferred...',
-    tags: ['Administrative', 'Office', 'Legal'],
-  },
-  {
-    id: 8,
-    title: 'Home Health Aide',
-    company: 'Caring Connections',
-    location: 'Sheridan County, WY',
-    type: 'Part-time',
-    compensationType: 'hourly',
-    salaryRange: null,
-    hourlyRate: '$16 - $19/hour',
-    posted: '2 days ago',
-    featured: true,
-    description: 'Compassionate caregivers needed for in-home senior care services...',
-    tags: ['Healthcare', 'Caregiving', 'Senior Care'],
-  },
-  {
-    id: 9,
-    title: 'Accounting Clerk',
-    company: 'Wyoming Financial',
-    location: 'Sheridan, WY',
-    type: 'Full-time',
-    compensationType: 'salary',
-    salaryRange: '$38,000 - $45,000/year',
-    hourlyRate: null,
-    posted: '1 week ago',
-    featured: false,
-    description: 'Entry-level accounting position with opportunity for growth...',
-    tags: ['Accounting', 'Finance', 'Entry Level'],
-  },
-  {
-    id: 10,
-    title: 'Landscaper',
-    company: 'Green Earth Landscaping',
-    location: 'Sheridan, WY',
-    type: 'Seasonal',
-    compensationType: 'hourly',
-    salaryRange: null,
-    hourlyRate: '$17 - $20/hour',
-    posted: '5 days ago',
-    featured: false,
-    description: 'Landscape maintenance, lawn care, and garden installation team members needed...',
-    tags: ['Outdoor', 'Physical Labor', 'Seasonal'],
-  },
-  {
-    id: 11,
-    title: 'Server/Bartender',
-    company: 'Mountain View Grill',
-    location: 'Big Horn, WY',
-    type: 'Part-time',
-    compensationType: 'hourly',
-    salaryRange: null,
-    hourlyRate: '$12 - $18/hour + tips',
-    posted: '2 days ago',
-    featured: false,
-    description: 'Experienced server/bartender for upscale casual restaurant...',
-    tags: ['Food Service', 'Customer Service', 'Hospitality'],
-  },
-  {
-    id: 12,
-    title: 'Truck Driver',
-    company: 'Wyoming Transport',
-    location: 'Sheridan, WY',
-    type: 'Full-time',
-    compensationType: 'both',
-    salaryRange: '$50,000 - $70,000/year',
-    hourlyRate: '$22 - $28/hour',
-    posted: '3 days ago',
-    featured: true,
-    description: 'CDL driver for regional routes. Home most weekends...',
-    tags: ['Transportation', 'CDL', 'Driving'],
-  },
-];
-
-// Interface for job listings
+// Interface for job listings from the database
 interface Job {
   id: number;
+  businessUserId: string;
   title: string;
   company: string;
   location: string;
   type: string;
-  compensationType: string;
-  salaryRange: string | null;
-  hourlyRate: string | null;
-  posted: string;
-  featured: boolean;
   description: string;
+  requirements: string;
+  benefits?: string | null;
+  compensationType: string;
+  salaryRange?: string | null;
+  hourlyRate?: string | null;
+  contactEmail?: string | null;
+  applicationUrl?: string | null;
+  contactPhone?: string | null;
+  status: string;
+  plan: string;
+  addons: string[];
+  featured: boolean;
+  expiresAt?: string | null;
   tags: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function JobListings() {
@@ -235,15 +77,22 @@ export default function JobListings() {
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState('dateDesc');
   
-  // State for filtered jobs
-  const [filteredJobs, setFilteredJobs] = useState<Job[]>(MOCK_JOBS);
+  // Fetch jobs from the API
+  const { data: jobs, isLoading } = useQuery<Job[]>({
+    queryKey: ['/api/jobs'],
+  });
   
   // Available job types for filtering
   const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Gig', 'Internship', 'Seasonal'];
   
+  // State for filtered jobs
+  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
+  
   // Filter jobs based on selected filters
   useEffect(() => {
-    let result = MOCK_JOBS;
+    if (!jobs) return;
+    
+    let result = [...jobs];
     
     // Search query filter
     if (searchQuery) {
@@ -252,7 +101,7 @@ export default function JobListings() {
         job.title.toLowerCase().includes(query) || 
         job.company.toLowerCase().includes(query) || 
         job.description.toLowerCase().includes(query) ||
-        job.tags.some(tag => tag.toLowerCase().includes(query))
+        (job.tags && job.tags.some(tag => tag.toLowerCase().includes(query)))
       );
     }
     
@@ -279,15 +128,15 @@ export default function JobListings() {
     
     // Sort results
     if (sortBy === 'dateDesc') {
-      // Already sorted by default in our mock data
+      result = [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     } else if (sortBy === 'dateAsc') {
-      result = [...result].reverse();
+      result = [...result].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     } else if (sortBy === 'featured') {
       result = [...result].sort((a, b) => (a.featured === b.featured) ? 0 : a.featured ? -1 : 1);
     }
     
     setFilteredJobs(result);
-  }, [searchQuery, jobType, location, compensationFilter, minSalary, sortBy]);
+  }, [jobs, searchQuery, jobType, location, compensationFilter, minSalary, sortBy]);
   
   // Handle job type filter changes
   const toggleJobType = (type: string) => {
