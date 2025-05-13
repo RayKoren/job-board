@@ -53,7 +53,7 @@ export function setupAuth(app: Express) {
     authorizationParams: {
       response_type: 'code',
       scope: 'openid profile email',
-      redirect_uri: `${baseURL}/callback` // Explicitly set the callback URL
+      // No need to set redirect_uri as it's automatically derived from baseURL + routes.callback
     },
   };
 
@@ -62,12 +62,27 @@ export function setupAuth(app: Express) {
   
   // Add custom login route for API compatibility
   app.get('/api/login', (req, res) => {
-    res.oidc.login({ returnTo: '/' });
+    console.log("Handling /api/login request, redirecting to Auth0");
+    res.oidc.login({
+      returnTo: '/',
+      // Use the Auth0 UI for login
+      authorizationParams: {
+        response_type: 'code',
+        prompt: 'login'
+      }
+    });
   });
   
   // Add custom logout route for API compatibility
   app.get('/api/logout', (req, res) => {
-    res.oidc.logout({ returnTo: '/' });
+    console.log("Handling /api/logout request");
+    res.oidc.logout({ 
+      returnTo: '/',
+      // Make sure we fully log out
+      logoutParams: {
+        federated: 'true' 
+      }
+    });
   });
 
   // Handle profile route - this is where users are redirected after login
