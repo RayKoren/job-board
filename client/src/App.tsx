@@ -38,8 +38,8 @@ function ProtectedRoute({
   const [, setLocation] = useLocation();
 
   if (!isAuthenticated) {
-    // Redirect to API login route if not authenticated
-    window.location.href = '/api/login';
+    // Redirect to login page if not authenticated
+    setLocation('/login');
     return null;
   }
   
@@ -70,6 +70,7 @@ function App() {
       <AuthProvider>
         <Switch>
           <Route path="/" component={Home} />
+          <Route path="/login" component={LoginPage} />
           <Route path="/select-role" component={RoleSelection} />
           <Route path="/pricing" component={() => {
             return (

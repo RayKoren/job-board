@@ -1,9 +1,11 @@
 import { ReactNode, useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { RoleSelection } from "@/components/RoleSelection";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { LogIn, LogOut } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -44,6 +46,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
 export function LoginButton() {
   const { isAuthenticated, user } = useAuth();
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
+  
+  const handleLogout = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      await apiRequest("GET", "/api/logout", undefined);
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
+      navigate("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
   
   if (isAuthenticated && user) {
     return (
@@ -57,28 +76,24 @@ export function LoginButton() {
         )}
         <div className="hidden md:block">
           <p className="text-sm font-medium text-forest">
-            {user.firstName ? `${user.firstName} ${user.lastName || ''}` : 'User'}
+            {user.firstName ? `${user.firstName} ${user.lastName || ''}` : user.email || 'User'}
           </p>
           <p className="text-xs text-gray-500">
             {user.role === 'business' ? 'Business Account' : 'Job Seeker'}
           </p>
         </div>
-        <Button variant="outline" size="sm" asChild>
-          <a href="/api/logout" className="flex items-center gap-2">
-            <LogOut className="w-4 h-4" />
-            <span className="hidden md:inline">Logout</span>
-          </a>
+        <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center gap-2">
+          <LogOut className="w-4 h-4" />
+          <span className="hidden md:inline">Logout</span>
         </Button>
       </div>
     );
   }
   
   return (
-    <Button variant="default" size="sm" asChild>
-      <a href="/api/login" className="flex items-center gap-2">
-        <LogIn className="w-4 h-4" />
-        <span>Login</span>
-      </a>
+    <Button variant="default" size="sm" onClick={() => navigate("/login")} className="flex items-center gap-2">
+      <LogIn className="w-4 h-4" />
+      <span>Login</span>
     </Button>
   );
 }

@@ -1,78 +1,152 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+
+// Components
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogIn, UserPlus, Home } from "lucide-react";
-import { Link } from "wouter";
+import { LogIn, Mail } from "lucide-react";
+
+// Form schema
+const loginSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address" }),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
+
+  // Form setup
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  // Form submission handler
+  const onSubmit = async (data: LoginFormValues) => {
+    setIsLoading(true);
+    try {
+      const response = await apiRequest("POST", "/api/login", data);
+      const result = await response.json();
+      
+      // Invalidate the user query to refresh auth state
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      
+      // If user needs to select a role, show a message
+      if (result.needsRoleSelection) {
+        toast({
+          title: "Welcome!",
+          description: "Please select your account type to continue.",
+        });
+      } else {
+        toast({
+          title: "Login successful",
+          description: "Welcome back!",
+        });
+      }
+      
+      // Redirect to home page
+      navigate("/");
+      
+    } catch (error) {
+      console.error("Login error:", error);
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: "Please check your email and try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="absolute top-4 left-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/">
-            <Home className="h-5 w-5" />
-            <span className="sr-only">Home</span>
-          </Link>
-        </Button>
-      </div>
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <h2 className="mt-6 text-3xl font-extrabold text-forest">Sheridan Jobs</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Connect with local businesses and job opportunities in Sheridan, Wyoming
-          </p>
-        </div>
-        
-        <div className="mt-8 space-y-6">
-          <div className="grid gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Welcome to Sheridan Jobs</CardTitle>
-                <CardDescription>
-                  Choose an option to continue
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Button className="w-full flex items-center justify-center gap-2" asChild>
-                  <a href="/api/login">
-                    <UserPlus className="h-5 w-5" />
-                    Create Account
-                  </a>
-                </Button>
-                
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
+    <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-12">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
+          <CardDescription className="text-center">
+            Enter your email to sign in to your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                        <Input
+                          placeholder="your.email@example.com"
+                          className="pl-10"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin mr-2 h-4 w-4 border-2 border-b-transparent rounded-full"></div>
+                    Signing in...
                   </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-muted-foreground">Or</span>
+                ) : (
+                  <div className="flex items-center justify-center">
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Sign In
                   </div>
-                </div>
-                
-                <Button variant="outline" className="w-full flex items-center justify-center gap-2" asChild>
-                  <a href="/api/login">
-                    <LogIn className="h-5 w-5" />
-                    Log In
-                  </a>
-                </Button>
-              </CardContent>
-              <CardFooter className="flex flex-col">
-                <p className="text-xs text-center text-muted-foreground mt-2">
-                  By continuing, you agree to our{" "}
-                  <Link to="/terms" className="underline underline-offset-4 hover:text-primary">
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link to="/privacy" className="underline underline-offset-4 hover:text-primary">
-                    Privacy Policy
-                  </Link>
-                  .
-                </p>
-              </CardFooter>
-            </Card>
+                )}
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+        <CardFooter className="flex flex-col space-y-4">
+          <div className="text-center text-sm text-muted-foreground mt-2">
+            <p>
+              Don't have an account? Just enter your email and we'll create one for you.
+            </p>
           </div>
-        </div>
-      </div>
+        </CardFooter>
+      </Card>
     </div>
   );
 }
