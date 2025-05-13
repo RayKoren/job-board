@@ -8,10 +8,10 @@ const Hero = () => {
       id="home" 
       className="relative h-screen bg-cover bg-center brightness-110"
       style={{ 
-        backgroundImage: `url(${wyomingSheridan})` 
+        backgroundImage: `url(${wyomingMountains})` 
       }}
     >
-      <div className="absolute inset-0 bg-black bg-opacity-25"></div>
+      <div className="absolute inset-0 bg-black bg-opacity-35"></div>
       <div className="container mx-auto px-4 h-full flex items-center relative z-10">
         <div className="text-white max-w-2xl">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
