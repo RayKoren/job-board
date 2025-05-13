@@ -78,7 +78,7 @@ export default function JobListings() {
   const [sortBy, setSortBy] = useState('dateDesc');
   
   // Fetch jobs from the API
-  const { data: jobs, isLoading } = useQuery<Job[]>({
+  const { data: jobs, isLoading, isError } = useQuery<Job[]>({
     queryKey: ['/api/jobs'],
   });
   
@@ -302,46 +302,62 @@ export default function JobListings() {
             )}
           </div>
           
-          {/* Results info */}
-          <div className="flex justify-between items-center mb-4">
-            <p className="text-brown">
-              {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'} found
-            </p>
-            {(jobType.length > 0 || location || compensationFilter || minSalary > 0) && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-forest flex items-center gap-1"
-                onClick={clearFilters}
-              >
-                <X size={14} />
-                Clear filters
-              </Button>
-            )}
-          </div>
-          
-          {/* Job listings */}
-          <div className="space-y-4">
-            {filteredJobs.length > 0 ? (
-              filteredJobs.map((job) => (
-                <JobCard key={job.id} job={job} />
-              ))
-            ) : (
-              <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">No jobs found</h3>
-                <p className="text-brown mb-4">
-                  Try adjusting your search or filter criteria to find more jobs.
+          {/* Job listings and loading states */}
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 size={40} className="animate-spin text-forest" />
+            </div>
+          ) : isError ? (
+            <div className="bg-red-50 rounded-lg shadow-sm p-8 text-center">
+              <h3 className="text-xl font-semibold text-red-700 mb-2">Error loading jobs</h3>
+              <p className="text-red-600 mb-4">
+                There was a problem retrieving job listings. Please try again later.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Results info */}
+              <div className="flex justify-between items-center mb-4">
+                <p className="text-brown">
+                  {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'} found
                 </p>
-                <Button 
-                  variant="outline" 
-                  onClick={clearFilters}
-                  className="text-forest border-forest"
-                >
-                  Clear All Filters
-                </Button>
+                {(jobType.length > 0 || location || compensationFilter || minSalary > 0) && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-forest flex items-center gap-1"
+                    onClick={clearFilters}
+                  >
+                    <X size={14} />
+                    Clear filters
+                  </Button>
+                )}
               </div>
-            )}
-          </div>
+              
+              {/* Job listings */}
+              <div className="space-y-4">
+                {filteredJobs.length > 0 ? (
+                  filteredJobs.map((job) => (
+                    <JobCard key={job.id} job={job} />
+                  ))
+                ) : (
+                  <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+                    <h3 className="text-xl font-semibold text-gray-700 mb-2">No jobs found</h3>
+                    <p className="text-brown mb-4">
+                      Try adjusting your search or filter criteria to find more jobs.
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      onClick={clearFilters}
+                      className="text-forest border-forest"
+                    >
+                      Clear All Filters
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </main>
       
@@ -400,7 +416,7 @@ function JobCard({ job }: { job: Job }) {
                 )}
                 <div className="flex items-center">
                   <CalendarRange className="h-4 w-4 mr-2 text-clay" />
-                  <span>Posted {job.posted}</span>
+                  <span>Posted {formatDistanceToNow(new Date(job.createdAt))} ago</span>
                 </div>
               </div>
               
