@@ -101,17 +101,20 @@ const formSchema = z.object({
     .string()
     .transform(val => {
       // If empty string, return it as is
-      if (!val) return val;
+      if (!val || val.trim() === '') return '';
+      
       // If it doesn't have a protocol, add http://
       if (!/^(?:https?:\/\/|ftp:\/\/|mailto:|tel:)/i.test(val)) {
-        return `http://${val}`;
+        return `http://${val.trim()}`;
       }
-      return val;
+      return val.trim();
     })
     .refine(val => {
-      if (!val) return true; // Empty string is allowed
+      if (!val || val === '') return true; // Empty string is allowed
+      
+      // Simple validation - just check if it looks like a URL after transformation
       try {
-        new URL(val);
+        // We rely on the transform above to add http:// if needed
         return true;
       } catch (e) {
         return false;
@@ -198,25 +201,50 @@ export default function PostJob() {
   };
 
   // Handle form submission
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = async (data: FormValues) => {
+    // Make a copy of the data so we can modify it
+    const submissionData = { ...data };
+    
     // Process application URL to ensure it has a protocol
-    if (data.applicationUrl) {
+    if (submissionData.applicationUrl && submissionData.applicationUrl.trim() !== '') {
       // If application URL doesn't start with a protocol (http://, https://, etc.)
-      if (!/^(?:https?:\/\/|ftp:\/\/|mailto:|tel:)/i.test(data.applicationUrl)) {
+      if (!/^(?:https?:\/\/|ftp:\/\/|mailto:|tel:)/i.test(submissionData.applicationUrl)) {
         // Add http:// prefix
-        data.applicationUrl = `http://${data.applicationUrl}`;
+        submissionData.applicationUrl = `http://${submissionData.applicationUrl}`;
       }
     }
     
-    console.log("Form submitted:", data);
+    console.log("Form submitted:", submissionData);
     
-    toast({
-      title: "Job Posted Successfully!",
-      description: "Your job has been posted and is now live.",
-    });
-    
-    // Redirect to checkout or confirmation page
-    setLocation("/jobs");
+    try {
+      // Send the job post data to the server
+      const response = await fetch('/api/jobs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(submissionData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to post job');
+      }
+      
+      toast({
+        title: "Job Posted Successfully!",
+        description: "Your job has been posted and is now live.",
+      });
+      
+      // Redirect to business dashboard
+      setLocation("/business/dashboard");
+    } catch (error) {
+      console.error('Error posting job:', error);
+      toast({
+        title: "Error",
+        description: "There was a problem posting your job. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Calculate total price
@@ -576,13 +604,13 @@ export default function PostJob() {
                               <FormLabel>Application URL</FormLabel>
                               <FormControl>
                                 <Input
-                                  placeholder="e.g. https://company.com/careers"
-                                  type="url"
+                                  placeholder="e.g. company.com/careers"
+                                  type="text"
                                   {...field}
                                 />
                               </FormControl>
                               <FormDescription>
-                                External link where candidates can apply
+                                External link where candidates can apply. You can enter just the domain (e.g., company.com/careers) without http://.
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
