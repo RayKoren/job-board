@@ -99,10 +99,26 @@ const formSchema = z.object({
     .optional(),
   applicationUrl: z
     .string()
-    .url({
-      message: "Please enter a valid URL.",
+    .transform(val => {
+      // If empty string, return it as is
+      if (!val) return val;
+      // If it doesn't have a protocol, add http://
+      if (!/^(?:https?:\/\/|ftp:\/\/|mailto:|tel:)/i.test(val)) {
+        return `http://${val}`;
+      }
+      return val;
     })
-    .optional(),
+    .refine(val => {
+      if (!val) return true; // Empty string is allowed
+      try {
+        new URL(val);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }, "Please enter a valid URL.")
+    .optional()
+    .or(z.literal("")),
   contactPhone: z.string().optional(),
   plan: z.enum(["basic", "standard", "featured", "unlimited"], {
     message: "Please select a plan.",
@@ -183,6 +199,15 @@ export default function PostJob() {
 
   // Handle form submission
   const onSubmit = (data: FormValues) => {
+    // Process application URL to ensure it has a protocol
+    if (data.applicationUrl) {
+      // If application URL doesn't start with a protocol (http://, https://, etc.)
+      if (!/^(?:https?:\/\/|ftp:\/\/|mailto:|tel:)/i.test(data.applicationUrl)) {
+        // Add http:// prefix
+        data.applicationUrl = `http://${data.applicationUrl}`;
+      }
+    }
+    
     console.log("Form submitted:", data);
     
     toast({
