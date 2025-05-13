@@ -17,7 +17,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Business profile routes
   app.post('/api/business/profile', isBusinessUser, async (req: any, res) => {
     try {
-      const userId = req.oidc.user.sub;
+      const userId = req.session.user.id;
       
       // Validate profile data
       const profileData = insertBusinessProfileSchema.parse({
@@ -35,7 +35,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get('/api/business/profile', isBusinessUser, async (req: any, res) => {
     try {
-      const userId = req.oidc.user.sub;
+      const userId = req.session.user.id;
       const profile = await storage.getBusinessProfile(userId);
       
       if (!profile) {
@@ -52,7 +52,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Job seeker profile routes
   app.post('/api/job-seeker/profile', isJobSeeker, async (req: any, res) => {
     try {
-      const userId = req.oidc.user.sub;
+      const userId = req.session.user.id;
       
       // Validate profile data
       const profileData = insertJobSeekerProfileSchema.parse({
@@ -70,7 +70,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get('/api/job-seeker/profile', isJobSeeker, async (req: any, res) => {
     try {
-      const userId = req.oidc.user.sub;
+      const userId = req.session.user.id;
       const profile = await storage.getJobSeekerProfile(userId);
       
       if (!profile) {
@@ -87,7 +87,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Job posting routes
   app.post('/api/jobs', isBusinessUser, async (req: any, res) => {
     try {
-      const userId = req.oidc.user.sub;
+      const userId = req.session.user.id;
       
       // Validate job posting data
       const jobData = insertJobPostingSchema.parse({
@@ -130,7 +130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get business job postings
   app.get('/api/business/jobs', isBusinessUser, async (req: any, res) => {
     try {
-      const userId = req.oidc.user.sub;
+      const userId = req.session.user.id;
       const jobs = await storage.getJobPostings({ businessUserId: userId });
       res.json(jobs);
     } catch (error) {
@@ -294,7 +294,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's job applications (job seeker only)
   app.get('/api/my-applications', isJobSeeker, async (req: any, res) => {
     try {
-      const userId = req.oidc.user.sub;
+      const userId = req.session.user.id;
       const applications = await storage.getJobApplicationsForUser(userId);
       res.json(applications);
     } catch (error) {
