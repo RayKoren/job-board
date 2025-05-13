@@ -90,7 +90,10 @@ export default function JobListings() {
   
   // Filter jobs based on selected filters
   useEffect(() => {
-    if (!jobs) return;
+    if (!jobs) {
+      setFilteredJobs([]);
+      return;
+    }
     
     let result = [...jobs];
     
@@ -416,7 +419,15 @@ function JobCard({ job }: { job: Job }) {
                 )}
                 <div className="flex items-center">
                   <CalendarRange className="h-4 w-4 mr-2 text-clay" />
-                  <span>Posted {formatDistanceToNow(new Date(job.createdAt))} ago</span>
+                  <span>Posted {
+                    (() => {
+                      try {
+                        return formatDistanceToNow(new Date(job.createdAt)) + ' ago';
+                      } catch (e) {
+                        return 'recently';
+                      }
+                    })()
+                  }</span>
                 </div>
               </div>
               
