@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search, ExternalLink, User, MapPin, FileText, Phone, Mail, Calendar, Clock } from "lucide-react";
+import { Loader2, Search, ExternalLink, User, MapPin, FileText, Phone, Mail, Calendar, Clock, Home } from "lucide-react";
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -58,6 +58,13 @@ export default function JobSeekerDashboard() {
           <Button variant="outline" asChild>
             <Link to="/job-seeker/profile">
               Edit Profile
+            </Link>
+          </Button>
+          
+          <Button variant="ghost" asChild>
+            <Link to="/" className="flex items-center gap-2">
+              <Home className="w-4 h-4" />
+              Home
             </Link>
           </Button>
         </div>
