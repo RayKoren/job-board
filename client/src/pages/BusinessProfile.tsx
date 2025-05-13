@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,7 +17,27 @@ const formSchema = z.object({
   companyName: z.string().min(2, "Company name must be at least 2 characters"),
   industry: z.string().optional(),
   location: z.string().optional(),
-  website: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  website: z.string()
+    .transform(val => {
+      // If empty string, return it as is
+      if (!val) return val;
+      // If it doesn't have a protocol, add http://
+      if (!/^(?:https?:\/\/|ftp:\/\/|mailto:|tel:)/i.test(val)) {
+        return `http://${val}`;
+      }
+      return val;
+    })
+    .refine(val => {
+      if (!val) return true; // Empty string is allowed
+      try {
+        new URL(val);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }, "Must be a valid URL")
+    .optional()
+    .or(z.literal("")),
   description: z.string().optional(),
   phone: z.string().optional(),
 });
@@ -30,8 +50,18 @@ export default function BusinessProfile() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
 
+  // Define business profile interface
+  interface BusinessProfile {
+    companyName: string;
+    industry?: string;
+    location?: string;
+    website?: string;
+    description?: string;
+    contactPhone?: string;
+  }
+
   // Fetch existing profile data
-  const { data: profileData, isLoading: isLoadingProfile } = useQuery({
+  const { data: profileData, isLoading: isLoadingProfile } = useQuery<BusinessProfile>({
     queryKey: ["/api/business/profile"],
     enabled: isAuthenticated && isBusinessUser,
   });
@@ -49,19 +79,30 @@ export default function BusinessProfile() {
   });
 
   // When profile data is loaded, update the form values
-  if (profileData && !form.formState.isDirty) {
-    form.reset({
-      companyName: profileData.companyName || "",
-      industry: profileData.industry || "",
-      location: profileData.location || "",
-      website: profileData.website || "",
-      description: profileData.description || "",
-      phone: profileData.phone || "",
-    });
-  }
+  useEffect(() => {
+    if (profileData && !form.formState.isDirty) {
+      form.reset({
+        companyName: profileData.companyName || "",
+        industry: profileData.industry || "",
+        location: profileData.location || "",
+        website: profileData.website || "",
+        description: profileData.description || "",
+        phone: profileData.contactPhone || "",
+      });
+    }
+  }, [profileData, form.formState.isDirty, form.reset]);
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
+    
+    // Process website URL to ensure it has a protocol
+    if (data.website) {
+      // If website doesn't start with a protocol (http://, https://, etc.)
+      if (!/^(?:https?:\/\/|ftp:\/\/|mailto:|tel:)/i.test(data.website)) {
+        // Add http:// prefix
+        data.website = `http://${data.website}`;
+      }
+    }
     
     try {
       await apiRequest("POST", "/api/business/profile", data);
