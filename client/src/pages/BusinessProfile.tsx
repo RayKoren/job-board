@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 
 const formSchema = z.object({
   companyName: z.string().min(2, "Company name must be at least 2 characters"),
@@ -92,6 +93,8 @@ export default function BusinessProfile() {
     }
   }, [profileData, form.formState.isDirty, form.reset]);
 
+  const [location, navigate] = useLocation();
+  
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     
@@ -115,6 +118,9 @@ export default function BusinessProfile() {
         title: "Profile updated",
         description: "Your business profile has been updated successfully.",
       });
+      
+      // Redirect to the business dashboard
+      navigate("/business/dashboard");
     } catch (error) {
       console.error("Error updating business profile:", error);
       toast({
