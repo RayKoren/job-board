@@ -232,7 +232,13 @@ export default function BusinessDashboard() {
                 
                 <div className="flex items-center text-sm text-gray-500">
                   <Calendar className="w-4 h-4 mr-1" />
-                  Posted {formatDistanceToNow(new Date(job.postedAt), { addSuffix: true })}
+                  Posted {(() => {
+                    try {
+                      return formatDistanceToNow(new Date(job.createdAt), { addSuffix: true });
+                    } catch (e) {
+                      return 'recently';
+                    }
+                  })()}
                 </div>
               </CardContent>
               
