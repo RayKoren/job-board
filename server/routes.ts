@@ -210,7 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/jobs/:jobId/apply', isAuthenticated, async (req: any, res) => {
     try {
       const jobId = parseInt(req.params.jobId);
-      const userId = req.oidc.user.sub;
+      const userId = req.session.user.id;
       
       // Verify job exists
       const job = await storage.getJobPosting(jobId);
@@ -237,7 +237,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/jobs/:id/applications', isBusinessUser, async (req: any, res) => {
     try {
       const jobId = parseInt(req.params.id);
-      const userId = req.oidc.user.sub;
+      const userId = req.session.user.id;
       
       // Verify job belongs to this business
       const job = await storage.getJobPosting(jobId);
@@ -263,7 +263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const applicationId = parseInt(req.params.id);
       const { status } = req.body;
-      const userId = req.oidc.user.sub;
+      const userId = req.session.user.id;
       
       // Validate status
       if (!['pending', 'reviewed', 'contacted', 'rejected'].includes(status)) {
