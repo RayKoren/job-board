@@ -160,7 +160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/jobs/:id', isBusinessUser, async (req: any, res) => {
     try {
       const jobId = parseInt(req.params.id);
-      const userId = req.oidc.user.sub;
+      const userId = req.session.user.id;
       
       // Verify job belongs to this business
       const job = await storage.getJobPosting(jobId);
@@ -185,7 +185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/jobs/:id', isBusinessUser, async (req: any, res) => {
     try {
       const jobId = parseInt(req.params.id);
-      const userId = req.oidc.user.sub;
+      const userId = req.session.user.id;
       
       // Verify job belongs to this business
       const job = await storage.getJobPosting(jobId);
@@ -355,7 +355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const paymentData = await createPaymentIntent({ 
         amount,
         metadata: { 
-          userId: req.oidc.user.sub,
+          userId: req.session.user.id,
           planTier,
           addons: addons ? JSON.stringify(addons) : '[]'
         }
