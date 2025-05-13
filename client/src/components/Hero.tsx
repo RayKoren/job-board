@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
-import wyomingHero2 from "../assets/wyoming-hero2.jpg";
-import wyomingHero3 from "../assets/wyoming-hero3.jpg";
+import wyomingSheridan from "../assets/wyoming-sheridan.jpg";
+import wyomingMountains from "../assets/wyoming-mountains.jpg";
 
 const Hero = () => {
   return (
@@ -8,7 +8,7 @@ const Hero = () => {
       id="home" 
       className="relative h-screen bg-cover bg-center brightness-110"
       style={{ 
-        backgroundImage: `url(${wyomingHero2})` 
+        backgroundImage: `url(${wyomingSheridan})` 
       }}
     >
       <div className="absolute inset-0 bg-black bg-opacity-25"></div>
