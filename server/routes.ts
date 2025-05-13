@@ -304,104 +304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Payment endpoints
-  app.post('/api/payments/create-intent', isAuthenticated, isBusinessUser, async (req: any, res) => {
-    try {
-      const { planTier, addons } = req.body;
-      
-      if (!planTier) {
-        return res.status(400).json({ error: 'Plan tier is required' });
-      }
-      
-      // Calculate the total amount based on the plan tier and any addons
-      // Use getPriceForPlan and getPriceForAddon defined inline
-      const getPriceForPlan = (plan: string): number => {
-        switch (plan) {
-          case 'basic': return 0;
-          case 'standard': return 20.00;
-          case 'featured': return 50.00;
-          case 'unlimited': return 150.00;
-          default: return 0;
-        }
-      };
-      
-      const getPriceForAddon = (addon: string): number => {
-        switch (addon) {
-          case 'boost': return 10.00;
-          case 'highlight': return 5.00;
-          case 'urgent': return 15.00;
-          case 'extended': return 20.00;
-          default: return 0;
-        }
-      };
-      
-      // Calculate total price
-      let amount = getPriceForPlan(planTier);
-      if (addons && addons.length > 0) {
-        for (const addon of addons) {
-          amount += getPriceForAddon(addon);
-        }
-      }
-      
-      // Free tier doesn't need payment processing
-      if (amount === 0) {
-        return res.json({ 
-          clientSecret: null,
-          amount: 0,
-          freeProduct: true
-        });
-      }
-      
-      // Create a payment intent with Stripe
-      const paymentData = await createPaymentIntent({ 
-        amount,
-        metadata: { 
-          userId: req.session.user.id,
-          planTier,
-          addons: addons ? JSON.stringify(addons) : '[]'
-        }
-      });
-      
-      res.json({
-        clientSecret: paymentData.clientSecret,
-        amount,
-        freeProduct: false
-      });
-    } catch (error: any) {
-      console.error('Payment intent creation error:', error);
-      res.status(500).json({ 
-        error: 'Failed to create payment intent',
-        message: error.message 
-      });
-    }
-  });
-  
-  // Get payment intent details
-  app.get('/api/payments/:paymentIntentId', isAuthenticated, async (req: any, res) => {
-    try {
-      const { paymentIntentId } = req.params;
-      
-      if (!paymentIntentId) {
-        return res.status(400).json({ error: 'Payment intent ID is required' });
-      }
-      
-      const paymentIntent = await retrievePaymentIntent(paymentIntentId);
-      
-      // Return payment details
-      res.json({
-        id: paymentIntent.id,
-        amount: paymentIntent.amount,
-        status: paymentIntent.status,
-        created: paymentIntent.created,
-        metadata: paymentIntent.metadata
-      });
-    } catch (error: any) {
-      console.error('Error retrieving payment intent:', error);
-      res.status(500).json({ 
-        error: 'Failed to retrieve payment details',
-        message: error.message 
-      });
-    }
-  });
+  // PayPal routes will be added here
   
   // Get pricing information for plans and addons
   app.get('/api/pricing', async (req, res) => {
@@ -490,36 +393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Verify a payment was successful
-  app.get('/api/verify-payment/:paymentIntentId', isAuthenticated, async (req, res) => {
-    try {
-      const { paymentIntentId } = req.params;
-      
-      if (!paymentIntentId) {
-        return res.status(400).json({ error: 'Payment intent ID is required' });
-      }
-      
-      const paymentIntent = await retrievePaymentIntent(paymentIntentId);
-      
-      if (paymentIntent.status === 'succeeded') {
-        return res.json({ 
-          success: true,
-          status: paymentIntent.status
-        });
-      } else {
-        return res.json({ 
-          success: false,
-          status: paymentIntent.status
-        });
-      }
-    } catch (error: any) {
-      console.error('Payment verification error:', error);
-      res.status(500).json({ 
-        error: 'Failed to verify payment',
-        message: error.message 
-      });
-    }
-  });
+  // New PayPal verification endpoint will be added here
   
   const httpServer = createServer(app);
   return httpServer;
