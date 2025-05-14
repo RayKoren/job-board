@@ -1,9 +1,10 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage, IJobPosting } from "./storage";
 import { setupAuth, isAuthenticated, isBusinessUser, isJobSeeker } from "./localAuth"; // Using local authentication temporarily
 import { z } from "zod";
-import { initDatabase } from "./db";
+import { initDatabase, sequelize } from "./db";
+import { QueryTypes } from "sequelize";
 import { getPriceForPlan, getPriceForAddon, calculateJobPostingPrice } from "./services/pricing";
 import { insertBusinessProfileSchema, insertJobSeekerProfileSchema, insertJobPostingSchema, insertJobApplicationSchema } from "@shared/zodSchema";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./services/paypal";
@@ -118,12 +119,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
             );
             
           if (planProduct && planProduct.id !== undefined && job.id !== undefined) {
-            // Update the job with the planId and planCode fields
-            await storage.updateJobPosting(job.id, {
-              planId: planProduct.id,
+            // Update the job with the planCode field - we can't set planId directly through the storage interface
+            const jobUpdate: Partial<IJobPosting> = {
               planCode: jobData.plan // Set planCode to match plan for compatibility
-            });
-            console.log(`Updated job ${job.id} with plan product ID ${planProduct.id} (${jobData.plan})`);
+            };
+            
+            // Update at database level for planId
+            try {
+              await sequelize.query(
+                `UPDATE "JobPostings" SET "planId" = :planId WHERE "id" = :jobId`,
+                {
+                  replacements: {
+                    planId: planProduct.id,
+                    jobId: job.id
+                  },
+                  type: QueryTypes.UPDATE
+                }
+              );
+              console.log(`Updated job ${job.id} with plan product ID ${planProduct.id} (${jobData.plan})`);
+            } catch (updateError) {
+              console.error('Error updating planId:', updateError);
+            }
+            
+            // Update other fields through the storage interface
+            await storage.updateJobPosting(job.id, jobUpdate);
           }
         }
         

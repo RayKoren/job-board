@@ -268,6 +268,15 @@ export const JobPosting = sequelize.define('JobPosting', {
     type: DataTypes.STRING,
     allowNull: false
   },
+  planCode: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  planId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+    // Will be linked to products table
+  },
   addons: {
     type: DataTypes.ARRAY(DataTypes.STRING),
     defaultValue: []
