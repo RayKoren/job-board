@@ -46,7 +46,7 @@ export default function PaymentSuccessPage() {
             const jobData = JSON.parse(pendingJobPost);
             if (jobData && jobData.price) {
               // Use the price from localStorage if available
-              setPaymentDetails(prev => ({
+              setPaymentDetails((prev: any) => ({
                 ...prev,
                 amount: parseFloat(jobData.price) * 100 // Convert to cents for consistency
               }));
