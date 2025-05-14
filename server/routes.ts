@@ -6,6 +6,7 @@ import { z } from "zod";
 import { initDatabase } from "./db";
 import { getPriceForPlan, getPriceForAddon, calculateJobPostingPrice } from "./services/pricing";
 import { insertBusinessProfileSchema, insertJobSeekerProfileSchema, insertJobPostingSchema, insertJobApplicationSchema } from "@shared/zodSchema";
+import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./services/paypal";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize database
