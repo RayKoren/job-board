@@ -321,17 +321,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Ensure addons is an array
       const addonsList = Array.isArray(addons) ? addons : [];
       
-      // Calculate total price using our pricing service
-      const amount = calculateJobPostingPrice(planTier, addonsList);
+      // Get pricing service
+      const { calculateJobPostingPrice, getPriceForPlan, getPriceForAddon, getPriceForPlanSync, getPriceForAddonSync } = await import('./services/pricing');
+      
+      // Calculate total price using our pricing service (async database version)
+      const amount = await calculateJobPostingPrice(planTier, addonsList);
+      
+      // Get individual prices
+      const planPrice = await getPriceForPlan(planTier);
+      const addonPrices = {};
+      for (const addon of addonsList) {
+        addonPrices[addon] = await getPriceForAddon(addon);
+      }
       
       // Log the pricing details with more information
       console.log(`Job Posting Price Calculation:
-        Plan Tier: ${planTier} (${getPriceForPlan(planTier)})
+        Plan Tier: ${planTier} (${planPrice})
         Add-ons: ${JSON.stringify(addonsList)}
-        Add-on Prices: ${addonsList.map((addon: string) => {
-          const price = getPriceForAddon(addon);
+        Add-on Prices: ${await Promise.all(addonsList.map(async (addon: string) => {
+          const price = await getPriceForAddon(addon);
           return `${addon}: $${price}${price === 0 ? ' (WARNING: $0 price)' : ''}`;
-        }).join(', ')}
+        })).then(prices => prices.join(', '))}
         Total Amount: $${amount}
       `);
       
