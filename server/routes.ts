@@ -329,7 +329,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get individual prices
       const planPrice = await getPriceForPlan(planTier);
-      const addonPrices = {};
+      const addonPrices: Record<string, number> = {};
       for (const addon of addonsList) {
         addonPrices[addon] = await getPriceForAddon(addon);
       }
@@ -346,7 +346,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `);
       
       // Free tier doesn't need payment processing (only "basic" plan is free)
-      if (planTier === 'basic' && amount === 0) {
+      if (planTier === 'basic' && Number(amount) === 0) {
         return res.json({ 
           freeProduct: true,
           amount: 0
@@ -355,7 +355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create a modified request body specifically for PayPal
       const paypalRequestBody = {
-        amount: amount.toFixed(2), // Format with exactly 2 decimal places
+        amount: Number(amount).toFixed(2), // Format with exactly 2 decimal places
         currency: "USD",
         intent: "CAPTURE"
       };
@@ -374,18 +374,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const paypalResponse = typeof body === 'string' ? JSON.parse(body) : body;
           
           // Add our calculated amount to the response with proper formatting
-          paypalResponse.amount = amount.toFixed(2);
+          paypalResponse.amount = Number(amount).toFixed(2);
           
           // Add information about plan and add-ons for reference
           paypalResponse.planDetails = {
             planTier,
             addons: addonsList,
             priceDetails: {
-              planPrice: getPriceForPlan(planTier),
-              addonPrices: addonsList.reduce((acc, addon) => {
-                acc[addon] = getPriceForAddon(addon);
-                return acc;
-              }, {})
+              planPrice: planPrice,
+              addonPrices: addonPrices
             }
           };
           
