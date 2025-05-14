@@ -73,12 +73,29 @@ export default function PaymentPage() {
         
         // Process selected add-ons
         if (data && data.addons && addons.length > 0) {
+          // Map the add-on keys to add-on objects with full information
           const selectedAddonObjects = addons
-            .filter(addonKey => data.addons[addonKey]) // Filter out any non-existent add-ons
-            .map(addonKey => ({
-              id: addonKey,
-              ...data.addons[addonKey]
-            }));
+            .filter(addonKey => {
+              // Filter out any non-existent add-ons
+              const exists = !!data.addons[addonKey];
+              if (!exists) {
+                console.warn(`Add-on key "${addonKey}" not found in pricing data`);
+                
+                // Special handling for social-boost which might be named social-media-promotion in the API
+                if (addonKey === 'social-boost' && data.addons['social-media-promotion']) {
+                  return true;
+                }
+              }
+              return exists;
+            })
+            .map(addonKey => {
+              // Handle social-boost mapping to social-media-promotion
+              const lookupKey = addonKey === 'social-boost' ? 'social-media-promotion' : addonKey;
+              return {
+                id: addonKey,
+                ...data.addons[lookupKey]
+              };
+            });
           
           console.log('Selected add-ons:', selectedAddonObjects);
           setAddonsList(selectedAddonObjects);
