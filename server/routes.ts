@@ -105,23 +105,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { products, jobPostingAddons } = await import('../shared/schema');
         const { eq, and } = await import('drizzle-orm');
         
-        // 1. If we have a planTier/planCode, look up the corresponding product ID
-        if (jobData.planCode) {
+        // 1. Use the plan field (which is the plan tier) to look up the corresponding product ID
+        if (jobData.plan) {
+          // Use plan as the product code/tier
           const [planProduct] = await db.select()
             .from(products)
             .where(
               and(
-                eq(products.code, jobData.planCode),
+                eq(products.code, jobData.plan),
                 eq(products.type, 'plan')
               )
             );
             
-          if (planProduct) {
-            // Update the job with the planId
+          if (planProduct && planProduct.id !== undefined && job.id !== undefined) {
+            // Update the job with the planId and planCode fields
             await storage.updateJobPosting(job.id, {
-              planId: planProduct.id
+              planId: planProduct.id,
+              planCode: jobData.plan // Set planCode to match plan for compatibility
             });
-            console.log(`Updated job ${job.id} with plan product ID ${planProduct.id}`);
+            console.log(`Updated job ${job.id} with plan product ID ${planProduct.id} (${jobData.plan})`);
           }
         }
         
@@ -148,18 +150,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (addonCode === 'highlight') lookupCode = 'highlighted';
             
             const addonProduct = addonMap.get(lookupCode);
-            if (addonProduct) {
+            if (addonProduct && addonProduct.id && job.id) {
               // Create relationship in the junction table
-              await db.insert(jobPostingAddons)
-                .values({
-                  jobId: job.id,
-                  productId: addonProduct.id
-                })
-                .onConflictDoNothing();
+              try {
+                await db.insert(jobPostingAddons)
+                  .values({
+                    jobId: job.id,
+                    productId: addonProduct.id
+                  })
+                  .onConflictDoNothing();
                 
-              console.log(`Added add-on ${lookupCode} (ID: ${addonProduct.id}) to job ${job.id}`);
+                console.log(`Added add-on ${lookupCode} (ID: ${addonProduct.id}) to job ${job.id}`);
+              } catch (insertError) {
+                console.error(`Error inserting add-on relationship: ${insertError}`);
+              }
             } else {
-              console.warn(`Add-on product with code ${lookupCode} not found`);
+              console.warn(`Add-on product with code ${lookupCode} not found or job ID missing`);
             }
           }
         }
@@ -403,7 +409,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const planPrice = await getPriceForPlan(planTier);
       const addonPrices: Record<string, number> = {};
       for (const addon of addonsList) {
-        addonPrices[addon] = await getPriceForAddon(addon);
+        if (typeof addon === 'string') {
+          addonPrices[addon] = await getPriceForAddon(addon);
+        }
       }
       
       // Log the pricing details with more information
@@ -454,7 +462,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             addons: addonsList,
             priceDetails: {
               planPrice: Number(planPrice),
-              addonPrices: Object.entries(addonPrices).reduce((acc, [key, value]) => {
+              addonPrices: Object.entries(addonPrices).reduce((acc: Record<string, number>, [key, value]) => {
                 acc[key] = Number(value);
                 return acc;
               }, {})

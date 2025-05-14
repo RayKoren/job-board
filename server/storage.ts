@@ -72,6 +72,8 @@ export interface IJobPosting {
   contactPhone?: string | null;
   status?: string;
   plan: string;
+  planId?: number; // Reference to the selected plan product
+  planCode?: string; // For backward compatibility (basic, standard, featured, unlimited)
   addons?: string[];
   featured?: boolean;
   expiresAt?: Date | null;
