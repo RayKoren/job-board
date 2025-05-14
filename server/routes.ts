@@ -325,7 +325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Job Posting Price Calculation:
         Plan Tier: ${planTier} (${getPriceForPlan(planTier)})
         Add-ons: ${JSON.stringify(addons)}
-        Add-on Prices: ${addons.map(addon => `${addon}: $${getPriceForAddon(addon)}`).join(', ')}
+        Add-on Prices: ${addons.map((addon: string) => `${addon}: $${getPriceForAddon(addon)}`).join(', ')}
         Total Amount: $${amount}
       `);
       

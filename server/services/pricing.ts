@@ -25,7 +25,17 @@ export function getPriceForAddon(addonType: string): number {
       return 15.00;
     case 'extended':
       return 20.00;
+    // Additional add-ons available in the UI
+    case 'top-of-search':
+      return 15.00;
+    case 'resume-access':
+      return 25.00;
+    case 'social-boost':
+      return 20.00;
+    case 'email-blast':
+      return 30.00;
     default:
+      console.log(`Unknown addon type: ${addonType}, defaulting to $0`);
       return 0;
   }
 }

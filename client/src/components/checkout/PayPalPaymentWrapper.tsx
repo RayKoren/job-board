@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
-import PayPalButton from '@/components/PayPalButton';
 
 interface PayPalPaymentWrapperProps {
   planTier: string;
@@ -23,8 +22,36 @@ export function PayPalPaymentWrapper({
   const [isLoading, setIsLoading] = useState(true);
   const [price, setPrice] = useState<number>(0);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const paypalButtonRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  // Load the PayPal SDK script
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const loadPayPalScript = () => {
+      const script = document.createElement('script');
+      script.src = 'https://www.sandbox.paypal.com/web-sdk/v6/core';
+      script.async = true;
+      script.onload = () => {
+        console.log('PayPal SDK script loaded successfully');
+        setScriptLoaded(true);
+      };
+      script.onerror = () => {
+        console.error('Failed to load PayPal SDK script');
+      };
+      document.body.appendChild(script);
+    };
+    
+    if (!(window as any).paypal) {
+      loadPayPalScript();
+    } else {
+      setScriptLoaded(true);
+    }
+  }, []);
+
+  // Step 1: Create PayPal order and get order ID
   useEffect(() => {
     const createPayPalOrder = async () => {
       try {
@@ -56,7 +83,9 @@ export function PayPalPaymentWrapper({
           
           // Extract the amount from the response
           const amount = parseFloat(
-            data.purchaseUnits?.[0]?.amount?.value || '0'
+            data.purchase_units?.[0]?.amount?.value || 
+            data.purchaseUnits?.[0]?.amount?.value || 
+            '0'
           );
           console.log('Amount extracted from response:', amount);
           setPrice(amount);
@@ -78,12 +107,116 @@ export function PayPalPaymentWrapper({
     createPayPalOrder();
   }, [planTier, addons, toast, onFreeSuccess]);
 
-  // Handle successful payment
-  const handlePaymentSuccess = (capturedOrderId: string) => {
-    if (onPaymentSuccess) {
-      onPaymentSuccess(capturedOrderId);
-    }
-  };
+  // Step 2: Initialize PayPal button when script is loaded and orderId is available
+  useEffect(() => {
+    const initializePayPalButton = async () => {
+      if (!scriptLoaded || !orderId || !paypalButtonRef.current) return;
+      
+      try {
+        console.log('Initializing PayPal button with order ID:', orderId);
+        
+        // Get the client token
+        const tokenResponse = await fetch('/paypal/setup');
+        const tokenData = await tokenResponse.json();
+        
+        if (!tokenData.clientToken) {
+          throw new Error('Failed to get PayPal client token');
+        }
+        
+        console.log('PayPal client token received');
+        
+        const { paypal } = window as any;
+        if (!paypal) {
+          throw new Error('PayPal SDK not loaded');
+        }
+        
+        // Clear existing content
+        paypalButtonRef.current.innerHTML = '';
+        
+        // Create the PayPal button
+        const sdkInstance = await paypal.createInstance({
+          clientToken: tokenData.clientToken,
+          components: ['paypal-payments'],
+        });
+        
+        const paypalCheckout = sdkInstance.createPayPalOneTimePaymentSession({
+          onApprove: async (data: any) => {
+            console.log('Payment approved:', data);
+            
+            try {
+              // Capture the order
+              const captureResponse = await fetch(`/paypal/order/${orderId}/capture`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+              });
+              
+              const captureData = await captureResponse.json();
+              console.log('Payment captured:', captureData);
+              
+              toast({
+                title: 'Payment Successful',
+                description: 'Your payment has been processed successfully.',
+              });
+              
+              if (onPaymentSuccess) {
+                onPaymentSuccess(orderId);
+              }
+            } catch (error) {
+              console.error('Failed to capture payment:', error);
+              toast({
+                variant: 'destructive',
+                title: 'Payment Error',
+                description: 'Your payment was approved but could not be captured.',
+              });
+            }
+          },
+          onCancel: () => {
+            console.log('Payment cancelled');
+            toast({
+              title: 'Payment Cancelled',
+              description: 'You cancelled the payment process.',
+            });
+          },
+          onError: (err: any) => {
+            console.error('Payment error:', err);
+            toast({
+              variant: 'destructive',
+              title: 'Payment Error',
+              description: 'There was an error processing your payment.',
+            });
+          },
+        });
+        
+        // Create the button element
+        const paypalButton = document.createElement('paypal-button');
+        paypalButton.id = 'paypal-button';
+        paypalButton.textContent = 'Pay with PayPal';
+        paypalButtonRef.current.appendChild(paypalButton);
+        
+        // Setup click handler
+        paypalButton.addEventListener('click', async () => {
+          try {
+            console.log('PayPal button clicked, starting checkout with order ID:', orderId);
+            await paypalCheckout.start(
+              { paymentFlow: 'auto' },
+              { orderId }
+            );
+          } catch (err) {
+            console.error('Failed to start PayPal checkout:', err);
+          }
+        });
+      } catch (error) {
+        console.error('Error initializing PayPal button:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Payment Setup Error',
+          description: 'Could not initialize the PayPal payment button.',
+        });
+      }
+    };
+    
+    initializePayPalButton();
+  }, [scriptLoaded, orderId, onPaymentSuccess, toast]);
 
   if (isLoading) {
     return (
@@ -144,15 +277,14 @@ export function PayPalPaymentWrapper({
         <div className="paypal-button-container">
           {orderId ? (
             <div 
-              className="bg-[#FFC439] text-blue-900 rounded-md py-2.5 px-4 flex items-center justify-center font-bold mb-4 cursor-pointer"
-              onClick={() => {
-                console.log("PayPal button clicked, using order ID:", orderId);
-              }}
+              ref={paypalButtonRef}
+              className="bg-[#FFC439] hover:bg-[#F2BA36] text-blue-900 rounded-md py-2.5 px-4 flex items-center justify-center font-bold mb-4 cursor-pointer h-12"
             >
-              <paypal-button id="paypal-button">Pay with PayPal</paypal-button>
+              {!scriptLoaded && <Spinner className="h-5 w-5 mr-2" />}
+              <span>Pay with PayPal</span>
             </div>
           ) : (
-            <div className="bg-gray-200 text-gray-500 rounded-md py-2.5 px-4 flex items-center justify-center font-bold mb-4">
+            <div className="bg-gray-200 text-gray-500 rounded-md py-2.5 px-4 flex items-center justify-center font-bold mb-4 h-12">
               <span>PayPal Button Unavailable</span>
             </div>
           )}
