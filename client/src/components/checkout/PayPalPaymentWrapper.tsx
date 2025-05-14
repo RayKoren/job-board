@@ -82,11 +82,20 @@ export function PayPalPaymentWrapper({
           setOrderId(data.id);
           
           // Extract the amount from the response
+          // Calculate the amount from the server response
+          // First try to get from PayPal response, then fall back to the amount property
           const amount = parseFloat(
             data.purchase_units?.[0]?.amount?.value || 
             data.purchaseUnits?.[0]?.amount?.value || 
+            data.amount || 
             '0'
           );
+          
+          console.log('Price calculation data:', {
+            fromResponse: data.purchase_units?.[0]?.amount?.value || data.purchaseUnits?.[0]?.amount?.value,
+            fromAmount: data.amount,
+            finalAmount: amount
+          });
           console.log('Amount extracted from response:', amount);
           setPrice(amount);
         } else {
@@ -197,9 +206,13 @@ export function PayPalPaymentWrapper({
         paypalButton.addEventListener('click', async () => {
           try {
             console.log('PayPal button clicked, starting checkout with order ID:', orderId);
+            // Create a Promise that resolves with the orderId object
+            const orderPromise = Promise.resolve({ orderId });
+            
+            // Start the PayPal checkout with the promise
             await paypalCheckout.start(
               { paymentFlow: 'auto' },
-              { orderId }
+              orderPromise
             );
           } catch (err) {
             console.error('Failed to start PayPal checkout:', err);

@@ -20,6 +20,7 @@ export function getPriceForAddon(addonType: string): number {
     case 'boost':
       return 10.00;
     case 'highlight':
+    case 'highlighted':
       return 5.00;
     case 'urgent':
       return 15.00;

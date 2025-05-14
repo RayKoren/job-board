@@ -350,10 +350,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Replace the request body with the PayPal-specific data
       req.body = paypalRequestBody;
       
+      // Intercept the response
+      const originalSend = res.send;
+      res.send = function(body) {
+        try {
+          // Parse the PayPal response
+          const paypalResponse = typeof body === 'string' ? JSON.parse(body) : body;
+          
+          // Add our calculated amount to the response
+          paypalResponse.amount = amount.toString();
+          
+          // Send the modified response
+          return originalSend.call(this, JSON.stringify(paypalResponse));
+        } catch (err) {
+          console.error('Error modifying PayPal response:', err);
+          return originalSend.call(this, body);
+        }
+      };
+      
       // Create PayPal order
       await createPaypalOrder(req, res);
       
-      // Restore the original body after the PayPal order is created
+      // Restore the original response.send and request body
+      res.send = originalSend;
       req.body = originalBody;
     } catch (error: any) {
       console.error('PayPal order creation error:', error);

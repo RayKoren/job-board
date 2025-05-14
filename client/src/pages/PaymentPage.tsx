@@ -140,7 +140,8 @@ export default function PaymentPage() {
   };
 
   const handleCancel = () => {
-    setLocation('/post-job');
+    // Add the continue parameter to preserve job posting data
+    setLocation('/post-job?continue=true');
   };
 
   if (isLoading) {
