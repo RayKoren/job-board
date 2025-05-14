@@ -217,6 +217,20 @@ export default function PostJob() {
     console.log("Form submitted:", submissionData);
     
     try {
+      // Check if this is a paid plan (anything except 'basic')
+      if (submissionData.plan !== 'basic') {
+        // For paid plans, redirect to payment page with job data
+        const jobDataParam = encodeURIComponent(JSON.stringify(submissionData));
+        const addonParam = submissionData.addons && submissionData.addons.length > 0 
+          ? encodeURIComponent(JSON.stringify(submissionData.addons)) 
+          : '';
+        
+        // Redirect to payment page
+        setLocation(`/payment?plan=${submissionData.plan}&addons=${addonParam}&jobData=${jobDataParam}`);
+        return;
+      }
+      
+      // Only proceed with immediate job posting for free 'basic' plan
       // Send the job post data to the server
       const response = await fetch('/api/jobs', {
         method: 'POST',

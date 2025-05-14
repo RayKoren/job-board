@@ -40,8 +40,6 @@ export default function PaymentSuccessPage() {
         // Check for a pending job post in localStorage
         const pendingJobPost = localStorage.getItem('pendingJobPost');
         if (pendingJobPost) {
-          // Leave it in localStorage - we'll process it when the user goes to post-job page
-          // with the continue=true parameter
           try {
             const jobData = JSON.parse(pendingJobPost);
             if (jobData && jobData.price) {
@@ -50,9 +48,32 @@ export default function PaymentSuccessPage() {
                 ...prev,
                 amount: parseFloat(jobData.price) * 100 // Convert to cents for consistency
               }));
+              
+              // Now we can submit the job posting since payment is confirmed
+              const response = await fetch('/api/jobs', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  ...jobData,
+                  paymentCompleted: true,
+                  paymentOrderId: orderId
+                }),
+              });
+              
+              if (!response.ok) {
+                throw new Error('Failed to post job after payment');
+              }
+              
+              // Clear the pending job post from localStorage
+              localStorage.removeItem('pendingJobPost');
+              
+              // Don't need to toast here as the success page already shows a success message
             }
           } catch (err) {
-            console.error('Error parsing job data:', err);
+            console.error('Error processing job data:', err);
+            setError('Payment was successful, but there was a problem posting your job. Please contact support.');
           }
         }
       } catch (err) {
@@ -72,7 +93,8 @@ export default function PaymentSuccessPage() {
   }, [isAuthenticated]);
 
   const handleContinue = () => {
-    setLocation('/post-job?continue=true');
+    // Go directly to dashboard instead of the posting page
+    setLocation('/business/dashboard');
   };
 
   const handleViewDashboard = () => {
