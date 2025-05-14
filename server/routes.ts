@@ -304,8 +304,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Payment endpoints
-  // PayPal routes will be added here
+  // PayPal payment endpoints
+  app.get("/paypal/setup", async (req, res) => {
+    await loadPaypalDefault(req, res);
+  });
+
+  app.post("/paypal/order", isAuthenticated, isBusinessUser, async (req, res) => {
+    try {
+      // Extract job posting details from request
+      const { planTier, addons = [] } = req.body;
+      
+      if (!planTier) {
+        return res.status(400).json({ error: 'Plan tier is required' });
+      }
+      
+      // Calculate total price using our pricing service
+      const amount = calculateJobPostingPrice(planTier, addons);
+      
+      // Free tier doesn't need payment processing
+      if (amount === 0) {
+        return res.json({ 
+          freeProduct: true,
+          amount: 0
+        });
+      }
+      
+      // Prepare order data for PayPal
+      req.body = {
+        ...req.body,
+        amount: amount.toString(),
+        currency: "USD",
+        intent: "CAPTURE"
+      };
+      
+      // Create PayPal order
+      await createPaypalOrder(req, res);
+    } catch (error: any) {
+      console.error('PayPal order creation error:', error);
+      res.status(500).json({ 
+        error: 'Failed to create PayPal order',
+        message: error.message 
+      });
+    }
+  });
+
+  app.post("/paypal/order/:orderID/capture", isAuthenticated, isBusinessUser, async (req, res) => {
+    await capturePaypalOrder(req, res);
+  });
   
   // Get pricing information for plans and addons
   app.get('/api/pricing', async (req, res) => {

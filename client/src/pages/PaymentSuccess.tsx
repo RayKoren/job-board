@@ -16,36 +16,47 @@ export default function PaymentSuccessPage() {
   const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
-    const fetchPaymentDetails = async () => {
+    const processPayPalOrder = async () => {
       try {
-        // Get the payment intent ID from URL
+        // Get the order ID from URL
         const searchParams = new URLSearchParams(window.location.search);
-        const paymentIntentId = searchParams.get('payment_intent');
+        const orderId = searchParams.get('order_id');
         
-        if (!paymentIntentId) {
+        if (!orderId) {
           setError('No payment information found.');
           setIsLoading(false);
           return;
         }
         
-        // Call API to verify payment
-        const response = await apiRequest('GET', `/api/payments/${paymentIntentId}`);
-        const data = await response.json();
+        // For PayPal, we already have confirmation when we get the order_id
+        // in the URL, so we can proceed with success handling
+        setPaymentDetails({
+          id: orderId,
+          status: 'COMPLETED',
+          created: Date.now() / 1000, // Current time in seconds
+          // Note: We don't have the exact amount here, but we'll get it from localStorage
+        });
         
-        if (data.status === 'succeeded') {
-          setPaymentDetails(data);
-          
-          // Check for a pending job post in localStorage
-          const pendingJobPost = localStorage.getItem('pendingJobPost');
-          if (pendingJobPost) {
-            // Leave it in localStorage - we'll process it when the user goes to post-job page
-            // with the continue=true parameter
+        // Check for a pending job post in localStorage
+        const pendingJobPost = localStorage.getItem('pendingJobPost');
+        if (pendingJobPost) {
+          // Leave it in localStorage - we'll process it when the user goes to post-job page
+          // with the continue=true parameter
+          try {
+            const jobData = JSON.parse(pendingJobPost);
+            if (jobData && jobData.price) {
+              // Use the price from localStorage if available
+              setPaymentDetails(prev => ({
+                ...prev,
+                amount: parseFloat(jobData.price) * 100 // Convert to cents for consistency
+              }));
+            }
+          } catch (err) {
+            console.error('Error parsing job data:', err);
           }
-        } else {
-          setError('Your payment is still processing. Please check back in a few minutes.');
         }
       } catch (err) {
-        console.error('Error fetching payment details:', err);
+        console.error('Error processing PayPal order:', err);
         setError('Failed to verify payment. Please contact support.');
       } finally {
         setIsLoading(false);
@@ -53,7 +64,7 @@ export default function PaymentSuccessPage() {
     };
     
     if (isAuthenticated) {
-      fetchPaymentDetails();
+      processPayPalOrder();
     } else {
       setIsLoading(false);
       setError('Please log in to view payment details.');

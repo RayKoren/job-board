@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { StripePaymentWrapper } from '@/components/checkout/StripePaymentWrapper';
+import { PayPalPaymentWrapper } from '@/components/checkout/PayPalPaymentWrapper';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
@@ -98,19 +98,26 @@ export default function PaymentPage() {
     }
   }, [isLoading, isAuthenticated, isBusinessUser, setLocation, toast]);
 
-  const handlePaymentSuccess = (paymentIntentId: string) => {
+  const handlePaymentSuccess = (orderId: string) => {
+    // Calculate the price to store it for later reference
+    const totalPrice = (
+      (pricingData?.plans[planTier]?.price || 0) + 
+      (addons || []).reduce((sum, addon) => sum + (pricingData?.addons[addon]?.price || 0), 0)
+    );
+    
     // Store data in local storage to resume job posting after payment
     if (jobData) {
       localStorage.setItem('pendingJobPost', JSON.stringify({
         ...jobData,
         planTier,
         addons,
-        paymentIntentId
+        orderId,
+        price: totalPrice.toString()
       }));
     }
     
     // Navigate to the success page
-    setLocation(`/payment-success?payment_intent=${paymentIntentId}`);
+    setLocation(`/payment-success?order_id=${orderId}`);
   };
 
   const handleFreeSuccess = () => {
@@ -222,7 +229,7 @@ export default function PaymentPage() {
             </div>
             
             <div>
-              <StripePaymentWrapper
+              <PayPalPaymentWrapper
                 planTier={planTier}
                 addons={addons}
                 onPaymentSuccess={handlePaymentSuccess}
