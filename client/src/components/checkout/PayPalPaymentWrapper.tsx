@@ -55,12 +55,17 @@ export function PayPalPaymentWrapper({
   useEffect(() => {
     const createPayPalOrder = async () => {
       try {
-        console.log('Creating PayPal order with:', { planTier, addons });
+        // Add detailed logging for debugging
+        console.log('Creating PayPal order with:', { 
+          planTier, 
+          addons,
+          addonDetails: addons.map(addon => `${addon}: type=${typeof addon}`)
+        });
         
         // Create PayPal order
         const response = await apiRequest('POST', '/paypal/order', {
           planTier,
-          addons
+          addons: Array.isArray(addons) ? addons : [] // Ensure addons is always an array
         });
         
         const data = await response.json();

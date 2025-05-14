@@ -318,14 +318,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Plan tier is required' });
       }
       
-      // Calculate total price using our pricing service
-      const amount = calculateJobPostingPrice(planTier, addons);
+      // Ensure addons is an array
+      const addonsList = Array.isArray(addons) ? addons : [];
       
-      // Log the pricing details
+      // Calculate total price using our pricing service
+      const amount = calculateJobPostingPrice(planTier, addonsList);
+      
+      // Log the pricing details with more information
       console.log(`Job Posting Price Calculation:
         Plan Tier: ${planTier} (${getPriceForPlan(planTier)})
-        Add-ons: ${JSON.stringify(addons)}
-        Add-on Prices: ${addons.map((addon: string) => `${addon}: $${getPriceForAddon(addon)}`).join(', ')}
+        Add-ons: ${JSON.stringify(addonsList)}
+        Add-on Prices: ${addonsList.map((addon: string) => {
+          const price = getPriceForAddon(addon);
+          return `${addon}: $${price}${price === 0 ? ' (WARNING: $0 price)' : ''}`;
+        }).join(', ')}
         Total Amount: $${amount}
       `);
       
@@ -339,7 +345,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create a modified request body specifically for PayPal
       const paypalRequestBody = {
-        amount: amount.toString(),
+        amount: amount.toFixed(2), // Format with exactly 2 decimal places
         currency: "USD",
         intent: "CAPTURE"
       };
@@ -357,8 +363,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Parse the PayPal response
           const paypalResponse = typeof body === 'string' ? JSON.parse(body) : body;
           
-          // Add our calculated amount to the response
-          paypalResponse.amount = amount.toString();
+          // Add our calculated amount to the response with proper formatting
+          paypalResponse.amount = amount.toFixed(2);
+          
+          // Add information about plan and add-ons for reference
+          paypalResponse.planDetails = {
+            planTier,
+            addons: addonsList,
+            priceDetails: {
+              planPrice: getPriceForPlan(planTier),
+              addonPrices: addonsList.reduce((acc, addon) => {
+                acc[addon] = getPriceForAddon(addon);
+                return acc;
+              }, {})
+            }
+          };
           
           // Send the modified response
           return originalSend.call(this, JSON.stringify(paypalResponse));

@@ -192,11 +192,28 @@ export default function PaymentPage() {
 
   // Display plan information
   const planInfo = pricingData?.plans[planTier];
+  
+  // Determine which add-ons to display
   const selectedAddons = addonsList.length > 0 
-    ? addonsList 
-    : addons.map(addon => pricingData?.addons[addon])
-           .filter(Boolean)
-           .map(addon => ({ id: addon.name.toLowerCase().replace(/\s+/g, '-'), ...addon }));
+    ? addonsList  // Use the processed add-ons list if available
+    : addons.map(addonKey => {
+        // Try to find the add-on in the pricing data
+        const addonInfo = pricingData?.addons[addonKey];
+        if (addonInfo) {
+          return { id: addonKey, ...addonInfo };
+        }
+        
+        // Special case for social-boost which might be named social-media-promotion in the API
+        if (addonKey === 'social-boost' && pricingData?.addons['social-media-promotion']) {
+          return { 
+            id: 'social-boost', 
+            ...pricingData.addons['social-media-promotion'] 
+          };
+        }
+        
+        return null;
+      })
+      .filter(Boolean); // Remove any null entries
 
   return (
     <div className="min-h-screen flex flex-col">

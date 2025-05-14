@@ -221,8 +221,16 @@ export default function PostJob() {
       if (submissionData.plan !== 'basic') {
         // For paid plans, redirect to payment page with job data
         const jobDataParam = encodeURIComponent(JSON.stringify(submissionData));
-        const addonParam = submissionData.addons && submissionData.addons.length > 0 
-          ? encodeURIComponent(JSON.stringify(submissionData.addons)) 
+        
+        // Map addons to ensure consistent naming with the server
+        const mappedAddons = submissionData.addons ? submissionData.addons.map(addon => {
+          // Map social-boost to social-media-promotion to match server naming
+          if (addon === 'social-boost') return 'social-media-promotion';
+          return addon;
+        }) : [];
+        
+        const addonParam = mappedAddons.length > 0 
+          ? encodeURIComponent(JSON.stringify(mappedAddons)) 
           : '';
         
         // Redirect to payment page
