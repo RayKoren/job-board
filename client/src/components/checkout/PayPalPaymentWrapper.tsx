@@ -28,6 +28,8 @@ export function PayPalPaymentWrapper({
   useEffect(() => {
     const createPayPalOrder = async () => {
       try {
+        console.log('Creating PayPal order with:', { planTier, addons });
+        
         // Create PayPal order
         const response = await apiRequest('POST', '/paypal/order', {
           planTier,
@@ -35,9 +37,11 @@ export function PayPalPaymentWrapper({
         });
         
         const data = await response.json();
+        console.log('Response from PayPal order creation:', data);
         
         // If the plan is free, handle accordingly
         if (data.freeProduct) {
+          console.log('Free plan detected, no payment needed');
           setIsLoading(false);
           setPrice(0);
           if (onFreeSuccess) {
@@ -47,15 +51,17 @@ export function PayPalPaymentWrapper({
         }
         
         if (data.id) {
+          console.log('PayPal order created with ID:', data.id);
           setOrderId(data.id);
           
           // Extract the amount from the response
           const amount = parseFloat(
             data.purchaseUnits?.[0]?.amount?.value || '0'
           );
+          console.log('Amount extracted from response:', amount);
           setPrice(amount);
         } else {
-          throw new Error('Failed to create PayPal order');
+          throw new Error('Failed to create PayPal order - no ID returned');
         }
       } catch (err) {
         console.error('Failed to create PayPal order:', err);
@@ -136,13 +142,20 @@ export function PayPalPaymentWrapper({
       
       <div className="flex flex-col space-y-4">
         <div className="paypal-button-container">
-          <div className="bg-[#FFC439] text-blue-900 rounded-md py-2.5 px-4 flex items-center justify-center font-bold mb-4">
-            <PayPalButton 
-              amount={price.toString()}
-              currency="USD"
-              intent="CAPTURE"
-            />
-          </div>
+          {orderId ? (
+            <div 
+              className="bg-[#FFC439] text-blue-900 rounded-md py-2.5 px-4 flex items-center justify-center font-bold mb-4 cursor-pointer"
+              onClick={() => {
+                console.log("PayPal button clicked, using order ID:", orderId);
+              }}
+            >
+              <paypal-button id="paypal-button">Pay with PayPal</paypal-button>
+            </div>
+          ) : (
+            <div className="bg-gray-200 text-gray-500 rounded-md py-2.5 px-4 flex items-center justify-center font-bold mb-4">
+              <span>PayPal Button Unavailable</span>
+            </div>
+          )}
         </div>
         
         {onCancel && (

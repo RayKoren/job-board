@@ -321,6 +321,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate total price using our pricing service
       const amount = calculateJobPostingPrice(planTier, addons);
       
+      // Log the pricing details
+      console.log(`Job Posting Price Calculation:
+        Plan Tier: ${planTier} (${getPriceForPlan(planTier)})
+        Add-ons: ${JSON.stringify(addons)}
+        Add-on Prices: ${addons.map(addon => `${addon}: $${getPriceForAddon(addon)}`).join(', ')}
+        Total Amount: $${amount}
+      `);
+      
       // Free tier doesn't need payment processing (only "basic" plan is free)
       if (planTier === 'basic' && amount === 0) {
         return res.json({ 
@@ -329,18 +337,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      console.log(`Creating PayPal order for planTier: ${planTier}, amount: ${amount}`);
-      
-      // Prepare order data for PayPal
-      req.body = {
-        ...req.body,
+      // Create a modified request body specifically for PayPal
+      const paypalRequestBody = {
         amount: amount.toString(),
         currency: "USD",
         intent: "CAPTURE"
       };
       
+      // Store the original body
+      const originalBody = req.body;
+      
+      // Replace the request body with the PayPal-specific data
+      req.body = paypalRequestBody;
+      
       // Create PayPal order
       await createPaypalOrder(req, res);
+      
+      // Restore the original body after the PayPal order is created
+      req.body = originalBody;
     } catch (error: any) {
       console.error('PayPal order creation error:', error);
       res.status(500).json({ 
