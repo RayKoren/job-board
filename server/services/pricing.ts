@@ -21,17 +21,18 @@ export function getPriceForAddon(addonType: string): number {
       return 10.00;
     case 'highlight':
     case 'highlighted':
-      return 5.00;
+      return 10.00;
     case 'urgent':
       return 15.00;
     case 'extended':
       return 20.00;
     // Additional add-ons available in the UI
     case 'top-of-search':
-      return 15.00;
-    case 'resume-access':
       return 25.00;
+    case 'resume-access':
+      return 15.00;
     case 'social-boost':
+    case 'social-media-promotion':
       return 20.00;
     case 'email-blast':
       return 30.00;
