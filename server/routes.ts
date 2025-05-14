@@ -96,7 +96,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
         businessUserId: userId,
       });
       
+      // Create the job posting first
       const job = await storage.createJobPosting(jobData);
+      
+      // Now create relationships for plan and add-ons in the database
+      try {
+        const { db } = await import('./db');
+        const { products, jobPostingAddons } = await import('../shared/schema');
+        const { eq, and } = await import('drizzle-orm');
+        
+        // 1. If we have a planTier/planCode, look up the corresponding product ID
+        if (jobData.planCode) {
+          const [planProduct] = await db.select()
+            .from(products)
+            .where(
+              and(
+                eq(products.code, jobData.planCode),
+                eq(products.type, 'plan')
+              )
+            );
+            
+          if (planProduct) {
+            // Update the job with the planId
+            await storage.updateJobPosting(job.id, {
+              planId: planProduct.id
+            });
+            console.log(`Updated job ${job.id} with plan product ID ${planProduct.id}`);
+          }
+        }
+        
+        // 2. If we have add-ons, create the relationship records
+        if (jobData.addons && jobData.addons.length > 0) {
+          // Get all add-on products
+          const addonProducts = await db.select()
+            .from(products)
+            .where(
+              and(
+                eq(products.type, 'addon'),
+                eq(products.active, true)
+              )
+            );
+            
+          // Map add-on codes to add-on products
+          const addonMap = new Map<string, any>(addonProducts.map(addon => [addon.code, addon]));
+          
+          // For each add-on code in the job, create a relationship to its product
+          for (const addonCode of jobData.addons) {
+            // Handle aliases (like social-boost -> social-media-promotion)
+            let lookupCode = addonCode;
+            if (addonCode === 'social-boost') lookupCode = 'social-media-promotion';
+            if (addonCode === 'highlight') lookupCode = 'highlighted';
+            
+            const addonProduct = addonMap.get(lookupCode);
+            if (addonProduct) {
+              // Create relationship in the junction table
+              await db.insert(jobPostingAddons)
+                .values({
+                  jobId: job.id,
+                  productId: addonProduct.id
+                })
+                .onConflictDoNothing();
+                
+              console.log(`Added add-on ${lookupCode} (ID: ${addonProduct.id}) to job ${job.id}`);
+            } else {
+              console.warn(`Add-on product with code ${lookupCode} not found`);
+            }
+          }
+        }
+      } catch (dbError) {
+        // We'll still return success even if the DB relationships fail
+        // This ensures backward compatibility
+        console.error("Error linking job posting to products:", dbError);
+      }
+      
       res.status(201).json(job);
     } catch (error) {
       console.error("Error creating job posting:", error);
@@ -376,13 +448,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Add our calculated amount to the response with proper formatting
           paypalResponse.amount = Number(amount).toFixed(2);
           
-          // Add information about plan and add-ons for reference
+          // Add information about plan and add-ons for reference with properly formatted values
           paypalResponse.planDetails = {
             planTier,
             addons: addonsList,
             priceDetails: {
-              planPrice: planPrice,
-              addonPrices: addonPrices
+              planPrice: Number(planPrice),
+              addonPrices: Object.entries(addonPrices).reduce((acc, [key, value]) => {
+                acc[key] = Number(value);
+                return acc;
+              }, {})
             }
           };
           
