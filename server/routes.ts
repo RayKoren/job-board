@@ -447,20 +447,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
           price: 10.00,
           description: 'Boosted search placement for 7 days'
         },
-        highlight: {
-          name: 'Listing Highlight',
-          price: 5.00,
-          description: 'Highlight your listing with a colored border'
+        highlighted: {
+          name: 'Highlighted Listing',
+          price: 10.00,
+          description: 'Make your listing stand out with a highlight'
         },
-        urgent: {
-          name: 'Urgent Hiring',
+        'top-of-search': {
+          name: 'Top of Search Results',
+          price: 25.00,
+          description: 'Priority placement in search results for 14 days'
+        },
+        'resume-access': {
+          name: 'Resume Database Access',
           price: 15.00,
-          description: 'Mark as "Urgent Hiring" with special badge'
+          description: 'Access all resumes for 30 days'
         },
-        extended: {
-          name: 'Extended Duration',
+        'social-media-promotion': {
+          name: 'Social Media Promotion',
           price: 20.00,
-          description: 'Extend listing duration by 30 days'
+          description: 'Promote your job on our social media channels'
         }
       };
       

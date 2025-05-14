@@ -16,6 +16,7 @@ export default function PaymentPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [planTier, setPlanTier] = useState<string>('');
   const [addons, setAddons] = useState<string[]>([]);
+  const [addonsList, setAddonsList] = useState<any[]>([]);
   const [jobData, setJobData] = useState<any>(null);
   const [pricingData, setPricingData] = useState<{ plans: any; addons: any } | null>(null);
   
@@ -69,6 +70,19 @@ export default function PaymentPage() {
         const response = await apiRequest('GET', '/api/pricing');
         const data = await response.json();
         setPricingData(data);
+        
+        // Process selected add-ons
+        if (data && data.addons && addons.length > 0) {
+          const selectedAddonObjects = addons
+            .filter(addonKey => data.addons[addonKey]) // Filter out any non-existent add-ons
+            .map(addonKey => ({
+              id: addonKey,
+              ...data.addons[addonKey]
+            }));
+          
+          console.log('Selected add-ons:', selectedAddonObjects);
+          setAddonsList(selectedAddonObjects);
+        }
       } catch (err) {
         console.error('Failed to fetch pricing data', err);
         toast({
@@ -82,7 +96,7 @@ export default function PaymentPage() {
     };
     
     fetchPricing();
-  }, [setLocation, toast]);
+  }, [setLocation, toast, addons]);
 
   // Redirect if not authenticated or not a business user
   useEffect(() => {
@@ -161,7 +175,11 @@ export default function PaymentPage() {
 
   // Display plan information
   const planInfo = pricingData?.plans[planTier];
-  const selectedAddons = addons.map(addon => pricingData?.addons[addon]).filter(Boolean);
+  const selectedAddons = addonsList.length > 0 
+    ? addonsList 
+    : addons.map(addon => pricingData?.addons[addon])
+           .filter(Boolean)
+           .map(addon => ({ id: addon.name.toLowerCase().replace(/\s+/g, '-'), ...addon }));
 
   return (
     <div className="min-h-screen flex flex-col">
