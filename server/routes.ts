@@ -406,87 +406,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     await capturePaypalOrder(req, res);
   });
   
-  // Get pricing information for plans and addons
+  // Get pricing information for plans and addons from database
   app.get('/api/pricing', async (req, res) => {
     try {
-      // Pricing information for all plan tiers
-      const plans = {
-        basic: {
-          name: 'Basic',
-          price: 0, // Free tier
-          features: [
-            'Single job posting',
-            'Basic listing visibility',
-            'Available for 30 days',
-            'Standard search placement'
-          ]
-        },
-        standard: {
-          name: 'Standard',
-          price: 20.00,
-          features: [
-            'Enhanced job listing',
-            'Better search visibility',
-            'Available for 30 days',
-            'Company logo display',
-            'Email support'
-          ]
-        },
-        featured: {
-          name: 'Featured',
-          price: 50.00,
-          features: [
-            'Premium job listing',
-            'Top search placement',
-            'Available for 45 days',
-            'Featured on homepage',
-            'Company profile highlight',
-            'Priority email support'
-          ]
-        },
-        unlimited: {
-          name: 'Unlimited',
-          price: 150.00,
-          features: [
-            'Up to 10 active job listings',
-            'Highest search visibility',
-            'Available for 60 days',
-            'Featured on homepage',
-            'Dedicated company profile page',
-            'Priority support',
-            'Applicant tracking'
-          ]
-        }
-      };
+      const { db } = await import('./db');
+      const { products } = await import('../shared/schema');
+      const { eq } = await import('drizzle-orm');
       
-      // Pricing information for addons
-      const addons = {
-        boost: {
-          name: 'Visibility Boost',
-          price: 10.00,
-          description: 'Boosted search placement for 7 days'
-        },
-        highlighted: {
-          name: 'Highlighted Listing',
-          price: 10.00,
-          description: 'Make your listing stand out with a highlight'
-        },
-        'top-of-search': {
-          name: 'Top of Search Results',
-          price: 25.00,
-          description: 'Priority placement in search results for 14 days'
-        },
-        'resume-access': {
-          name: 'Resume Database Access',
-          price: 15.00,
-          description: 'Access all resumes for 30 days'
-        },
-        'social-media-promotion': {
-          name: 'Social Media Promotion',
-          price: 20.00,
-          description: 'Promote your job on our social media channels'
-        }
-      };
+      // Get all active plans ordered by sortOrder
+      const plansList = await db.select()
+        .from(products)
+        .where(
+          eq(products.type, 'plan')
+        )
+        .orderBy(products.sortOrder);
+        
+      // Get all active add-ons ordered by sortOrder
+      const addonsList = await db.select()
+        .from(products)
+        .where(
+          eq(products.type, 'addon')
+        )
+        .orderBy(products.sortOrder);
+      
+      // Transform to expected format
+      const plans: Record<string, any> = {};
+      for (const plan of plansList) {
+        plans[plan.code] = {
+          name: plan.name,
+          price: Number(plan.price),
+          features: plan.features || []
+        };
+      }
+      
+      const addons: Record<string, any> = {};
+      for (const addon of addonsList) {
+        addons[addon.code] = {
+          name: addon.name,
+          price: Number(addon.price),
+          description: addon.description || ''
+        };
+      }
       
       res.json({ plans, addons });
     } catch (error: any) {

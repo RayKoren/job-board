@@ -1,4 +1,7 @@
 import { Sequelize, DataTypes } from 'sequelize';
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import * as schema from '../shared/schema';
 
 // Check for database URL
 if (!process.env.DATABASE_URL) {
@@ -6,6 +9,17 @@ if (!process.env.DATABASE_URL) {
     "DATABASE_URL must be set. Did you forget to provision a database?",
   );
 }
+
+// Create Postgres pool for Drizzle
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? {
+    rejectUnauthorized: false
+  } : undefined
+});
+
+// Create Drizzle instance
+export const db = drizzle(pool, { schema });
 
 // Create Sequelize instance
 export const sequelize = new Sequelize(process.env.DATABASE_URL, {
