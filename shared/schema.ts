@@ -1,10 +1,13 @@
-import { pgTable, text, serial, integer, varchar, timestamp, jsonb, index, boolean, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, varchar, timestamp, jsonb, index, boolean, pgEnum, decimal, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
 // Define user roles enum
 export const userRoleEnum = pgEnum('user_role', ['business', 'job_seeker']);
+
+// Define product type enum
+export const productTypeEnum = pgEnum('product_type', ['plan', 'addon']);
 
 // Session storage table (for Replit Auth)
 export const sessions = pgTable(
@@ -24,7 +27,7 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  role: userRoleEnum("role").notNull(),
+  role: userRoleEnum("role"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -59,6 +62,21 @@ export const jobSeekerProfiles = pgTable("job_seeker_profiles", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Products table for plans and add-ons
+export const products = pgTable("products", {
+  id: serial("id").primaryKey(),
+  code: varchar("code", { length: 50 }).notNull().unique(), // e.g., 'basic', 'standard', etc.
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  type: productTypeEnum("type").notNull(), // 'plan' or 'addon'
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  active: boolean("active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  features: jsonb("features").default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Job postings
 export const jobPostings = pgTable("job_postings", {
   id: serial("id").primaryKey(),
@@ -76,13 +94,23 @@ export const jobPostings = pgTable("job_postings", {
   tags: text("tags").array(),
   postedAt: timestamp("posted_at").defaultNow(),
   expiresAt: timestamp("expires_at"),
-  planTier: text("plan_tier").notNull(), // Basic, Standard, Featured, Unlimited
+  planId: integer("plan_id").references(() => products.id), // Reference to the selected plan product
+  planCode: text("plan_code").notNull(), // For backward compatibility (basic, standard, featured, unlimited)
+  status: text("status").default("pending").notNull(), // pending, active, expired, deleted
 });
+
+// Junction table for job postings and product add-ons
+export const jobPostingAddons = pgTable("job_posting_addons", {
+  jobId: integer("job_id").notNull().references(() => jobPostings.id, { onDelete: 'cascade' }),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: 'cascade' }),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.jobId, table.productId] }),
+}));
 
 // Job applications
 export const jobApplications = pgTable("job_applications", {
   id: serial("id").primaryKey(),
-  jobId: serial("job_id").notNull().references(() => jobPostings.id, { onDelete: 'cascade' }),
+  jobId: integer("job_id").notNull().references(() => jobPostings.id, { onDelete: 'cascade' }),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: text("name").notNull(),
   email: text("email").notNull(),
@@ -113,6 +141,11 @@ export const jobPostingsRelations = relations(jobPostings, ({ one, many }) => ({
     references: [users.id],
   }),
   applications: many(jobApplications),
+  plan: one(products, {
+    fields: [jobPostings.planId],
+    references: [products.id],
+  }),
+  addons: many(jobPostingAddons),
 }));
 
 export const jobApplicationsRelations = relations(jobApplications, ({ one }) => ({
@@ -126,12 +159,31 @@ export const jobApplicationsRelations = relations(jobApplications, ({ one }) => 
   }),
 }));
 
+// Relations for the product tables
+export const productsRelations = relations(products, ({ many }) => ({
+  jobPostings: many(jobPostings),
+  jobPostingAddons: many(jobPostingAddons),
+}));
+
+export const jobPostingAddonsRelations = relations(jobPostingAddons, ({ one }) => ({
+  jobPosting: one(jobPostings, {
+    fields: [jobPostingAddons.jobId],
+    references: [jobPostings.id],
+  }),
+  product: one(products, {
+    fields: [jobPostingAddons.productId],
+    references: [products.id],
+  }),
+}));
+
 // Zod schemas for data insertion
 export const insertUserSchema = createInsertSchema(users);
 export const insertBusinessProfileSchema = createInsertSchema(businessProfiles);
 export const insertJobSeekerProfileSchema = createInsertSchema(jobSeekerProfiles);
 export const insertJobPostingSchema = createInsertSchema(jobPostings);
 export const insertJobApplicationSchema = createInsertSchema(jobApplications);
+export const insertProductSchema = createInsertSchema(products);
+export const insertJobPostingAddonSchema = createInsertSchema(jobPostingAddons);
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -144,3 +196,7 @@ export type JobPosting = typeof jobPostings.$inferSelect;
 export type UpsertJobPosting = typeof jobPostings.$inferInsert;
 export type JobApplication = typeof jobApplications.$inferSelect;
 export type UpsertJobApplication = typeof jobApplications.$inferInsert;
+export type Product = typeof products.$inferSelect;
+export type UpsertProduct = typeof products.$inferInsert;
+export type JobPostingAddon = typeof jobPostingAddons.$inferSelect;
+export type UpsertJobPostingAddon = typeof jobPostingAddons.$inferInsert;
