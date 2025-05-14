@@ -67,8 +67,19 @@ export default function PaymentPage() {
     // Fetch pricing information
     const fetchPricing = async () => {
       try {
-        const response = await apiRequest('GET', '/api/pricing');
+        console.log('Fetching pricing data...');
+        const response = await fetch('/api/pricing', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Error fetching pricing data: ${response.status} ${response.statusText}`);
+        }
+        
         const data = await response.json();
+        console.log('Pricing data received:', data);
         setPricingData(data);
         
         // Process selected add-ons
@@ -101,11 +112,17 @@ export default function PaymentPage() {
           setAddonsList(selectedAddonObjects);
         }
       } catch (err) {
-        console.error('Failed to fetch pricing data', err);
+        console.error('Failed to fetch pricing data:', err);
+        // Log more details about the error
+        if (err instanceof Error) {
+          console.error('Error message:', err.message);
+          console.error('Error stack:', err.stack);
+        }
+        
         toast({
           variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to load pricing information. Please try again.'
+          title: 'Error Loading Pricing',
+          description: 'Failed to load pricing information. Please try again or contact support.'
         });
       } finally {
         setIsLoading(false);
