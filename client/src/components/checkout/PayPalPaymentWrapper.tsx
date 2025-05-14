@@ -90,8 +90,8 @@ export function PayPalPaymentWrapper({
     );
   }
 
-  // For free plans, show success message
-  if (price === 0) {
+  // Only show the free plan message for the "basic" plan tier
+  if (planTier === 'basic' && price === 0) {
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
         <div className="text-center py-8">

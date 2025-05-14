@@ -321,13 +321,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate total price using our pricing service
       const amount = calculateJobPostingPrice(planTier, addons);
       
-      // Free tier doesn't need payment processing
-      if (amount === 0) {
+      // Free tier doesn't need payment processing (only "basic" plan is free)
+      if (planTier === 'basic' && amount === 0) {
         return res.json({ 
           freeProduct: true,
           amount: 0
         });
       }
+      
+      console.log(`Creating PayPal order for planTier: ${planTier}, amount: ${amount}`);
       
       // Prepare order data for PayPal
       req.body = {
