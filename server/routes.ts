@@ -106,6 +106,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { products, jobPostingAddons } = await import('../shared/schema');
         const { eq, and } = await import('drizzle-orm');
         
+        console.log('Creating database relationships for job posting:', {
+          jobId: job.id,
+          plan: jobData.plan,
+          planCode: jobData.planCode,
+          addons: jobData.addons
+        });
+        
         // 1. Use the plan field (which is the plan tier) to look up the corresponding product ID
         if (jobData.plan) {
           // Use plan as the product code/tier
@@ -454,10 +461,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create a modified request body specifically for PayPal
       const paypalRequestBody = {
-        amount: Number(amount).toFixed(2), // Format with exactly 2 decimal places
+        amount: String(Number(amount).toFixed(2)), // Format as string with exactly 2 decimal places
         currency: "USD",
         intent: "CAPTURE"
       };
+      
+      console.log('PayPal request payload:', JSON.stringify(paypalRequestBody, null, 2));
       
       // Store the original body
       const originalBody = req.body;
@@ -473,7 +482,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const paypalResponse = typeof body === 'string' ? JSON.parse(body) : body;
           
           // Add our calculated amount to the response with proper formatting
-          paypalResponse.amount = Number(amount).toFixed(2);
+          paypalResponse.amount = String(Number(amount).toFixed(2));
           
           // Add information about plan and add-ons for reference with properly formatted values
           paypalResponse.planDetails = {
@@ -487,6 +496,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }, {})
             }
           };
+          
+          console.log('PayPal response to client:', JSON.stringify(paypalResponse, null, 2));
           
           // Send the modified response
           return originalSend.call(this, JSON.stringify(paypalResponse));

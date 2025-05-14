@@ -89,17 +89,24 @@ export function PayPalPaymentWrapper({
           // Extract the amount from the response
           // Calculate the amount from the server response
           // First try to get from PayPal response, then fall back to the amount property
-          const amount = parseFloat(
-            data.purchase_units?.[0]?.amount?.value || 
+          let amountValue = data.purchase_units?.[0]?.amount?.value || 
             data.purchaseUnits?.[0]?.amount?.value || 
             data.amount || 
-            '0'
-          );
+            '0';
+            
+          // Force it to be a string before parsing to float
+          if (typeof amountValue === 'number') {
+            amountValue = String(amountValue);
+          }
+          
+          const amount = parseFloat(amountValue);
           
           console.log('Price calculation data:', {
             fromResponse: data.purchase_units?.[0]?.amount?.value || data.purchaseUnits?.[0]?.amount?.value,
             fromAmount: data.amount,
-            finalAmount: amount
+            amountType: typeof data.amount, 
+            finalAmount: amount,
+            formattedFinalAmount: amount.toFixed(2)
           });
           console.log('Amount extracted from response:', amount);
           setPrice(amount);

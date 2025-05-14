@@ -64,6 +64,15 @@ export async function createPaypalOrder(req: Request, res: Response) {
   try {
     const { amount, currency, intent } = req.body;
 
+    // Log the incoming request data for debugging
+    console.log('PayPal createOrder request:', {
+      amount,
+      currency,
+      intent,
+      amountType: typeof amount,
+      parsedAmount: parseFloat(amount)
+    });
+
     if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
       return res
         .status(400)
@@ -84,6 +93,13 @@ export async function createPaypalOrder(req: Request, res: Response) {
         .json({ error: "Invalid intent. Intent is required." });
     }
 
+    // Ensure amount is properly formatted as a string with 2 decimal places
+    const formattedAmount = typeof amount === 'string' 
+      ? amount 
+      : String(parseFloat(amount).toFixed(2));
+      
+    console.log('Formatted amount for PayPal:', formattedAmount);
+    
     const collect = {
       body: {
         intent: intent,
@@ -91,7 +107,7 @@ export async function createPaypalOrder(req: Request, res: Response) {
           {
             amount: {
               currencyCode: currency,
-              value: amount,
+              value: formattedAmount,
             },
           },
         ],

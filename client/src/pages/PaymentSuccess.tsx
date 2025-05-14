@@ -50,16 +50,26 @@ export default function PaymentSuccessPage() {
               }));
               
               // Now we can submit the job posting since payment is confirmed
+              console.log('Creating job posting with data:', {
+                ...jobData,
+                paymentCompleted: true,
+                paymentOrderId: orderId
+              });
+              
+              // Ensure planCode is set to the same value as plan if not already set
+              const updatedJobData = {
+                ...jobData,
+                planCode: jobData.planCode || jobData.plan, // Make sure planCode matches plan
+                paymentCompleted: true,
+                paymentOrderId: orderId
+              };
+              
               const response = await fetch('/api/jobs', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                  ...jobData,
-                  paymentCompleted: true,
-                  paymentOrderId: orderId
-                }),
+                body: JSON.stringify(updatedJobData),
               });
               
               if (!response.ok) {
