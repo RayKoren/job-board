@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -7,7 +7,6 @@ import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { apiRequest } from '@/lib/queryClient';
 
 export default function PaymentPage() {
   const [_, setLocation] = useLocation();
@@ -20,7 +19,15 @@ export default function PaymentPage() {
   const [jobData, setJobData] = useState<any>(null);
   const [pricingData, setPricingData] = useState<{ plans: any; addons: any } | null>(null);
   
+  // Use ref to prevent multiple calls to the same data
+  const dataInitialized = useRef(false);
+  const pricingFetched = useRef(false);
+  
+  // Initialize data from URL parameters
   useEffect(() => {
+    if (dataInitialized.current) return; // Only run once
+    dataInitialized.current = true;
+    
     // Get URL parameters
     const searchParams = new URLSearchParams(window.location.search);
     const plan = searchParams.get('plan');
@@ -63,8 +70,14 @@ export default function PaymentPage() {
         console.error('Failed to parse job data', err);
       }
     }
+  }, [toast, setLocation]);
+  
+  // Fetch pricing information - separate effect to avoid dependencies on addons
+  useEffect(() => {
+    // Skip if we've already fetched pricing or if data isn't yet initialized
+    if (pricingFetched.current || !dataInitialized.current) return;
+    pricingFetched.current = true;
     
-    // Fetch pricing information
     const fetchPricing = async () => {
       try {
         console.log('Fetching pricing data...');
@@ -130,7 +143,7 @@ export default function PaymentPage() {
     };
     
     fetchPricing();
-  }, [setLocation, toast, addons]);
+  }, [addons, toast, dataInitialized.current]);
 
   // Redirect if not authenticated or not a business user
   useEffect(() => {
@@ -158,6 +171,7 @@ export default function PaymentPage() {
       localStorage.setItem('pendingJobPost', JSON.stringify({
         ...jobData,
         planTier,
+        planCode: planTier, // Ensure compatibility with backend
         addons,
         orderId,
         price: totalPrice.toString()
@@ -174,6 +188,7 @@ export default function PaymentPage() {
       localStorage.setItem('pendingJobPost', JSON.stringify({
         ...jobData,
         planTier,
+        planCode: planTier, // Ensure compatibility with backend
         addons,
         free: true
       }));
