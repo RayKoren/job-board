@@ -9,6 +9,11 @@ import { getPriceForPlan, getPriceForAddon, calculateJobPostingPrice } from "./s
 import { insertBusinessProfileSchema, insertJobSeekerProfileSchema, insertJobPostingSchema, insertJobApplicationSchema } from "@shared/zodSchema";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./services/paypal";
 
+// Helper function to create an object with dynamic fields
+function createJobData(baseData: any, extraFields: Record<string, any> = {}): any {
+  return { ...baseData, ...extraFields };
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize database
   await initDatabase();
@@ -90,11 +95,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/jobs', isBusinessUser, async (req: any, res) => {
     try {
       const userId = req.session.user.id;
-      
-      // Helper function to create an object with dynamic fields
-      function createJobData(baseData: any, extraFields: Record<string, any> = {}): any {
-        return { ...baseData, ...extraFields };
-      }
       
       // Validate job posting data
       const jobData = insertJobPostingSchema.parse(
@@ -339,17 +339,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.session.user.id;
       
       // Verify job belongs to this business
-      const job = await storage.getJobPosting(jobId);
-      if (!job) {
+      const existingJob = await storage.getJobPosting(jobId);
+      if (!existingJob) {
         return res.status(404).json({ message: "Job posting not found" });
       }
       
-      if (job.businessUserId !== userId) {
+      if (existingJob.businessUserId !== userId) {
         return res.status(403).json({ message: "Not authorized to update this job posting" });
       }
       
+      // Create an update object
+      const jobUpdateData = createJobData(req.body);
+      
+      // If the plan was changed, recalculate the expiry date
+      if (jobUpdateData.plan && jobUpdateData.plan !== existingJob.plan) {
+        try {
+          const { db } = await import('./db');
+          const { products } = await import('../shared/schema');
+          const { eq, and } = await import('drizzle-orm');
+          
+          // Look up the plan to determine the listing duration
+          const [planProduct] = await db.select()
+            .from(products)
+            .where(
+              and(
+                eq(products.code, jobUpdateData.plan),
+                eq(products.type, 'plan'),
+                eq(products.active, true)
+              )
+            );
+            
+          if (planProduct) {
+            let durationInDays = 15; // Default duration (for Basic plan)
+            
+            // Determine duration from plan code or description
+            switch (planProduct.code) {
+              case 'basic':
+                durationInDays = 15;
+                break;
+              case 'standard':
+                durationInDays = 30;
+                break;
+              case 'featured':
+                durationInDays = 30;
+                break;
+              case 'unlimited':
+                durationInDays = 90;
+                break;
+              default:
+                // Try to extract duration from description if available
+                if (planProduct.description) {
+                  const durationMatch = planProduct.description.match(/(\d+)[- ]day/i);
+                  if (durationMatch && durationMatch[1]) {
+                    durationInDays = parseInt(durationMatch[1], 10);
+                  }
+                }
+            }
+            
+            // Calculate the new expiry date from today
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + durationInDays);
+            
+            // Add it to the update data
+            jobUpdateData.expiresAt = expiresAt;
+            jobUpdateData.status = 'active'; // Ensure the job is marked as active
+            
+            // Set planCode to match plan
+            jobUpdateData.planCode = jobUpdateData.plan;
+            
+            console.log(`Updating job plan to ${jobUpdateData.plan}: Setting new expiry date to ${expiresAt.toISOString()} (${durationInDays} days from now)`);
+            
+            // Look up the plan ID for the database relationship
+            if (planProduct.id) {
+              // Use raw query to update the plan ID directly for better compatibility
+              await sequelize.query(
+                `UPDATE "JobPostings" SET "planId" = :planId WHERE "id" = :jobId`,
+                {
+                  replacements: {
+                    planId: planProduct.id,
+                    jobId: jobId
+                  },
+                  type: QueryTypes.UPDATE
+                }
+              );
+              console.log(`Updated job ${jobId} with new plan product ID ${planProduct.id} (${jobUpdateData.plan})`);
+            }
+          }
+        } catch (error) {
+          console.error('Error recalculating job expiry date:', error);
+        }
+      }
+      
       // Update job
-      const updatedJob = await storage.updateJobPosting(jobId, req.body);
+      const updatedJob = await storage.updateJobPosting(jobId, jobUpdateData);
       res.json(updatedJob);
     } catch (error) {
       console.error("Error updating job posting:", error);
