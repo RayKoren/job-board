@@ -18,7 +18,7 @@ export interface IUser {
   role: 'business' | 'job_seeker' | null;
   createdAt?: Date;
   updatedAt?: Date;
-  [key: string]: any; // Allow dynamic properties to fix sequelize TypeScript issues
+  [key: string | symbol | number]: any; // Allow dynamic properties to fix sequelize TypeScript issues
 }
 
 export interface IBusinessProfile {
@@ -35,7 +35,7 @@ export interface IBusinessProfile {
   logoUrl?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
-  [key: string]: any; // Allow dynamic properties to fix sequelize TypeScript issues
+  [key: string | symbol | number]: any; // Allow dynamic properties to fix sequelize TypeScript issues
 }
 
 export interface IJobSeekerProfile {
@@ -54,7 +54,7 @@ export interface IJobSeekerProfile {
   preferredJobTypes?: string[] | null;
   createdAt?: Date;
   updatedAt?: Date;
-  [key: string]: any; // Allow dynamic properties to fix sequelize TypeScript issues
+  [key: string | symbol | number]: any; // Allow dynamic properties to fix sequelize TypeScript issues
 }
 
 export interface IJobPosting {
@@ -83,7 +83,7 @@ export interface IJobPosting {
   tags?: string[];
   createdAt?: Date;
   updatedAt?: Date;
-  [key: string]: any; // Allow dynamic properties to fix sequelize TypeScript issues
+  [key: string | symbol | number]: any; // Allow dynamic properties to fix sequelize TypeScript issues
 }
 
 export interface IJobApplication {
@@ -98,6 +98,7 @@ export interface IJobApplication {
   status?: string;
   createdAt?: Date;
   updatedAt?: Date;
+  [key: string | symbol | number]: any; // Allow dynamic properties to fix sequelize TypeScript issues
 }
 
 export interface IStorage {

@@ -91,11 +91,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.session.user.id;
       
+      // Helper function to create an object with dynamic fields
+      function createJobData(baseData: any, extraFields: Record<string, any> = {}): any {
+        return { ...baseData, ...extraFields };
+      }
+      
       // Validate job posting data
-      const jobData = insertJobPostingSchema.parse({
-        ...req.body,
-        businessUserId: userId,
-      });
+      const jobData = insertJobPostingSchema.parse(
+        createJobData({
+          ...req.body,
+          businessUserId: userId,
+        })
+      );
       
       // Calculate the expiry date based on the chosen plan
       if (!jobData.expiresAt && jobData.plan) {
@@ -150,10 +157,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             jobData.expiresAt = expiresAt;
             jobData.status = 'active'; // Ensure the job is marked as active
             
-            // Set planCode to match plan 
-            if (!jobData.planCode) {
-              jobData.planCode = jobData.plan;
-            }
+            // Use the helper function to set dynamic fields
+            Object.assign(jobData, { planCode: jobData.plan });
             
             console.log(`Setting job expiry date to ${expiresAt.toISOString()} (${durationInDays} days from now)`);
           }
