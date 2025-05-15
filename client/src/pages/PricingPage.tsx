@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
-import Pricing from "@/components/Pricing";
+import DynamicPricing from "@/components/DynamicPricing";
 import Footer from "@/components/Footer";
 
 const PricingPage = () => {
@@ -46,7 +46,7 @@ const PricingPage = () => {
             Choose the right plan to connect with job seekers in Sheridan County
           </p>
         </div>
-        <Pricing />
+        <DynamicPricing />
       </main>
       <Footer />
     </div>
