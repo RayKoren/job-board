@@ -136,10 +136,55 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function PostJob() {
   const { isAuthenticated, isLoading, user } = useAuth();
-  const [selectedPlan, setSelectedPlan] = useState<"basic" | "standard" | "featured" | "unlimited">("standard");
+  const [selectedPlan, setSelectedPlan] = useState<string>("standard");
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  
+  // State for pricing data
+  const [pricingData, setPricingData] = useState<{
+    plans: Record<string, any>,
+    addons: Record<string, any>
+  } | null>(null);
+  const [loadingPricing, setLoadingPricing] = useState(true);
+  
+  // Fetch pricing data from API
+  useEffect(() => {
+    const fetchPricingData = async () => {
+      try {
+        setLoadingPricing(true);
+        const response = await fetch('/api/pricing');
+        
+        if (!response.ok) {
+          throw new Error(`Error fetching pricing data: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log("Fetched pricing data:", data);
+        setPricingData(data);
+        
+        // If the previously selected plan is inactive or unavailable, select a default
+        if (data.plans && !data.plans[selectedPlan]) {
+          if (data.plans.standard) {
+            setSelectedPlan('standard');
+          } else if (Object.keys(data.plans).length > 0) {
+            setSelectedPlan(Object.keys(data.plans)[0]);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch pricing data:', err);
+        toast({
+          variant: 'destructive',
+          title: 'Error Loading Pricing',
+          description: 'Failed to load pricing information. Please try again later.'
+        });
+      } finally {
+        setLoadingPricing(false);
+      }
+    };
+    
+    fetchPricingData();
+  }, [toast]);
   
   // Redirect to login if user is not authenticated
   useEffect(() => {
@@ -196,8 +241,10 @@ export default function PostJob() {
   };
 
   // Handle plan selection
-  const handlePlanChange = (plan: "basic" | "standard" | "featured" | "unlimited") => {
-    setSelectedPlan(plan);
+  const handlePlanChange = (plan: string) => {
+    if (pricingData?.plans && pricingData.plans[plan]) {
+      setSelectedPlan(plan);
+    }
   };
 
   // Handle form submission
@@ -269,35 +316,19 @@ export default function PostJob() {
     }
   };
 
-  // Calculate total price
+  // Calculate total price from API data
   const getPlanPrice = () => {
-    switch (selectedPlan) {
-      case "basic":
-        return 0;
-      case "standard":
-        return 20;
-      case "featured":
-        return 50;
-      case "unlimited":
-        return 150;
-      default:
-        return 0;
+    if (!pricingData || !pricingData.plans || !pricingData.plans[selectedPlan]) {
+      return 0;
     }
+    return pricingData.plans[selectedPlan].price || 0;
   };
 
   const getAddonPrice = (addon: string) => {
-    switch (addon) {
-      case "resume-access":
-        return 15;
-      case "highlighted":
-        return 10;
-      case "top-of-search":
-        return 25;
-      case "social-boost":
-        return 20;
-      default:
-        return 0;
+    if (!pricingData || !pricingData.addons || !pricingData.addons[addon]) {
+      return 0;
     }
+    return pricingData.addons[addon].price || 0;
   };
 
   const totalPrice = () => {
@@ -671,108 +702,72 @@ export default function PostJob() {
                           </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                          <div
-                            className={`relative p-4 rounded-lg border-2 cursor-pointer ${selectedPlan === "basic" ? "border-forest bg-white" : "border-gray-200 bg-gray-50"}`}
-                            onClick={() => handlePlanChange("basic" as const)}
-                          >
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <h4 className="font-semibold">Basic</h4>
-                                <p className="text-sm text-gray-500">
-                                  7-day listing
-                                </p>
+                          {loadingPricing ? (
+                            // Loading state
+                            <div className="space-y-4">
+                              <div className="border-2 border-gray-200 p-4 rounded-lg animate-pulse">
+                                <div className="flex justify-between items-center mb-2">
+                                  <div className="w-1/2">
+                                    <div className="h-5 bg-gray-200 rounded w-3/4"></div>
+                                    <div className="h-4 bg-gray-200 rounded w-1/2 mt-2"></div>
+                                  </div>
+                                  <div className="w-1/4 h-6 bg-gray-200 rounded"></div>
+                                </div>
                               </div>
-                              <div className="text-xl font-bold">Free</div>
+                              <div className="border-2 border-gray-200 p-4 rounded-lg animate-pulse">
+                                <div className="flex justify-between items-center mb-2">
+                                  <div className="w-1/2">
+                                    <div className="h-5 bg-gray-200 rounded w-3/4"></div>
+                                    <div className="h-4 bg-gray-200 rounded w-1/2 mt-2"></div>
+                                  </div>
+                                  <div className="w-1/4 h-6 bg-gray-200 rounded"></div>
+                                </div>
+                              </div>
                             </div>
-                            {selectedPlan === "basic" && (
-                              <div className="absolute top-2 right-2 text-forest">
-                                <Check className="w-5 h-5" />
+                          ) : pricingData && Object.keys(pricingData.plans).length > 0 ? (
+                            // Render plans dynamically
+                            Object.entries(pricingData.plans).map(([planCode, plan]) => (
+                              <div
+                                key={planCode}
+                                className={`relative p-4 rounded-lg border-2 cursor-pointer ${
+                                  selectedPlan === planCode ? "border-forest bg-white" : "border-gray-200 bg-gray-50"
+                                }`}
+                                onClick={() => handlePlanChange(planCode)}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <h4 className="font-semibold">{plan.name}</h4>
+                                    <p className="text-sm text-gray-500">
+                                      {plan.duration ? (plan.duration.split('job listing')[0] || '').trim() : ''}
+                                    </p>
+                                  </div>
+                                  <div className="text-xl font-bold">{plan.price > 0 ? `$${plan.price}` : 'Free'}</div>
+                                </div>
+                                
+                                {/* Show features if available */}
+                                {plan.features && plan.features.length > 0 && (
+                                  <div className="mt-2 text-sm text-forest">
+                                    {plan.features.slice(0, 3).map((feature, index) => (
+                                      <span key={index} className="flex items-center gap-1">
+                                        <Check className="w-4 h-4" /> {feature}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                                
+                                {selectedPlan === planCode && (
+                                  <div className="absolute top-2 right-2 text-forest">
+                                    <Check className="w-5 h-5" />
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-
-                          <div
-                            className={`relative p-4 rounded-lg border-2 cursor-pointer ${selectedPlan === "standard" ? "border-forest bg-white" : "border-gray-200 bg-gray-50"}`}
-                            onClick={() => handlePlanChange("standard" as const)}
-                          >
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <h4 className="font-semibold">Standard</h4>
-                                <p className="text-sm text-gray-500">
-                                  30-day listing
-                                </p>
-                              </div>
-                              <div className="text-xl font-bold">$20</div>
+                            ))
+                          ) : (
+                            // No plans available state
+                            <div className="text-center p-6 border-2 border-gray-200 rounded-lg">
+                              <p className="text-gray-500">No pricing plans available</p>
                             </div>
-                            {selectedPlan === "standard" && (
-                              <div className="absolute top-2 right-2 text-forest">
-                                <Check className="w-5 h-5" />
-                              </div>
-                            )}
-                          </div>
-
-                          <div
-                            className={`relative p-4 rounded-lg border-2 cursor-pointer ${selectedPlan === "featured" ? "border-forest bg-white" : "border-gray-200 bg-gray-50"}`}
-                            onClick={() => handlePlanChange("featured" as const)}
-                          >
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <h4 className="font-semibold">Featured</h4>
-                                <p className="text-sm text-gray-500">
-                                  30-day featured listing
-                                </p>
-                              </div>
-                              <div className="text-xl font-bold">$50</div>
-                            </div>
-                            <div className="mt-2 text-sm text-forest">
-                              <span className="flex items-center gap-1">
-                                <Check className="w-4 h-4" /> Priority placement
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Check className="w-4 h-4" /> Highlighted in
-                                search
-                              </span>
-                            </div>
-                            {selectedPlan === "featured" && (
-                              <div className="absolute top-2 right-2 text-forest">
-                                <Check className="w-5 h-5" />
-                              </div>
-                            )}
-                          </div>
-
-                          <div
-                            className={`relative p-4 rounded-lg border-2 cursor-pointer ${selectedPlan === "unlimited" ? "border-forest bg-white" : "border-gray-200 bg-gray-50"}`}
-                            onClick={() => handlePlanChange("unlimited" as const)}
-                          >
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <h4 className="font-semibold">Unlimited</h4>
-                                <p className="text-sm text-gray-500">
-                                  90-day premium listing
-                                </p>
-                              </div>
-                              <div className="text-xl font-bold">$150</div>
-                            </div>
-                            <div className="mt-2 text-sm text-forest">
-                              <span className="flex items-center gap-1">
-                                <Check className="w-4 h-4" /> Top placement for
-                                30 days
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Check className="w-4 h-4" /> Social media
-                                promotion
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Check className="w-4 h-4" /> Access to all
-                                applicant resumes
-                              </span>
-                            </div>
-                            {selectedPlan === "unlimited" && (
-                              <div className="absolute top-2 right-2 text-forest">
-                                <Check className="w-5 h-5" />
-                              </div>
-                            )}
-                          </div>
+                          )}
                         </CardContent>
                       </Card>
 
@@ -784,85 +779,52 @@ export default function PostJob() {
                           </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
-                              id="resume-access"
-                              checked={selectedAddons.includes("resume-access")}
-                              onCheckedChange={() =>
-                                toggleAddon("resume-access")
-                              }
-                            />
-                            <div className="grid gap-1.5">
-                              <Label
-                                htmlFor="resume-access"
-                                className="font-medium"
-                              >
-                                Resume Database Access (+$15)
-                              </Label>
-                              <p className="text-sm text-gray-500">
-                                Access all resumes for 30 days
-                              </p>
+                          {loadingPricing ? (
+                            // Loading state for add-ons
+                            <div className="space-y-4">
+                              <div className="flex items-center space-x-2 animate-pulse">
+                                <div className="w-5 h-5 bg-gray-200 rounded"></div>
+                                <div className="grid gap-1.5 w-full">
+                                  <div className="h-5 bg-gray-200 rounded w-3/4"></div>
+                                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2 animate-pulse">
+                                <div className="w-5 h-5 bg-gray-200 rounded"></div>
+                                <div className="grid gap-1.5 w-full">
+                                  <div className="h-5 bg-gray-200 rounded w-3/4"></div>
+                                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
-                              id="highlighted"
-                              checked={selectedAddons.includes("highlighted")}
-                              onCheckedChange={() => toggleAddon("highlighted")}
-                            />
-                            <div className="grid gap-1.5">
-                              <Label
-                                htmlFor="highlighted"
-                                className="font-medium"
-                              >
-                                Highlighted Listing (+$10)
-                              </Label>
-                              <p className="text-sm text-gray-500">
-                                Make your listing stand out with a highlight
-                              </p>
+                          ) : pricingData && Object.keys(pricingData.addons).length > 0 ? (
+                            // Render add-ons dynamically
+                            Object.entries(pricingData.addons).map(([addonCode, addon]) => (
+                              <div key={addonCode} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={addonCode}
+                                  checked={selectedAddons.includes(addonCode)}
+                                  onCheckedChange={() => toggleAddon(addonCode)}
+                                />
+                                <div className="grid gap-1.5">
+                                  <Label
+                                    htmlFor={addonCode}
+                                    className="font-medium"
+                                  >
+                                    {addon.name} (+${addon.price})
+                                  </Label>
+                                  <p className="text-sm text-gray-500">
+                                    {addon.description}
+                                  </p>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            // No add-ons available state
+                            <div className="text-center p-4">
+                              <p className="text-gray-500">No add-ons available</p>
                             </div>
-                          </div>
-
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
-                              id="top-of-search"
-                              checked={selectedAddons.includes("top-of-search")}
-                              onCheckedChange={() =>
-                                toggleAddon("top-of-search")
-                              }
-                            />
-                            <div className="grid gap-1.5">
-                              <Label
-                                htmlFor="top-of-search"
-                                className="font-medium"
-                              >
-                                Top of Search Results (+$25)
-                              </Label>
-                              <p className="text-sm text-gray-500">
-                                Priority placement in search results for 14 days
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
-                              id="social-boost"
-                              checked={selectedAddons.includes("social-boost")}
-                              onCheckedChange={() => toggleAddon("social-boost")}
-                            />
-                            <div className="grid gap-1.5">
-                              <Label
-                                htmlFor="social-boost"
-                                className="font-medium"
-                              >
-                                Social Media Promotion (+$20)
-                              </Label>
-                              <p className="text-sm text-gray-500">
-                                Promote your job on our social media channels
-                              </p>
-                            </div>
-                          </div>
+                          )}
                         </CardContent>
                       </Card>
 
