@@ -97,7 +97,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
         businessUserId: userId,
       });
       
-      // Create the job posting first
+      // Calculate the expiry date based on the chosen plan
+      if (!jobData.expiresAt && jobData.plan) {
+        try {
+          const { db } = await import('./db');
+          const { products } = await import('../shared/schema');
+          const { eq, and } = await import('drizzle-orm');
+          
+          // Look up the plan to determine the listing duration
+          const [planProduct] = await db.select()
+            .from(products)
+            .where(
+              and(
+                eq(products.code, jobData.plan),
+                eq(products.type, 'plan'),
+                eq(products.active, true)
+              )
+            );
+            
+          if (planProduct) {
+            let durationInDays = 15; // Default duration (for Basic plan)
+            
+            // Determine duration from plan code or description
+            switch (planProduct.code) {
+              case 'basic':
+                durationInDays = 15;
+                break;
+              case 'standard':
+                durationInDays = 30;
+                break;
+              case 'featured':
+                durationInDays = 30;
+                break;
+              case 'unlimited':
+                durationInDays = 90;
+                break;
+              default:
+                // Try to extract duration from description if available
+                if (planProduct.description) {
+                  const durationMatch = planProduct.description.match(/(\d+)[- ]day/i);
+                  if (durationMatch && durationMatch[1]) {
+                    durationInDays = parseInt(durationMatch[1], 10);
+                  }
+                }
+            }
+            
+            // Calculate the expiry date
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + durationInDays);
+            
+            // Add it to the job data
+            jobData.expiresAt = expiresAt;
+            jobData.status = 'active'; // Ensure the job is marked as active
+            
+            // Set planCode to match plan 
+            if (!jobData.planCode) {
+              jobData.planCode = jobData.plan;
+            }
+            
+            console.log(`Setting job expiry date to ${expiresAt.toISOString()} (${durationInDays} days from now)`);
+          }
+        } catch (error) {
+          console.error('Error determining job expiry date:', error);
+        }
+      }
+      
+      // Create the job posting with the calculated expiry date
       const job = await storage.createJobPosting(jobData);
       
       // Now create relationships for plan and add-ons in the database
@@ -109,7 +174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('Creating database relationships for job posting:', {
           jobId: job.id,
           plan: jobData.plan,
-          planCode: jobData.planCode,
+          expiresAt: jobData.expiresAt,
           addons: jobData.addons
         });
         
@@ -128,7 +193,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (planProduct && planProduct.id !== undefined && job.id !== undefined) {
             // Update the job with the planCode field - we can't set planId directly through the storage interface
             const jobUpdate: Partial<IJobPosting> = {
-              planCode: jobData.plan // Set planCode to match plan for compatibility
+              planCode: jobData.plan, // Set planCode to match plan for compatibility
+              planId: planProduct.id  // Set the plan ID reference
             };
             
             // Update at database level for planId
@@ -531,13 +597,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { db } = await import('./db');
       const { products } = await import('../shared/schema');
-      const { eq } = await import('drizzle-orm');
+      const { eq, and } = await import('drizzle-orm');
       
       // Get all active plans ordered by sortOrder
       const plansList = await db.select()
         .from(products)
         .where(
-          eq(products.type, 'plan')
+          and(
+            eq(products.type, 'plan'),
+            eq(products.active, true) // Only include active plans
+          )
         )
         .orderBy(products.sortOrder);
         
@@ -545,7 +614,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const addonsList = await db.select()
         .from(products)
         .where(
-          eq(products.type, 'addon')
+          and(
+            eq(products.type, 'addon'),
+            eq(products.active, true) // Only include active add-ons
+          )
         )
         .orderBy(products.sortOrder);
       
@@ -555,7 +627,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         plans[plan.code] = {
           name: plan.name,
           price: Number(plan.price),
-          features: plan.features || []
+          features: plan.features || [],
+          active: plan.active, // Include active status
+          duration: plan.description // Use description field for duration info
         };
       }
       
@@ -564,7 +638,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         addons[addon.code] = {
           name: addon.name,
           price: Number(addon.price),
-          description: addon.description || ''
+          description: addon.description || '',
+          active: addon.active // Include active status
         };
       }
       

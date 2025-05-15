@@ -18,6 +18,7 @@ export interface IUser {
   role: 'business' | 'job_seeker' | null;
   createdAt?: Date;
   updatedAt?: Date;
+  [key: string]: any; // Allow dynamic properties to fix sequelize TypeScript issues
 }
 
 export interface IBusinessProfile {
@@ -34,6 +35,7 @@ export interface IBusinessProfile {
   logoUrl?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
+  [key: string]: any; // Allow dynamic properties to fix sequelize TypeScript issues
 }
 
 export interface IJobSeekerProfile {
@@ -52,6 +54,7 @@ export interface IJobSeekerProfile {
   preferredJobTypes?: string[] | null;
   createdAt?: Date;
   updatedAt?: Date;
+  [key: string]: any; // Allow dynamic properties to fix sequelize TypeScript issues
 }
 
 export interface IJobPosting {
@@ -80,6 +83,7 @@ export interface IJobPosting {
   tags?: string[];
   createdAt?: Date;
   updatedAt?: Date;
+  [key: string]: any; // Allow dynamic properties to fix sequelize TypeScript issues
 }
 
 export interface IJobApplication {
@@ -117,6 +121,7 @@ export interface IStorage {
     featured?: boolean;
     limit?: number;
     offset?: number;
+    includeExpired?: boolean;
   }): Promise<IJobPosting[]>;
   createJobPosting(posting: IJobPosting): Promise<IJobPosting>;
   updateJobPosting(id: number, posting: Partial<IJobPosting>): Promise<IJobPosting>;
@@ -204,6 +209,7 @@ export class DatabaseStorage implements IStorage {
     featured?: boolean;
     limit?: number;
     offset?: number;
+    includeExpired?: boolean;
   } = {}): Promise<IJobPosting[]> {
     const whereClause: any = {};
     
@@ -213,6 +219,17 @@ export class DatabaseStorage implements IStorage {
     
     if (options.featured !== undefined) {
       whereClause.featured = options.featured;
+    }
+    
+    // Filter out expired job postings unless specifically requested
+    if (options.includeExpired !== true) {
+      whereClause[Op.or] = [
+        { expiresAt: { [Op.gt]: new Date() } }, // Not expired yet
+        { expiresAt: null } // No expiration date set
+      ];
+      
+      // Also only show active job postings by default
+      whereClause.status = { [Op.ne]: 'deleted' };
     }
     
     const postings = await JobPosting.findAll({
