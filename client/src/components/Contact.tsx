@@ -76,30 +76,6 @@ const Contact = () => {
                 </div>
               </div>
             </div>
-
-            <div className="flex space-x-4">
-              <a
-                href="#"
-                className="bg-forest text-white p-3 rounded-full hover:bg-opacity-90 transition duration-300"
-                aria-label="Facebook"
-              >
-                <Facebook className="h-5 w-5" />
-              </a>
-              <a
-                href="#"
-                className="bg-forest text-white p-3 rounded-full hover:bg-opacity-90 transition duration-300"
-                aria-label="Instagram"
-              >
-                <Instagram className="h-5 w-5" />
-              </a>
-              <a
-                href="#"
-                className="bg-forest text-white p-3 rounded-full hover:bg-opacity-90 transition duration-300"
-                aria-label="LinkedIn"
-              >
-                <Linkedin className="h-5 w-5" />
-              </a>
-            </div>
           </div>
 
           <div className="lg:w-1/2">

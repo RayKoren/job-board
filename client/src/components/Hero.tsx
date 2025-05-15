@@ -4,11 +4,11 @@ import wyomingBighorns from "../assets/wyoming-bighorns.jpg";
 
 const Hero = () => {
   return (
-    <section 
-      id="home" 
+    <section
+      id="home"
       className="relative h-screen bg-cover bg-center brightness-110"
-      style={{ 
-        backgroundImage: `url(${wyomingBighorns})` 
+      style={{
+        backgroundImage: `url(${wyomingBighorns})`,
       }}
     >
       <div className="absolute inset-0 bg-black bg-opacity-35"></div>
@@ -18,7 +18,8 @@ const Hero = () => {
             Sheridan Wyoming Jobs & Gigs
           </h1>
           <p className="text-xl md:text-2xl mb-8">
-            Connecting local businesses with talent in the Sheridan community
+            Connecting local businesses with talent in Sheridan, WY and the
+            surrounding communities
           </p>
           <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
             <Button

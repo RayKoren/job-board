@@ -42,7 +42,6 @@ const ServiceCard = ({
 };
 
 const Services = () => {
-  
   const services = [
     {
       title: "Find a Job",
@@ -74,7 +73,7 @@ const Services = () => {
     {
       title: "Post a Gig",
       description:
-        "Need temporary help? Post short-term projects and find skilled local talent in Sheridan, WY",
+        "Need temporary help? Post short-term projects and find skilled local talent in Sheridan",
       icon: <ClipboardList className="h-6 w-6" />,
       buttonText: "Post Gig",
       buttonLink: "/post-job",

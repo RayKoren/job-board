@@ -13,30 +13,33 @@ const Home = () => {
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const anchor = target.closest('a[href^="#"]');
-      
+
       if (anchor) {
         e.preventDefault();
-        const targetId = anchor.getAttribute('href');
-        
-        if (targetId && targetId !== '#') {
+        const targetId = anchor.getAttribute("href");
+
+        if (targetId && targetId !== "#") {
           const targetElement = document.querySelector(targetId);
           if (targetElement) {
             const navbarHeight = 80; // Adjust based on your navbar height
-            const yOffset = targetElement.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
-            
+            const yOffset =
+              targetElement.getBoundingClientRect().top +
+              window.pageYOffset -
+              navbarHeight;
+
             window.scrollTo({
               top: yOffset,
-              behavior: 'smooth'
+              behavior: "smooth",
             });
           }
         }
       }
     };
 
-    document.addEventListener('click', handleClick);
-    
+    document.addEventListener("click", handleClick);
+
     return () => {
-      document.removeEventListener('click', handleClick);
+      document.removeEventListener("click", handleClick);
     };
   }, []);
 
@@ -45,9 +48,9 @@ const Home = () => {
       <Navbar />
       <main>
         <Hero />
-        <About />
         <Services />
         <FeaturedJobs />
+        <About />
         <Contact />
       </main>
       <Footer />
