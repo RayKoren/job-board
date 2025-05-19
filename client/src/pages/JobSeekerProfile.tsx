@@ -5,14 +5,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Loader2, Upload, FileText, X, Link as LinkIcon } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Loader2, Upload, FileText, X, Link as LinkIcon, ArrowLeft } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -233,12 +233,30 @@ export default function JobSeekerProfile() {
     );
   }
 
+  // Handle going back to dashboard
+  const handleBack = () => {
+    navigate('/job-seeker-dashboard');
+  };
+
   return (
     <div className="container max-w-4xl mx-auto py-12 px-4">
-      <h1 className="text-3xl font-bold text-forest mb-4">Job Seeker Profile</h1>
-      <p className="text-lg text-gray-600 mb-8">
-        Complete your profile to make it easier to apply for jobs and be discovered by employers.
-      </p>
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+        <div className="mb-4 md:mb-0">
+          <h1 className="text-3xl font-bold text-forest mb-2">Job Seeker Profile</h1>
+          <p className="text-lg text-gray-600">
+            Complete your profile to make it easier to apply for jobs and be discovered by employers.
+          </p>
+        </div>
+        
+        <Button 
+          variant="outline" 
+          onClick={handleBack}
+          className="flex items-center gap-2 w-full md:w-auto"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+          Back to Dashboard
+        </Button>
+      </div>
 
       {isLoadingProfile ? (
         <div className="flex justify-center items-center py-12">
