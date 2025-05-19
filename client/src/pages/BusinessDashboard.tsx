@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus, Edit, Trash2, ExternalLink, Star, Tag, Briefcase, MapPin, Calendar, Home } from "lucide-react";
+import { Loader2, Plus, Edit, Trash2, ExternalLink, Star, Tag, Briefcase, MapPin, Calendar, Home, Eye } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";

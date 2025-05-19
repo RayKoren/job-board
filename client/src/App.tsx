@@ -18,9 +18,8 @@ import LoginPage from "@/pages/LoginPage";
 import RoleSelection from "@/pages/RoleSelection";
 import PaymentPage from "@/pages/PaymentPage";
 import PaymentSuccess from "@/pages/PaymentSuccess";
-// Dynamic imports
-const BusinessJobView = () => import("@/pages/BusinessJobView").then(module => <module.default />);
-const BusinessJobEdit = () => import("@/pages/BusinessJobEdit").then(module => <module.default />);
+import BusinessJobView from "@/pages/BusinessJobView";
+import BusinessJobEdit from "@/pages/BusinessJobEdit";
 
 
 // Components
@@ -107,14 +106,13 @@ function App() {
             path="/business/dashboard" 
             component={() => <ProtectedRoute component={BusinessDashboard} requiredRole="business" />} 
           />
-          {/* Job view/edit routes */}
           <Route 
-            path="/business/jobs/:id"
-            component={BusinessJobView}
+            path="/business/jobs/:id" 
+            component={() => <ProtectedRoute component={BusinessJobView} requiredRole="business" />} 
           />
           <Route 
-            path="/business/jobs/:id/edit"
-            component={BusinessJobEdit}
+            path="/business/jobs/:id/edit" 
+            component={() => <ProtectedRoute component={BusinessJobEdit} requiredRole="business" />} 
           />
           
           {/* Job Seeker Routes (Protected) */}

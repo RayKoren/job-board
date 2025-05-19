@@ -328,6 +328,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get specific business job
+  app.get('/api/business/jobs/:id', isBusinessUser, async (req: any, res) => {
+    try {
+      const userId = req.session.user.id;
+      const jobId = parseInt(req.params.id);
+      
+      if (isNaN(jobId)) {
+        return res.status(400).json({ message: 'Invalid job ID' });
+      }
+      
+      const job = await storage.getJobPosting(jobId);
+      
+      if (!job) {
+        return res.status(404).json({ message: 'Job posting not found' });
+      }
+      
+      // Ensure the job belongs to the requesting business
+      if (job.businessUserId !== userId) {
+        return res.status(403).json({ message: 'You do not have permission to view this job posting' });
+      }
+      
+      return res.status(200).json(job);
+    } catch (error) {
+      console.error('Error fetching job posting:', error);
+      return res.status(500).json({ message: 'Failed to fetch job posting' });
+    }
+  });
+  
+  // Update specific business job
+  app.put('/api/business/jobs/:id', isBusinessUser, async (req: any, res) => {
+    try {
+      const userId = req.session.user.id;
+      const jobId = parseInt(req.params.id);
+      
+      if (isNaN(jobId)) {
+        return res.status(400).json({ message: 'Invalid job ID' });
+      }
+      
+      const job = await storage.getJobPosting(jobId);
+      
+      if (!job) {
+        return res.status(404).json({ message: 'Job posting not found' });
+      }
+      
+      // Ensure the job belongs to the requesting business
+      if (job.businessUserId !== userId) {
+        return res.status(403).json({ message: 'You do not have permission to edit this job posting' });
+      }
+      
+      // Don't allow changing certain fields
+      const { 
+        plan, planId, planCode, addons, featured, 
+        expiresAt, status, businessUserId, ...updateData 
+      } = req.body;
+      
+      // Update the job posting
+      const updatedJob = await storage.updateJobPosting(jobId, updateData);
+      
+      return res.status(200).json(updatedJob);
+    } catch (error) {
+      console.error('Error updating job posting:', error);
+      return res.status(500).json({ message: 'Failed to update job posting' });
+    }
+  });
+  
   // Get single job posting (public)
   app.get('/api/jobs/:id', async (req, res) => {
     try {

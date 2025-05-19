@@ -27,7 +27,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import BusinessLayout from '@/components/BusinessLayout';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import {
@@ -120,35 +119,43 @@ export default function BusinessJobView() {
   
   if (isLoading) {
     return (
-      <BusinessLayout>
-        <div className="flex justify-center items-center min-h-[60vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-forest" />
+      <>
+        <Navbar />
+        <div className="min-h-screen bg-gray-50">
+          <div className="flex justify-center items-center min-h-[60vh]">
+            <Loader2 className="h-8 w-8 animate-spin text-forest" />
+          </div>
         </div>
-      </BusinessLayout>
+        <Footer />
+      </>
     );
   }
   
   if (error || !job) {
     return (
-      <BusinessLayout>
-        <div className="py-8 px-4">
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            <p>Error loading job details. The job posting may have been deleted or you don't have permission to view it.</p>
+      <>
+        <Navbar />
+        <div className="min-h-screen bg-gray-50">
+          <div className="py-8 px-4 max-w-5xl mx-auto">
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              <p>Error loading job details. The job posting may have been deleted or you don't have permission to view it.</p>
+            </div>
+            <Button asChild>
+              <Link to="/business/dashboard">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
+              </Link>
+            </Button>
           </div>
-          <Button asChild>
-            <Link to="/business/dashboard">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
-            </Link>
-          </Button>
         </div>
-      </BusinessLayout>
+        <Footer />
+      </>
     );
   }
   
   return (
     <>
       <Navbar />
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <div className="container mx-auto px-4 py-8 max-w-5xl min-h-screen bg-gray-50">
         <div className="mb-8 flex items-center justify-between">
           <Button variant="outline" asChild>
             <Link to="/business/dashboard">
