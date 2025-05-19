@@ -252,9 +252,15 @@ export default function BusinessDashboard() {
               <CardFooter className="flex justify-between">
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" asChild>
-                    <Link to={`/jobs/${job.id}`}>
-                      <ExternalLink className="w-4 h-4 mr-1" />
+                    <Link to={`/business/jobs/${job.id}`}>
+                      <Eye className="w-4 h-4 mr-1" />
                       View
+                    </Link>
+                  </Button>
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to={`/business/jobs/${job.id}/edit`}>
+                      <Edit className="w-4 h-4 mr-1" />
+                      Edit
                     </Link>
                   </Button>
                   
