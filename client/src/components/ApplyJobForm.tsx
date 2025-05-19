@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -178,7 +178,7 @@ export default function ApplyJobForm({
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md md:max-w-lg sm:max-w-[425px]">
+      <DialogContent className="max-w-md md:max-w-lg sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Apply for {jobTitle}</DialogTitle>
           <DialogDescription>
@@ -332,7 +332,37 @@ export default function ApplyJobForm({
                         </FormDescription>
                       </div>
                     </div>
-                    {field.value && getProfilePreview() as React.ReactNode}
+                    {field.value && (
+                      <Card className="mt-4 border-dashed border-gray-300">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-md">Profile information to be shared</CardTitle>
+                          <CardDescription>This information will be visible to the employer</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-2 text-sm">
+                          {(profileData as any)?.title && (
+                            <div>
+                              <span className="font-medium">Title:</span> {(profileData as any).title}
+                            </div>
+                          )}
+                          {(profileData as any)?.location && (
+                            <div>
+                              <span className="font-medium">Location:</span> {(profileData as any).location}
+                            </div>
+                          )}
+                          {(profileData as any)?.skills && Array.isArray((profileData as any).skills) && (profileData as any).skills.length > 0 && (
+                            <div>
+                              <span className="font-medium">Skills:</span> {(profileData as any).skills.join(", ")}
+                            </div>
+                          )}
+                          {(profileData as any)?.resumeUrl && (
+                            <div className="flex items-center">
+                              <FileText className="h-4 w-4 mr-1 text-forest" />
+                              <span className="font-medium">Resume:</span> Attached
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
