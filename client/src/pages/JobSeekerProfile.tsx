@@ -64,15 +64,17 @@ export default function JobSeekerProfile() {
   // Using useEffect to avoid infinite re-renders
   useEffect(() => {
     if (profileData) {
+      // Use type assertion to help TypeScript understand the structure
+      const profile = profileData as any;
       form.reset({
-        title: profileData.title || "",
-        bio: profileData.bio || "",
-        skills: profileData.skills ? profileData.skills.join(", ") : "",
-        experience: profileData.experience || "",
-        education: profileData.education || "",
-        resumeUrl: profileData.resumeUrl || "",
-        phone: profileData.phone || "",
-        location: profileData.location || "",
+        title: profile.title || "",
+        bio: profile.bio || "",
+        skills: profile.skills ? profile.skills.join(", ") : "",
+        experience: profile.experience || "",
+        education: profile.education || "",
+        resumeUrl: profile.resumeUrl || "",
+        phone: profile.phone || "",
+        location: profile.location || "",
       });
     }
   }, [profileData, form]);

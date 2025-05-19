@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import express, { type Express, type Request, type Response } from "express";
 import { createServer, type Server } from "http";
 import { storage, IJobPosting } from "./storage";
 import { setupAuth, isAuthenticated, isBusinessUser, isJobSeeker } from "./localAuth"; // Using local authentication temporarily
@@ -6,6 +6,7 @@ import { z } from "zod";
 import { initDatabase, sequelize } from "./db";
 import { QueryTypes } from "sequelize";
 import path from "path";
+import fs from "fs";
 import { getPriceForPlan, getPriceForAddon, calculateJobPostingPrice } from "./services/pricing";
 import { insertBusinessProfileSchema, insertJobSeekerProfileSchema, insertJobPostingSchema, insertJobApplicationSchema } from "@shared/zodSchema";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./services/paypal";
@@ -820,7 +821,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // New PayPal verification endpoint will be added here
+  // Create uploads directory if it doesn't exist - handled at startup
+  if (!fs.existsSync('uploads')) {
+    fs.mkdirSync('uploads', { recursive: true });
+  }
+  
+  // Serve static files from the uploads directory
+  app.use('/uploads', express.static('uploads'));
+  
+  // Resume upload route (protected)
+  app.post('/api/resume-upload', isJobSeeker, (req: Request, res: Response) => {
+    try {
+      // Use single upload middleware directly in route handler
+      resumeUpload.single('resume')(req, res, (err) => {
+        if (err) {
+          return res.status(400).json({ message: 'Error uploading file: ' + err.message });
+        }
+        
+        if (!req.file) {
+          return res.status(400).json({ message: 'No file uploaded' });
+        }
+        
+        const fileUrl = getFileUrl(req.file.filename);
+        
+        // Return the URL to the uploaded file
+        return res.status(200).json({
+          message: 'File uploaded successfully',
+          fileUrl,
+          fileName: req.file.originalname,
+          fileSize: req.file.size
+        });
+      });
+    } catch (error) {
+      console.error('Error uploading resume:', error);
+      return res.status(500).json({ message: 'Failed to upload resume' });
+    }
+  });
+  
+  // Track job application clicks
+  app.post('/api/jobs/:id/track-click', async (req, res) => {
+    try {
+      const jobId = parseInt(req.params.id);
+      
+      if (isNaN(jobId)) {
+        return res.status(400).json({ message: 'Invalid job ID' });
+      }
+      
+      // Update click count in the database
+      try {
+        await sequelize.query(
+          `UPDATE "job_postings" 
+           SET "click_count" = COALESCE("click_count", 0) + 1 
+           WHERE "id" = :jobId`,
+          {
+            replacements: { jobId },
+            type: QueryTypes.UPDATE
+          }
+        );
+        
+        return res.status(200).json({ success: true });
+      } catch (dbError) {
+        console.error('Error updating click count:', dbError);
+        return res.status(500).json({ message: 'Failed to update click count' });
+      }
+    } catch (error) {
+      console.error('Error tracking job click:', error);
+      return res.status(500).json({ message: 'Failed to track job click' });
+    }
+  });
   
   const httpServer = createServer(app);
   return httpServer;

@@ -90,14 +90,22 @@ export const jobPostings = pgTable("job_postings", {
   hourlyRate: text("hourly_rate"),
   description: text("description").notNull(),
   requirements: text("requirements"),
+  benefits: text("benefits"),
+  contactEmail: text("contact_email"),
+  applicationUrl: text("application_url"),
+  contactPhone: text("contact_phone"),
   featured: boolean("featured").default(false),
   tags: text("tags").array(),
+  addons: text("addons").array(),
   postedAt: timestamp("posted_at").defaultNow(),
   expiresAt: timestamp("expires_at"),
   planId: integer("plan_id").references(() => products.id), // Reference to the selected plan product
   planCode: text("plan_code").notNull(), // For backward compatibility (basic, standard, featured, unlimited)
   plan: text("plan").notNull(), // Legacy field (same value as planCode, kept for backward compatibility)
   status: text("status").default("pending").notNull(), // pending, active, expired, deleted
+  clickCount: integer("click_count").default(0), // Track application clicks 
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Junction table for job postings and product add-ons
