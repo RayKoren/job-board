@@ -406,7 +406,9 @@ function JobCard({ job }: { job: Job }) {
                     <Badge className="bg-clay">Featured</Badge>
                   )}
                   {job.addons?.includes('urgent') && (
-                    <Badge className="bg-red-500 text-white">Urgent</Badge>
+                    <Badge className="bg-red-600 text-white flex items-center gap-1">
+                      <span className="animate-pulse">⚡</span> Urgent Hiring
+                    </Badge>
                   )}
                 </div>
               </div>
