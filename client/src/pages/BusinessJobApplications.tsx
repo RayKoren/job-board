@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -48,9 +48,10 @@ export default function BusinessJobApplications() {
   });
   
   // Filter applications by status
+  const applicationsArray = Array.isArray(applications) ? applications : [];
   const filteredApplications = selectedStatus && selectedStatus !== "all"
-    ? (applications as any[])?.filter(app => app.status === selectedStatus)
-    : applications;
+    ? applicationsArray.filter(app => app.status === selectedStatus)
+    : applicationsArray;
   
   useEffect(() => {
     if (isAuthenticated === false) {
