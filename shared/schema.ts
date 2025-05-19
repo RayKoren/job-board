@@ -55,7 +55,9 @@ export const jobSeekerProfiles = pgTable("job_seeker_profiles", {
   skills: text("skills").array(),
   experience: text("experience"),
   education: text("education"),
-  resumeUrl: text("resume_url"),
+  resumeData: text("resume_data"), // Store base64 encoded resume data
+  resumeName: text("resume_name"), // Original filename
+  resumeType: text("resume_type"), // MIME type
   phone: text("phone"),
   location: text("location"),
   createdAt: timestamp("created_at").defaultNow(),

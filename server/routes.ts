@@ -928,11 +928,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static files from the uploads directory
   app.use('/uploads', express.static('uploads'));
   
-  // Resume upload route (protected)
-  app.post('/api/resume-upload', isJobSeeker, (req: Request, res: Response) => {
+  // Resume upload route (protected) - storing directly in database
+  app.post('/api/resume-upload', isJobSeeker, async (req: any, res: Response) => {
     try {
-      // Use single upload middleware directly in route handler
-      resumeUpload.single('resume')(req, res, (err) => {
+      // Handle single file upload in memory
+      const bufferStorage = multer.memoryStorage();
+      const upload = multer({
+        storage: bufferStorage,
+        limits: {
+          fileSize: 5 * 1024 * 1024 // 5MB limit
+        },
+        fileFilter: (req, file, cb) => {
+          // Accept only PDF and DOC/DOCX files
+          const allowedMimeTypes = [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          ];
+          
+          if (allowedMimeTypes.includes(file.mimetype)) {
+            cb(null, true);
+          } else {
+            cb(new Error('Invalid file type. Only PDF and Word documents are allowed.'));
+          }
+        }
+      }).single('resume');
+
+      upload(req, res, async (err) => {
         if (err) {
           return res.status(400).json({ message: 'Error uploading file: ' + err.message });
         }
@@ -940,16 +962,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!req.file) {
           return res.status(400).json({ message: 'No file uploaded' });
         }
+
+        const userId = req.session.user.id;
         
-        const fileUrl = getFileUrl(req.file.filename);
-        
-        // Return the URL to the uploaded file
-        return res.status(200).json({
-          message: 'File uploaded successfully',
-          fileUrl,
-          fileName: req.file.originalname,
-          fileSize: req.file.size
-        });
+        try {
+          // Convert buffer to base64 string for storage
+          const resumeData = req.file.buffer.toString('base64');
+          
+          // Get the current job seeker profile
+          const profile = await storage.getJobSeekerProfile(userId);
+          
+          if (profile) {
+            // Update the profile with resume data
+            await storage.upsertJobSeekerProfile({
+              ...profile,
+              resumeData: resumeData,
+              resumeName: req.file.originalname,
+              resumeType: req.file.mimetype
+            });
+          }
+          
+          // Return success response
+          return res.status(200).json({
+            message: 'File uploaded successfully',
+            fileName: req.file.originalname,
+            fileSize: req.file.size
+          });
+        } catch (dbError) {
+          console.error('Error saving resume to database:', dbError);
+          return res.status(500).json({ message: 'Failed to save resume to database' });
+        }
       });
     } catch (error) {
       console.error('Error uploading resume:', error);
