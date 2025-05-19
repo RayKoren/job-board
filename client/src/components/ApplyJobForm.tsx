@@ -178,7 +178,7 @@ export default function ApplyJobForm({
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md md:max-w-lg sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-md md:max-w-lg sm:max-w-[425px] max-h-[80vh] overflow-y-auto p-6">
         <DialogHeader>
           <DialogTitle>Apply for {jobTitle}</DialogTitle>
           <DialogDescription>
