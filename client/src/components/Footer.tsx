@@ -94,10 +94,10 @@ const Footer = () => {
               </li>
               <li>
                 <a
-                  href="/pricing"
+                  href="/post-job"
                   className="text-gray-300 hover:text-white transition duration-300"
                 >
-                  Pricing
+                  Post a Job
                 </a>
               </li>
               <li>
@@ -105,7 +105,7 @@ const Footer = () => {
                   href="/post-job"
                   className="text-gray-300 hover:text-white transition duration-300"
                 >
-                  Post a Job
+                  Post a Gig
                 </a>
               </li>
             </ul>
