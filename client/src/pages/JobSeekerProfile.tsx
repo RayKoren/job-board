@@ -440,13 +440,13 @@ export default function JobSeekerProfile() {
                 </div>
               </div>
               
-              {profileData?.resumeUrl && (
+              {profileData && (profileData as any).resumeUrl && (
                 <div className="mt-4">
                   <Label>Current Resume</Label>
                   <div className="mt-2 flex items-center">
                     <FileText className="h-5 w-5 text-forest mr-2" />
                     <a 
-                      href={profileData.resumeUrl} 
+                      href={(profileData as any).resumeUrl} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-forest hover:underline flex items-center"

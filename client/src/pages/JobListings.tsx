@@ -502,11 +502,18 @@ function JobCard({ job }: { job: Job }) {
         </div>
       </motion.div>
       
-      {/* Apply Job Modal */}
-      <ApplyJobModal 
-        job={job}
+      {/* Apply Job Form with Consent */}
+      <ApplyJobForm 
+        jobId={job.id}
+        jobTitle={job.title}
+        company={job.company}
         isOpen={isApplyModalOpen}
         onClose={() => setIsApplyModalOpen(false)}
+        contactInfo={{
+          email: job.contactEmail || undefined,
+          phone: job.contactPhone || undefined,
+          applicationUrl: job.applicationUrl || undefined
+        }}
       />
     </>
   );

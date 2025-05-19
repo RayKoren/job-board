@@ -140,7 +140,9 @@ export default function ApplyJobForm({
   const getProfilePreview = () => {
     if (!profileData) return null;
     
+    // Use type assertion to access profile properties
     const profile = profileData as any;
+    
     return (
       <Card className="mt-4 border-dashed border-gray-300">
         <CardHeader className="pb-2">
@@ -158,7 +160,7 @@ export default function ApplyJobForm({
               <span className="font-medium">Location:</span> {profile.location}
             </div>
           )}
-          {profile.skills && profile.skills.length > 0 && (
+          {profile.skills && Array.isArray(profile.skills) && profile.skills.length > 0 && (
             <div>
               <span className="font-medium">Skills:</span> {profile.skills.join(", ")}
             </div>
@@ -330,7 +332,7 @@ export default function ApplyJobForm({
                         </FormDescription>
                       </div>
                     </div>
-                    {field.value && getProfilePreview()}
+                    {field.value && getProfilePreview() as React.ReactNode}
                     <FormMessage />
                   </FormItem>
                 )}
