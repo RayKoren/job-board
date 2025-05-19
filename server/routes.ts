@@ -546,6 +546,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Job application routes
+  // Route for the main Apply form
+  app.post('/api/job-applications', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.user.id;
+      const { jobId, ...rest } = req.body;
+      
+      // Verify job exists
+      const job = await storage.getJobPosting(parseInt(jobId));
+      if (!job) {
+        return res.status(404).json({ message: "Job posting not found" });
+      }
+      
+      // Create application
+      const applicationData = {
+        ...rest,
+        jobId: parseInt(jobId),
+        userId,
+        status: "pending"
+      };
+      
+      const application = await storage.createJobApplication(applicationData);
+      res.status(201).json(application);
+    } catch (error) {
+      console.error("Error creating job application:", error);
+      res.status(400).json({ message: "Invalid application data", error });
+    }
+  });
+
+  // Legacy route - keep for backward compatibility
   app.post('/api/jobs/:jobId/apply', isAuthenticated, async (req: any, res) => {
     try {
       const jobId = parseInt(req.params.jobId);

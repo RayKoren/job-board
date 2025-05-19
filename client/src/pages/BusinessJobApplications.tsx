@@ -48,8 +48,8 @@ export default function BusinessJobApplications() {
   });
   
   // Filter applications by status
-  const filteredApplications = selectedStatus
-    ? applications?.filter(app => app.status === selectedStatus)
+  const filteredApplications = selectedStatus && selectedStatus !== "all"
+    ? (applications as any[])?.filter(app => app.status === selectedStatus)
     : applications;
   
   useEffect(() => {
@@ -210,7 +210,7 @@ export default function BusinessJobApplications() {
                 <SelectValue placeholder="All Applications" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Applications</SelectItem>
+                <SelectItem value="all">All Applications</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="reviewed">Reviewed</SelectItem>
                 <SelectItem value="contacted">Contacted</SelectItem>
