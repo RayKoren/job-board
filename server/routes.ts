@@ -257,13 +257,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (addonProduct && addonProduct.id && job.id) {
               // Create relationship in the junction table
               try {
-                await db.insert(jobPostingAddons)
-                  .values({
-                    jobId: job.id,
-                    productId: addonProduct.id
-                  })
-                  .onConflictDoNothing();
-                
+                // Use raw SQL query with sequelize to ensure proper validation and compatibility
+                await sequelize.query(
+                  `INSERT INTO "job_posting_addons" ("job_id", "product_id") 
+                   VALUES (:jobId, :productId)
+                   ON CONFLICT DO NOTHING`,
+                  {
+                    replacements: {
+                      jobId: job.id,
+                      productId: addonProduct.id
+                    },
+                    type: QueryTypes.INSERT
+                  }
+                );
                 console.log(`Added add-on ${lookupCode} (ID: ${addonProduct.id}) to job ${job.id}`);
               } catch (insertError) {
                 console.error(`Error inserting add-on relationship: ${insertError}`);
