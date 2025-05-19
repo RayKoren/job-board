@@ -19,6 +19,7 @@ import RoleSelection from "@/pages/RoleSelection";
 import PaymentPage from "@/pages/PaymentPage";
 import PaymentSuccess from "@/pages/PaymentSuccess";
 
+
 // Components
 import Pricing from "@/components/Pricing";
 import Footer from "@/components/Footer";
@@ -102,6 +103,14 @@ function App() {
           <Route 
             path="/business/dashboard" 
             component={() => <ProtectedRoute component={BusinessDashboard} requiredRole="business" />} 
+          />
+          <Route 
+            path="/business/jobs/:id" 
+            component={() => <ProtectedRoute component={BusinessJobView} requiredRole="business" />} 
+          />
+          <Route 
+            path="/business/jobs/:id/edit" 
+            component={() => <ProtectedRoute component={BusinessJobEdit} requiredRole="business" />} 
           />
           
           {/* Job Seeker Routes (Protected) */}
