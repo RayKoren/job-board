@@ -635,10 +635,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.session.user.id;
       const applications = await storage.getJobApplicationsForUser(userId);
-      res.json(applications);
+      
+      // Get job details for each application
+      const applicationsWithJobs = await Promise.all(
+        applications.map(async (application) => {
+          const job = await storage.getJobPosting(application.jobId);
+          return {
+            ...application,
+            job: job ? {
+              id: job.id,
+              title: job.title,
+              company: job.company,
+              location: job.location,
+              type: job.type
+            } : null
+          };
+        })
+      );
+      
+      res.json(applicationsWithJobs);
     } catch (error) {
       console.error("Error fetching user applications:", error);
       res.status(500).json({ message: "Failed to fetch user applications" });
+    }
+  });
+  
+  // Get all applications for business user's jobs
+  app.get('/api/business/applications', isBusinessUser, async (req: any, res) => {
+    try {
+      const userId = req.session.user.id;
+      
+      // Get all jobs for this business
+      const jobs = await storage.getJobPostings({ businessUserId: userId });
+      
+      // Get applications for each job
+      const jobsWithApplications = await Promise.all(
+        jobs.map(async (job) => {
+          const applications = await storage.getJobApplicationsForJob(job.id);
+          return {
+            ...job,
+            applicationCount: applications.length,
+            applications: applications.map(app => ({
+              id: app.id,
+              name: app.name,
+              email: app.email,
+              status: app.status,
+              appliedAt: app.createdAt
+            }))
+          };
+        })
+      );
+      
+      res.json(jobsWithApplications);
+    } catch (error) {
+      console.error("Error fetching business applications:", error);
+      res.status(500).json({ message: "Failed to fetch business applications" });
     }
   });
   

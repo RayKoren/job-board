@@ -266,7 +266,11 @@ export default function BusinessDashboard() {
                   
                   <Button size="sm" variant="outline" asChild>
                     <Link to={`/business/jobs/${job.id}/applications`}>
-                      Applications
+                      <MessageSquare className="w-4 h-4 mr-1" />
+                      Applications {job.applicationCount ? 
+                        <Badge variant="secondary" className="ml-1">{job.applicationCount}</Badge> : 
+                        null
+                      }
                     </Link>
                   </Button>
                 </div>
