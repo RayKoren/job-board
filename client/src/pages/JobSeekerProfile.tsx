@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,12 +6,16 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload, FileText, X, Link as LinkIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 const formSchema = z.object({
   title: z.string().optional(),
@@ -30,6 +34,10 @@ export default function JobSeekerProfile() {
   const { isAuthenticated, isJobSeeker } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
   // Fetch existing profile data
@@ -53,23 +61,127 @@ export default function JobSeekerProfile() {
   });
 
   // When profile data is loaded, update the form values
-  if (profileData && !form.formState.isDirty) {
-    form.reset({
-      title: profileData.title || "",
-      bio: profileData.bio || "",
-      skills: profileData.skills ? profileData.skills.join(", ") : "",
-      experience: profileData.experience || "",
-      education: profileData.education || "",
-      resumeUrl: profileData.resumeUrl || "",
-      phone: profileData.phone || "",
-      location: profileData.location || "",
-    });
-  }
+  // Using useEffect to avoid infinite re-renders
+  useEffect(() => {
+    if (profileData) {
+      form.reset({
+        title: profileData.title || "",
+        bio: profileData.bio || "",
+        skills: profileData.skills ? profileData.skills.join(", ") : "",
+        experience: profileData.experience || "",
+        education: profileData.education || "",
+        resumeUrl: profileData.resumeUrl || "",
+        phone: profileData.phone || "",
+        location: profileData.location || "",
+      });
+    }
+  }, [profileData, form]);
+
+  // Handle file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type (PDF or DOC/DOCX)
+      const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!validTypes.includes(file.type)) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload a PDF or Word document file (.pdf, .doc, .docx)",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Validate file size (limit to 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please upload a file smaller than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setResumeFile(file);
+    }
+  };
+  
+  // Handle resume upload
+  const uploadResume = async (): Promise<string | null> => {
+    if (!resumeFile) return null;
+    
+    setIsUploading(true);
+    setUploadProgress(0);
+    
+    try {
+      // Create FormData object to send the file
+      const formData = new FormData();
+      formData.append('resume', resumeFile);
+      
+      // Upload the file using fetch with progress reporting
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/resume-upload', true);
+      
+      // Setup progress monitoring
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percentComplete = Math.round((e.loaded / e.total) * 100);
+          setUploadProgress(percentComplete);
+        }
+      };
+      
+      // Create a promise to handle the upload
+      const uploadPromise = new Promise<string>((resolve, reject) => {
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            const response = JSON.parse(xhr.responseText);
+            resolve(response.fileUrl);
+          } else {
+            reject(new Error(`Upload failed with status ${xhr.status}`));
+          }
+        };
+        xhr.onerror = () => reject(new Error('Upload failed'));
+      });
+      
+      xhr.send(formData);
+      const fileUrl = await uploadPromise;
+      
+      // Return the URL of the uploaded file
+      return fileUrl;
+    } catch (error) {
+      console.error('Error uploading resume:', error);
+      toast({
+        title: "Upload failed",
+        description: "Could not upload your resume. Please try again.",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
+  // Handle resume removal
+  const handleRemoveResume = () => {
+    setResumeFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     
     try {
+      // Upload resume if one is selected
+      let resumeUrl = data.resumeUrl;
+      if (resumeFile) {
+        const uploadedUrl = await uploadResume();
+        if (uploadedUrl) {
+          resumeUrl = uploadedUrl;
+        }
+      }
+      
       // Convert comma-separated skills to array
       const skills = data.skills
         ? data.skills.split(",").map(skill => skill.trim()).filter(skill => skill)
@@ -78,6 +190,7 @@ export default function JobSeekerProfile() {
       await apiRequest("POST", "/api/job-seeker/profile", {
         ...data,
         skills,
+        resumeUrl, // Include the URL from the file upload
       });
       
       // Invalidate the profile query to refetch the updated data
@@ -88,6 +201,9 @@ export default function JobSeekerProfile() {
         title: "Profile updated",
         description: "Your job seeker profile has been updated successfully.",
       });
+      
+      // Clear the resume file state after successful submission
+      setResumeFile(null);
     } catch (error) {
       console.error("Error updating job seeker profile:", error);
       toast({
@@ -240,19 +356,105 @@ export default function JobSeekerProfile() {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="resumeUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Resume URL</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Link to your resume (Google Drive, Dropbox, etc.)" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+            <div className="space-y-6">
+              <FormField
+                control={form.control}
+                name="resumeUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Resume URL</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Link to your resume (Google Drive, Dropbox, etc.)" />
+                    </FormControl>
+                    <FormDescription>
+                      Provide a URL to your resume, or upload a file below
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="mt-4">
+                <Label htmlFor="resume-upload">Resume Upload</Label>
+                <div className="mt-2">
+                  <input
+                    id="resume-upload"
+                    type="file"
+                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    onChange={handleFileChange}
+                    ref={fileInputRef}
+                    className="sr-only"
+                  />
+                  
+                  {!resumeFile ? (
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-forest transition-colors">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="mx-auto"
+                      >
+                        <Upload className="mr-2 h-4 w-4" />
+                        Upload Resume
+                      </Button>
+                      <p className="mt-2 text-sm text-gray-500">
+                        PDF or Word Document, max 5MB
+                      </p>
+                    </div>
+                  ) : (
+                    <Card>
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <div className="flex items-center">
+                          <FileText className="h-8 w-8 text-forest mr-2" />
+                          <div>
+                            <p className="font-medium truncate max-w-[200px]">{resumeFile.name}</p>
+                            <p className="text-sm text-gray-500">{(resumeFile.size / 1024).toFixed(0)} KB</p>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleRemoveResume}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+                  
+                  {isUploading && (
+                    <div className="mt-2">
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-forest transition-all"
+                          style={{ width: `${uploadProgress}%` }}
+                        ></div>
+                      </div>
+                      <p className="text-sm text-center mt-1">Uploading: {uploadProgress}%</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {profileData?.resumeUrl && (
+                <div className="mt-4">
+                  <Label>Current Resume</Label>
+                  <div className="mt-2 flex items-center">
+                    <FileText className="h-5 w-5 text-forest mr-2" />
+                    <a 
+                      href={profileData.resumeUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-forest hover:underline flex items-center"
+                    >
+                      View Current Resume <LinkIcon className="ml-1 h-3 w-3" />
+                    </a>
+                  </div>
+                </div>
               )}
-            />
+            </div>
 
             <div className="flex justify-end">
               <Button type="submit" disabled={isSubmitting}>
