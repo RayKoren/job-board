@@ -269,7 +269,7 @@ export default function BusinessJobApplications() {
                         {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
                       </Badge>
                       <span className="text-xs text-gray-500 mt-1">
-                        Applied {application.appliedAt ? format(new Date(application.appliedAt), 'MMM d, yyyy') : 'Recently'}
+                        Applied {application.createdAt ? format(new Date(application.createdAt), 'MMM d, yyyy') : 'Recently'}
                       </span>
                     </div>
                   </div>

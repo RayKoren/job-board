@@ -212,7 +212,7 @@ export default function JobSeekerDashboard() {
                   
                   <div className="flex items-center text-gray-500">
                     <Calendar className="w-4 h-4 mr-2" />
-                    Applied {formatDistanceToNow(new Date(application.appliedAt), { addSuffix: true })}
+                    Applied {application.createdAt ? formatDistanceToNow(new Date(application.createdAt), { addSuffix: true }) : 'recently'}
                   </div>
                 </div>
               </CardContent>

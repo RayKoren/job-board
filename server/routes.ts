@@ -619,7 +619,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get applications
       const applications = await storage.getJobApplicationsForJob(jobId);
-      res.json(applications);
+      
+      // Get job seeker profiles for the applications
+      const applicationsWithProfiles = await Promise.all(
+        applications.map(async (application) => {
+          const profile = await storage.getJobSeekerProfile(application.userId);
+          return {
+            ...application,
+            profile: profile ? {
+              id: profile.id,
+              userId: profile.userId,
+              title: profile.title,
+              skills: profile.skills,
+              resumeUrl: profile.resumeUrl,
+              location: profile.location
+            } : null
+          };
+        })
+      );
+      
+      res.json(applicationsWithProfiles);
     } catch (error) {
       console.error("Error fetching job applications:", error);
       res.status(500).json({ message: "Failed to fetch job applications" });
