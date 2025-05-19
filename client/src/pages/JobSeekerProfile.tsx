@@ -110,9 +110,9 @@ export default function JobSeekerProfile() {
     }
   };
   
-  // Handle resume upload
-  const uploadResume = async (): Promise<string | null> => {
-    if (!resumeFile) return null;
+  // Handle resume upload (now directly to database)
+  const uploadResume = async (): Promise<boolean> => {
+    if (!resumeFile) return false;
     
     setIsUploading(true);
     setUploadProgress(0);
@@ -135,11 +135,12 @@ export default function JobSeekerProfile() {
       };
       
       // Create a promise to handle the upload
-      const uploadPromise = new Promise<string>((resolve, reject) => {
+      const uploadPromise = new Promise<boolean>((resolve, reject) => {
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) {
             const response = JSON.parse(xhr.responseText);
-            resolve(response.fileUrl);
+            // Resume is now stored in database, not as a URL
+            resolve(true);
           } else {
             reject(new Error(`Upload failed with status ${xhr.status}`));
           }
@@ -148,10 +149,10 @@ export default function JobSeekerProfile() {
       });
       
       xhr.send(formData);
-      const fileUrl = await uploadPromise;
+      await uploadPromise;
       
-      // Return the URL of the uploaded file
-      return fileUrl;
+      // Return success
+      return true;
     } catch (error) {
       console.error('Error uploading resume:', error);
       toast({
@@ -159,7 +160,7 @@ export default function JobSeekerProfile() {
         description: "Could not upload your resume. Please try again.",
         variant: "destructive",
       });
-      return null;
+      return false;
     } finally {
       setIsUploading(false);
     }
@@ -177,13 +178,11 @@ export default function JobSeekerProfile() {
     setIsSubmitting(true);
     
     try {
-      // Upload resume if one is selected
-      let resumeUrl = data.resumeUrl;
+      // Upload resume directly to the database if one is selected
       if (resumeFile) {
-        const uploadedUrl = await uploadResume();
-        if (uploadedUrl) {
-          resumeUrl = uploadedUrl;
-        }
+        await uploadResume();
+        // Resume data is now stored directly in the database associated with the user,
+        // so we don't need to track the URL in the form data
       }
       
       // Convert comma-separated skills to array
@@ -194,7 +193,7 @@ export default function JobSeekerProfile() {
       await apiRequest("POST", "/api/job-seeker/profile", {
         ...data,
         skills,
-        resumeUrl, // Include the URL from the file upload
+        // No need to include resumeUrl anymore as it's handled separately
       });
       
       // Invalidate the profile query to refetch the updated data
