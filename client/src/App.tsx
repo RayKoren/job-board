@@ -20,6 +20,7 @@ import PaymentPage from "@/pages/PaymentPage";
 import PaymentSuccess from "@/pages/PaymentSuccess";
 import BusinessJobView from "@/pages/BusinessJobView";
 import BusinessJobEdit from "@/pages/BusinessJobEdit";
+import BusinessJobApplications from "@/pages/BusinessJobApplications";
 
 
 // Components
@@ -113,6 +114,10 @@ function App() {
           <Route 
             path="/business/jobs/:id/edit" 
             component={() => <ProtectedRoute component={BusinessJobEdit} requiredRole="business" />} 
+          />
+          <Route 
+            path="/business/jobs/:id/applications" 
+            component={() => <ProtectedRoute component={BusinessJobApplications} requiredRole="business" />} 
           />
           
           {/* Job Seeker Routes (Protected) */}
