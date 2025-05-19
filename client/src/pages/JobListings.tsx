@@ -381,9 +381,9 @@ function JobCard({ job }: { job: Job }) {
   return (
     <>
       <motion.div 
-        className={`bg-white rounded-lg shadow-sm overflow-hidden 
+        className={`rounded-lg shadow-sm overflow-hidden 
           ${job.featured ? 'border-l-4 border-clay' : ''}
-          ${job.addons?.includes('highlighted') ? 'bg-amber-50' : ''}
+          ${job.addons?.includes('highlighted') ? 'bg-amber-100' : 'bg-white'}
           ${job.addons?.includes('top-of-search') ? 'ring-2 ring-forest' : ''}
         `}
         whileHover={{ y: -3, boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' }}
@@ -408,6 +408,11 @@ function JobCard({ job }: { job: Job }) {
                   {job.addons?.includes('urgent') && (
                     <Badge className="bg-red-600 text-white flex items-center gap-1">
                       <span className="animate-pulse">⚡</span> Urgent Hiring
+                    </Badge>
+                  )}
+                  {job.addons?.includes('top-of-search') && (
+                    <Badge className="bg-forest text-white">
+                      Promoted
                     </Badge>
                   )}
                 </div>

@@ -71,13 +71,29 @@ const JobCard = ({ job }: JobCardProps) => {
         transition: { duration: 0.2 }
       }}
     >
-      <Card className="border border-gray-200 hover:shadow-lg transition-all duration-300 h-full">
+      <Card className={`border border-gray-200 hover:shadow-lg transition-all duration-300 h-full
+        ${job.featured ? 'border-l-4 border-clay' : ''}
+        ${job.addons?.includes('highlighted') ? 'bg-amber-100' : ''}
+        ${job.addons?.includes('top-of-search') ? 'ring-2 ring-forest' : ''}
+      `}>
         <CardContent className="p-6">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <Badge variant="outline" className={`px-3 py-1 rounded-full text-xs font-medium ${colorClass} mb-2`}>
-                {job.type}
-              </Badge>
+              <div className="flex flex-wrap gap-1 mb-2">
+                <Badge variant="outline" className={`px-3 py-1 rounded-full text-xs font-medium ${colorClass}`}>
+                  {job.type}
+                </Badge>
+                {job.addons?.includes('urgent') && (
+                  <Badge className="bg-red-600 text-white flex items-center gap-1 rounded-full">
+                    <span className="animate-pulse">⚡</span> Urgent
+                  </Badge>
+                )}
+                {job.addons?.includes('top-of-search') && (
+                  <Badge className="bg-forest text-white rounded-full">
+                    Promoted
+                  </Badge>
+                )}
+              </div>
               <h3 className="text-xl font-bold text-forest">{job.title}</h3>
               <p className="text-gray-600">{job.company}</p>
             </div>
