@@ -381,7 +381,11 @@ function JobCard({ job }: { job: Job }) {
   return (
     <>
       <motion.div 
-        className={`bg-white rounded-lg shadow-sm overflow-hidden ${job.featured ? 'border-l-4 border-clay' : ''}`}
+        className={`bg-white rounded-lg shadow-sm overflow-hidden 
+          ${job.featured ? 'border-l-4 border-clay' : ''}
+          ${job.addons?.includes('highlighted') ? 'bg-amber-50' : ''}
+          ${job.addons?.includes('top-of-search') ? 'ring-2 ring-forest' : ''}
+        `}
         whileHover={{ y: -3, boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' }}
         transition={{ duration: 0.2 }}
       >
@@ -397,9 +401,14 @@ function JobCard({ job }: { job: Job }) {
                     <span>{job.company}</span>
                   </div>
                 </div>
-                {job.featured && (
-                  <Badge className="bg-clay">Featured</Badge>
-                )}
+                <div className="flex flex-wrap gap-1">
+                  {job.featured && (
+                    <Badge className="bg-clay">Featured</Badge>
+                  )}
+                  {job.addons?.includes('urgent') && (
+                    <Badge className="bg-red-500 text-white">Urgent</Badge>
+                  )}
+                </div>
               </div>
               
               <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-4 text-sm text-gray-600">

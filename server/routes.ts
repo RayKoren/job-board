@@ -153,6 +153,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const expiresAt = new Date();
             expiresAt.setDate(expiresAt.getDate() + durationInDays);
             
+            // Check if job has the "extend-post" add-on and add additional days
+            if (jobData.addons && jobData.addons.includes('extend-post')) {
+              const extensionDays = 7; // Each extend-post adds 7 days
+              expiresAt.setDate(expiresAt.getDate() + extensionDays);
+              console.log(`Adding ${extensionDays} days to expiry date due to "extend-post" add-on`);
+            }
+            
             // Add it to the job data
             jobData.expiresAt = expiresAt;
             jobData.status = 'active'; // Ensure the job is marked as active
