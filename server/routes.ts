@@ -920,13 +920,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Create uploads directory if it doesn't exist - handled at startup
-  if (!fs.existsSync('uploads')) {
-    fs.mkdirSync('uploads', { recursive: true });
-  }
+  // No longer need to create uploads directory since we're storing in database
   
-  // Serve static files from the uploads directory
-  app.use('/uploads', express.static('uploads'));
+  // Endpoint to download resume from database by user ID
+  app.get('/api/resume/:userId', async (req: Request, res: Response) => {
+    try {
+      const userId = req.params.userId;
+      
+      // Get the job seeker profile with resume data
+      const profile = await storage.getJobSeekerProfile(userId);
+      
+      if (!profile || !profile.resumeData || !profile.resumeType || !profile.resumeName) {
+        return res.status(404).json({ message: 'Resume not found' });
+      }
+      
+      // Convert base64 data back to buffer
+      const fileBuffer = Buffer.from(profile.resumeData, 'base64');
+      
+      // Set appropriate headers for file download
+      res.setHeader('Content-Type', profile.resumeType);
+      res.setHeader('Content-Disposition', `attachment; filename=${profile.resumeName}`);
+      res.setHeader('Content-Length', fileBuffer.length);
+      
+      // Send the file data
+      return res.send(fileBuffer);
+    } catch (error) {
+      console.error('Error downloading resume:', error);
+      return res.status(500).json({ message: 'Failed to download resume' });
+    }
+  });
   
   // Resume upload route (protected) - storing directly in database
   app.post('/api/resume-upload', isJobSeeker, async (req: any, res: Response) => {

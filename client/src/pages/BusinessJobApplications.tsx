@@ -308,16 +308,18 @@ export default function BusinessJobApplications() {
                         </div>
                       )}
                       
-                      {application.profile.resumeUrl && (
+                      {/* Using the new database-stored resume system */}
+                      {application.profile && application.profile.userId && (
                         <div className="mt-3">
                           <a 
-                            href={application.profile.resumeUrl}
+                            href={`/api/resume/${application.profile.userId}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center text-forest hover:underline"
                           >
                             <FileText className="w-4 h-4 mr-1" />
-                            View Resume
+                            View Resume {application.profile.resumeName ? 
+                              `(${application.profile.resumeName})` : ''}
                           </a>
                         </div>
                       )}

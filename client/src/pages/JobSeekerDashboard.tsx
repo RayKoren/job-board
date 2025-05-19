@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 
 export default function JobSeekerDashboard() {
-  const { isAuthenticated, isJobSeeker } = useAuth();
+  const { user, isAuthenticated, isJobSeeker } = useAuth();
 
   const { data: jobSeekerProfile, isLoading: isLoadingProfile } = useQuery({
     queryKey: ["/api/job-seeker/profile"],
@@ -125,15 +125,16 @@ export default function JobSeekerDashboard() {
             )}
             
             <div className="flex flex-wrap gap-4">
-              {jobSeekerProfile.resumeUrl && (
+              {/* Resume download now uses API endpoint with userId */}
+              {(jobSeekerProfile.resumeData || jobSeekerProfile.resumeName) && (
                 <a 
-                  href={jobSeekerProfile.resumeUrl} 
+                  href={`/api/resume/${user?.id}`}
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="inline-flex items-center text-forest hover:underline"
                 >
                   <FileText className="w-4 h-4 mr-1" />
-                  Resume
+                  Resume {jobSeekerProfile.resumeName ? `(${jobSeekerProfile.resumeName})` : ''}
                 </a>
               )}
               
