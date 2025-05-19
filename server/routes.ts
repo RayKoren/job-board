@@ -5,9 +5,11 @@ import { setupAuth, isAuthenticated, isBusinessUser, isJobSeeker } from "./local
 import { z } from "zod";
 import { initDatabase, sequelize } from "./db";
 import { QueryTypes } from "sequelize";
+import path from "path";
 import { getPriceForPlan, getPriceForAddon, calculateJobPostingPrice } from "./services/pricing";
 import { insertBusinessProfileSchema, insertJobSeekerProfileSchema, insertJobPostingSchema, insertJobApplicationSchema } from "@shared/zodSchema";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./services/paypal";
+import { resumeUpload, getFileUrl } from "./services/fileUpload";
 
 // Helper function to create an object with dynamic fields
 function createJobData(baseData: any, extraFields: Record<string, any> = {}): any {
