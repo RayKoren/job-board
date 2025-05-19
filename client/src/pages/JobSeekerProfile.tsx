@@ -378,22 +378,11 @@ export default function JobSeekerProfile() {
             />
 
             <div className="space-y-6">
-              <FormField
-                control={form.control}
-                name="resumeUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Resume URL</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Link to your resume (Google Drive, Dropbox, etc.)" />
-                    </FormControl>
-                    <FormDescription>
-                      Provide a URL to your resume, or upload a file below
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <h3 className="text-lg font-medium">Resume</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Upload your resume to make it easier for employers to review your qualifications.
+                Your resume will be stored securely in our database.
+              </p>
               
               <div className="mt-4">
                 <Label htmlFor="resume-upload">Resume Upload</Label>

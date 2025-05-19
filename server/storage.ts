@@ -49,7 +49,10 @@ export interface IJobSeekerProfile {
   location?: string | null;
   contactEmail?: string | null;
   contactPhone?: string | null;
-  resumeUrl?: string | null;
+  // New fields for database-stored resumes
+  resumeData?: string | null;
+  resumeName?: string | null;
+  resumeType?: string | null;
   availableForWork?: boolean;
   preferredJobTypes?: string[] | null;
   createdAt?: Date;
