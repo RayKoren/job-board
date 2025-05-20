@@ -9,14 +9,9 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Configure session with PostgreSQL store
-const PgSession = connectPgSimple(session);
+// Configure session with memory store for development simplicity
+// We're avoiding PostgreSQL store due to schema compatibility issues
 app.use(session({
-  store: new PgSession({
-    pool: pool,
-    tableName: 'sessions',
-    createTableIfMissing: true,
-  }),
   secret: process.env.SESSION_SECRET || 'a-long-random-string',
   resave: false,
   saveUninitialized: false,

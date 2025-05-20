@@ -235,7 +235,7 @@ export default function JobSeekerProfile() {
 
   // Handle going back to dashboard
   const handleBack = () => {
-    navigate('/job-seeker-dashboard');
+    navigate('/jobseeker/dashboard');
   };
 
   return (
@@ -448,18 +448,18 @@ export default function JobSeekerProfile() {
                 </div>
               </div>
               
-              {profileData && (profileData as any).resumeUrl && (
+              {profileData && ((profileData as any).resumeName || (profileData as any).resumeData) && (
                 <div className="mt-4">
                   <Label>Current Resume</Label>
                   <div className="mt-2 flex items-center">
                     <FileText className="h-5 w-5 text-forest mr-2" />
                     <a 
-                      href={(profileData as any).resumeUrl} 
+                      href={`/api/resume/${(profileData as any).userId}`}
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-forest hover:underline flex items-center"
                     >
-                      View Current Resume <LinkIcon className="ml-1 h-3 w-3" />
+                      View Current Resume: {(profileData as any).resumeName || "Resume"} <LinkIcon className="ml-1 h-3 w-3" />
                     </a>
                   </div>
                 </div>
