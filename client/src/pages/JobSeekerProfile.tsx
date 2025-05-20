@@ -190,11 +190,16 @@ export default function JobSeekerProfile() {
         ? data.skills.split(",").map(skill => skill.trim()).filter(skill => skill)
         : [];
       
-      await apiRequest("POST", "/api/job-seeker/profile", {
+      // Upload profile data
+      const result = await apiRequest("POST", "/api/job-seeker/profile", {
         ...data,
-        skills,
-        // No need to include resumeUrl anymore as it's handled separately
+        skills
       });
+      
+      // After successful update, redirect to dashboard
+      if (result.ok) {
+        navigate("/jobseeker/dashboard");
+      }
       
       // Invalidate the profile query to refetch the updated data
       queryClient.invalidateQueries({ queryKey: ["/api/job-seeker/profile"] });
