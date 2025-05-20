@@ -995,9 +995,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const profile = await storage.getJobSeekerProfile(userId);
           
           if (profile) {
+            console.log("Updating existing job seeker profile with resume data");
             // Update the profile with resume data
             await storage.upsertJobSeekerProfile({
               ...profile,
+              resumeData: resumeData,
+              resumeName: req.file.originalname,
+              resumeType: req.file.mimetype
+            });
+          } else {
+            console.log("Creating new job seeker profile with resume data");
+            // Create a new profile with the resume data if none exists
+            await storage.upsertJobSeekerProfile({
+              userId: userId,
               resumeData: resumeData,
               resumeName: req.file.originalname,
               resumeType: req.file.mimetype

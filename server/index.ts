@@ -13,12 +13,13 @@ app.use(express.urlencoded({ extended: false }));
 // We're avoiding PostgreSQL store due to schema compatibility issues
 app.use(session({
   secret: process.env.SESSION_SECRET || 'a-long-random-string',
-  resave: false,
-  saveUninitialized: false,
+  resave: true, // Changed to true to ensure session is saved on every request
+  saveUninitialized: true, // Changed to true to save new sessions
   cookie: {
     secure: false, // Set to false for development to allow HTTP
     httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 1 week
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+    sameSite: 'lax' // Added to improve session handling with navigation
   }
 }));
 
