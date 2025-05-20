@@ -69,7 +69,7 @@ export const User = sequelize.define('User', {
     allowNull: true
   }
 }, {
-  tableName: 'Users',
+  tableName: 'users',
   timestamps: true
 });
 
@@ -84,7 +84,7 @@ export const BusinessProfile = sequelize.define('BusinessProfile', {
     type: DataTypes.STRING,
     allowNull: false,
     references: {
-      model: 'Users',
+      model: 'users',
       key: 'id'
     }
   },
@@ -125,7 +125,7 @@ export const BusinessProfile = sequelize.define('BusinessProfile', {
     allowNull: true
   }
 }, {
-  tableName: 'BusinessProfiles',
+  tableName: 'business_profiles',
   timestamps: true
 });
 
@@ -140,7 +140,7 @@ export const JobSeekerProfile = sequelize.define('JobSeekerProfile', {
     type: DataTypes.STRING,
     allowNull: false,
     references: {
-      model: 'Users',
+      model: 'users',
       key: 'id'
     }
   },
@@ -176,7 +176,16 @@ export const JobSeekerProfile = sequelize.define('JobSeekerProfile', {
     type: DataTypes.STRING,
     allowNull: true
   },
-  resumeUrl: {
+  // New fields for database-stored resumes
+  resumeData: {
+    type: DataTypes.TEXT('long'),
+    allowNull: true
+  },
+  resumeName: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  resumeType: {
     type: DataTypes.STRING,
     allowNull: true
   },
@@ -189,7 +198,7 @@ export const JobSeekerProfile = sequelize.define('JobSeekerProfile', {
     allowNull: true
   }
 }, {
-  tableName: 'JobSeekerProfiles',
+  tableName: 'job_seeker_profiles',
   timestamps: true
 });
 
@@ -204,7 +213,7 @@ export const JobPosting = sequelize.define('JobPosting', {
     type: DataTypes.STRING,
     allowNull: false,
     references: {
-      model: 'Users',
+      model: 'users',
       key: 'id'
     }
   },
@@ -294,7 +303,7 @@ export const JobPosting = sequelize.define('JobPosting', {
     defaultValue: []
   }
 }, {
-  tableName: 'JobPostings',
+  tableName: 'job_postings',
   timestamps: true
 });
 

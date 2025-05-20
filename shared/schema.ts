@@ -127,7 +127,7 @@ export const jobApplications = pgTable("job_applications", {
   email: text("email").notNull(),
   phone: text("phone"),
   coverLetter: text("cover_letter"),
-  resumeUrl: text("resume_url"),
+  // Delete resumeUrl since we're storing resumes in the job_seeker_profiles table
   status: text("status").default("pending"), // pending, reviewed, contacted, rejected
   appliedAt: timestamp("applied_at").defaultNow(),
 });
