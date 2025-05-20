@@ -190,15 +190,24 @@ export default function JobSeekerProfile() {
         ? data.skills.split(",").map(skill => skill.trim()).filter(skill => skill)
         : [];
       
-      // Upload profile data
+      // Upload profile data with explicit fields to ensure all data is sent
       const result = await apiRequest("POST", "/api/job-seeker/profile", {
-        ...data,
-        skills
+        title: data.title,
+        bio: data.bio,
+        skills,
+        experience: data.experience,
+        education: data.education,
+        phone: data.phone,
+        location: data.location
       });
       
       // After successful update, redirect to dashboard
       if (result.ok) {
-        navigate("/jobseeker/dashboard");
+        // Using the correct URL path for job seeker dashboard
+        // Add a small delay to ensure server has processed the update
+        setTimeout(() => {
+          navigate("/job-seeker/dashboard");
+        }, 100);
       }
       
       // Invalidate the profile query to refetch the updated data
@@ -240,7 +249,7 @@ export default function JobSeekerProfile() {
 
   // Handle going back to dashboard
   const handleBack = () => {
-    navigate('/jobseeker/dashboard');
+    navigate('/job-seeker/dashboard');
   };
 
   return (
@@ -294,6 +303,9 @@ export default function JobSeekerProfile() {
                     <FormControl>
                       <Input {...field} placeholder="Sheridan, WY" />
                     </FormControl>
+                    <FormDescription>
+                      Your current location (city, state)
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -306,7 +318,7 @@ export default function JobSeekerProfile() {
                   <FormItem>
                     <FormLabel>Phone</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} placeholder="(307) 555-1234" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -381,6 +393,36 @@ export default function JobSeekerProfile() {
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Your phone number" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Location</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Your location (e.g., Sheridan, WY)" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="space-y-6">
               <h3 className="text-lg font-medium">Resume</h3>
