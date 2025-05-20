@@ -2,19 +2,26 @@ import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { initDatabase } from "./db";
+import { initDatabase, pool } from "./db";
+import connectPgSimple from "connect-pg-simple";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Configure session
+// Configure session with PostgreSQL store
+const PgSession = connectPgSimple(session);
 app.use(session({
+  store: new PgSession({
+    pool: pool,
+    tableName: 'sessions',
+    createTableIfMissing: true,
+  }),
   secret: process.env.SESSION_SECRET || 'a-long-random-string',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Set to false for development to allow HTTP
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000 // 1 week
   }

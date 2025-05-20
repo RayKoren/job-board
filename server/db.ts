@@ -11,7 +11,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 // Create Postgres pool for Drizzle
-const pool = new Pool({
+export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? {
     rejectUnauthorized: false
@@ -318,7 +318,7 @@ export const JobApplication = sequelize.define('JobApplication', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'JobPostings',
+      model: 'job_postings',
       key: 'id'
     }
   },
@@ -326,7 +326,7 @@ export const JobApplication = sequelize.define('JobApplication', {
     type: DataTypes.STRING,
     allowNull: false,
     references: {
-      model: 'Users',
+      model: 'users',
       key: 'id'
     }
   },
@@ -355,7 +355,7 @@ export const JobApplication = sequelize.define('JobApplication', {
     defaultValue: 'pending'
   }
 }, {
-  tableName: 'JobApplications',
+  tableName: 'job_applications',
   timestamps: true
 });
 
@@ -368,7 +368,7 @@ export const Session = sequelize.define('Session', {
   expires: DataTypes.DATE,
   sess: DataTypes.JSON
 }, {
-  tableName: 'Sessions',
+  tableName: 'sessions',
   timestamps: false
 });
 
