@@ -52,7 +52,10 @@ export const jobSeekerProfileSchema = z.object({
   location: z.string().nullable().optional(),
   contactEmail: z.string().nullable().optional(),
   contactPhone: z.string().nullable().optional(),
-  resumeUrl: z.string().nullable().optional(),
+  // Database stored resume fields
+  resumeData: z.string().nullable().optional(),
+  resumeName: z.string().nullable().optional(), 
+  resumeType: z.string().nullable().optional(),
   availableForWork: z.boolean().optional(),
   preferredJobTypes: z.array(z.string()).nullable().optional(),
   createdAt: z.date().optional(),
