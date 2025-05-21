@@ -558,13 +558,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Job posting not found" });
       }
       
-      // Create application
-      const applicationData = {
+      // Create application with proper validation using the Zod schema
+      const applicationData = insertJobApplicationSchema.parse({
         ...rest,
         jobId: parseInt(jobId),
         userId,
         status: "pending"
-      };
+      });
       
       const application = await storage.createJobApplication(applicationData);
       res.status(201).json(application);
