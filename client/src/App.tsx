@@ -15,6 +15,8 @@ import JobSeekerProfile from "@/pages/JobSeekerProfile";
 import BusinessDashboard from "@/pages/BusinessDashboard";
 import JobSeekerDashboard from "@/pages/JobSeekerDashboard";
 import LoginPage from "@/pages/LoginPage";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
 import RoleSelection from "@/pages/RoleSelection";
 import PaymentPage from "@/pages/PaymentPage";
 import PaymentSuccess from "@/pages/PaymentSuccess";
@@ -74,7 +76,9 @@ function App() {
       <AuthProvider>
         <Switch>
           <Route path="/" component={Home} />
-          <Route path="/login" component={LoginPage} />
+          <Route path="/login" component={Login} />
+          <Route path="/register" component={Register} />
+          <Route path="/legacy-login" component={LoginPage} />
           <Route path="/select-role" component={RoleSelection} />
           <Route path="/pricing" component={() => {
             return (

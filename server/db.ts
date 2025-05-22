@@ -54,7 +54,7 @@ export const User = sequelize.define('User', {
   },
   password: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: true // Allow null for existing users during migration
   },
   firstName: {
     type: DataTypes.STRING,

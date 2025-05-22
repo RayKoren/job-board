@@ -85,7 +85,7 @@ export default function Register() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <Mountains className="h-8 w-8 text-forest" />
+            <Mountain className="h-8 w-8 text-forest" />
             <h1 className="text-3xl font-bold text-forest">Sheridan Jobs</h1>
           </div>
           <p className="text-muted-foreground">
