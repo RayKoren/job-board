@@ -6,13 +6,31 @@ export const userRoleEnum = z.enum(['business', 'job_seeker']);
 // User schema
 export const userSchema = z.object({
   id: z.string(),
-  email: z.string().email().nullable(),
+  email: z.string().email(),
+  password: z.string(),
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
   profileImageUrl: z.string().nullable(),
   role: userRoleEnum.nullable(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
+});
+
+export const registerSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string(),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  role: userRoleEnum,
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+export const loginSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
 });
 
 export const insertUserSchema = userSchema.omit({ createdAt: true, updatedAt: true });
