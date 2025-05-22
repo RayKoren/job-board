@@ -305,6 +305,11 @@ export const JobPosting = sequelize.define('JobPosting', {
   tags: {
     type: DataTypes.ARRAY(DataTypes.STRING),
     defaultValue: []
+  },
+  clickCount: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    allowNull: false
   }
 }, {
   tableName: 'job_postings',

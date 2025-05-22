@@ -1044,7 +1044,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         await sequelize.query(
           `UPDATE "job_postings" 
-           SET "click_count" = COALESCE("click_count", 0) + 1 
+           SET "clickCount" = COALESCE("clickCount", 0) + 1 
            WHERE "id" = :jobId`,
           {
             replacements: { jobId },
