@@ -52,7 +52,7 @@ export function LoginButton() {
   const handleLogout = async (e: React.MouseEvent) => {
     e.preventDefault();
     try {
-      await apiRequest("GET", "/api/logout", undefined);
+      await apiRequest("POST", "/api/auth/logout", {});
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({
         title: "Logged out",

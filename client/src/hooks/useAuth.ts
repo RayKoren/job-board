@@ -18,7 +18,7 @@ interface AuthResponse {
 }
 
 export function useAuth() {
-  const { data, isLoading, error } = useQuery<AuthResponse | null>({
+  const { data, isLoading, error } = useQuery<AuthUser | null>({
     queryKey: ["/api/auth/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
@@ -26,12 +26,12 @@ export function useAuth() {
   });
 
   return {
-    user: data?.user || null,
-    profile: data?.profile || null,
+    user: data || null,
+    profile: null, // Legacy compatibility
     isLoading,
     error,
-    isAuthenticated: !!data?.user,
-    isBusinessUser: data?.user?.role === 'business',
-    isJobSeeker: data?.user?.role === 'job_seeker',
+    isAuthenticated: !!data,
+    isBusinessUser: data?.role === 'business',
+    isJobSeeker: data?.role === 'job_seeker',
   };
 }
