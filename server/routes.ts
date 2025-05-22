@@ -1,7 +1,7 @@
 import express, { type Express, type Request, type Response } from "express";
 import { createServer, type Server } from "http";
 import { storage, IJobPosting } from "./storage";
-import { setupAuth, isAuthenticated, isBusinessUser, isJobSeeker } from "./localAuth"; // Using local authentication temporarily
+import { setupAuth, isAuthenticated, isBusinessUser, isJobSeeker } from "./passwordAuth"; // Using password-based authentication
 import { z } from "zod";
 import { initDatabase, sequelize } from "./db";
 import { QueryTypes } from "sequelize";

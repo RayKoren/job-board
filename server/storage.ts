@@ -11,7 +11,8 @@ import { Model } from 'sequelize';
 // Define types for our storage operations
 export interface IUser {
   id: string;
-  email: string | null;
+  email: string;
+  password: string;
   firstName: string | null;
   lastName: string | null;
   profileImageUrl: string | null;
