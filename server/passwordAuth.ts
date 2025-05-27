@@ -5,6 +5,7 @@ import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from "@shared/zodSchema";
 import crypto from "crypto";
+import { emailService } from "./services/emailService";
 import { z } from "zod";
 
 if (!process.env.SESSION_SECRET) {
@@ -190,9 +191,8 @@ export async function setupAuth(app: Express) {
         resetTokenExpiry
       });
       
-      // In a real application, you would send an email here
-      // For now, we'll log the reset link for testing
-      console.log(`Password reset link: /reset-password?token=${resetToken}`);
+      // Send password reset email
+      const emailSent = await emailService.sendPasswordResetEmail(user.email, resetToken);
       
       res.json({ 
         message: "If an account with that email exists, a password reset link has been sent.",
