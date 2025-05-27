@@ -156,6 +156,13 @@ export class DatabaseStorage implements IStorage {
     return user ? user.toJSON() as IUser : null;
   }
 
+  async getUserByResetToken(token: string): Promise<IUser | null> {
+    const user = await User.findOne({
+      where: { resetToken: token }
+    });
+    return user ? user.toJSON() as IUser : null;
+  }
+
   async upsertUser(userData: IUser): Promise<IUser> {
     const [user, created] = await User.upsert(userData);
     return user.toJSON() as IUser;

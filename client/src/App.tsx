@@ -17,6 +17,8 @@ import JobSeekerDashboard from "@/pages/JobSeekerDashboard";
 import LoginPage from "@/pages/LoginPage";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
 import RoleSelection from "@/pages/RoleSelection";
 import PaymentPage from "@/pages/PaymentPage";
 import PaymentSuccess from "@/pages/PaymentSuccess";
@@ -78,6 +80,8 @@ function App() {
           <Route path="/" component={Home} />
           <Route path="/login" component={Login} />
           <Route path="/register" component={Register} />
+          <Route path="/forgot-password" component={ForgotPassword} />
+          <Route path="/reset-password" component={ResetPassword} />
           <Route path="/legacy-login" component={LoginPage} />
           <Route path="/select-role" component={RoleSelection} />
           <Route path="/pricing" component={() => {

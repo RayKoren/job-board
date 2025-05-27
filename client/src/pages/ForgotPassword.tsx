@@ -1,11 +1,10 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema } from "@shared/zodSchema";
+import { forgotPasswordSchema } from "@shared/zodSchema";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useLocation } from "wouter";
+import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
 import {
   Card,
@@ -25,41 +24,44 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Mountain } from "lucide-react";
+import { Loader2, Mountain, Mail } from "lucide-react";
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
-export default function Login() {
-  const [, setLocation] = useLocation();
+export default function ForgotPassword() {
   const { toast } = useToast();
   
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
       email: "",
-      password: "",
     },
   });
 
-  const onSubmit = async (data: LoginFormValues) => {
+  const onSubmit = async (data: ForgotPasswordFormValues) => {
     try {
-      await apiRequest("POST", "/api/auth/login", data);
-      
-      // Invalidate auth queries to refresh user data
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      const response = await apiRequest("POST", "/api/auth/forgot-password", data);
       
       toast({
-        title: "Welcome back!",
-        description: "You've been logged in successfully.",
+        title: "Reset link sent!",
+        description: "If an account with that email exists, a password reset link has been sent.",
       });
       
-      // Redirect to dashboard or home
-      setLocation("/");
+      // In development, show the reset token for testing
+      if ((response as any).resetToken) {
+        toast({
+          title: "Development Mode",
+          description: `Reset token: ${(response as any).resetToken}`,
+          variant: "default",
+        });
+      }
+      
+      form.reset();
     } catch (error: any) {
-      console.error("Login error:", error);
+      console.error("Forgot password error:", error);
       toast({
-        title: "Login failed",
-        description: error.message || "Please check your credentials and try again.",
+        title: "Error",
+        description: error.message || "Failed to send reset link. Please try again.",
         variant: "destructive",
       });
     }
@@ -74,15 +76,15 @@ export default function Login() {
             <h1 className="text-3xl font-bold text-forest">Sheridan Jobs</h1>
           </div>
           <p className="text-muted-foreground">
-            Welcome back to Wyoming's premier job board
+            Reset your password
           </p>
         </div>
 
         <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center text-forest">Sign In</CardTitle>
+            <CardTitle className="text-2xl text-center text-forest">Forgot Password</CardTitle>
             <CardDescription className="text-center">
-              Enter your credentials to access your account
+              Enter your email address and we'll send you a link to reset your password
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -93,30 +95,17 @@ export default function Login() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>Email Address</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="your.email@example.com"
-                          type="email"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter your password"
-                          type="password"
-                          {...field}
-                        />
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                          <Input
+                            placeholder="your.email@example.com"
+                            type="email"
+                            className="pl-10"
+                            {...field}
+                          />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -130,10 +119,10 @@ export default function Login() {
                   {form.formState.isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Signing in...
+                      Sending reset link...
                     </>
                   ) : (
-                    "Sign In"
+                    "Send Reset Link"
                   )}
                 </Button>
               </form>
@@ -141,14 +130,9 @@ export default function Login() {
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-sm text-muted-foreground text-center">
-              <Link href="/forgot-password" className="text-forest hover:underline">
-                Forgot your password?
-              </Link>
-            </div>
-            <div className="text-sm text-muted-foreground text-center">
-              Don't have an account?{" "}
-              <Link href="/register" className="text-forest hover:underline font-medium">
-                Sign up
+              Remember your password?{" "}
+              <Link href="/login" className="text-forest hover:underline font-medium">
+                Sign in
               </Link>
             </div>
             <div className="text-sm text-muted-foreground text-center">

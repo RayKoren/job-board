@@ -1,12 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema } from "@shared/zodSchema";
+import { resetPasswordSchema } from "@shared/zodSchema";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useLocation } from "wouter";
-import { Link } from "wouter";
+import { apiRequest } from "@/lib/queryClient";
+import { useLocation, Link } from "wouter";
 import {
   Card,
   CardContent,
@@ -25,45 +24,62 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Mountain } from "lucide-react";
+import { Loader2, Mountain, Lock } from "lucide-react";
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
-export default function Login() {
-  const [, setLocation] = useLocation();
+export default function ResetPassword() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  // Get token from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  
+  const form = useForm<ResetPasswordFormValues>({
+    resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
-      email: "",
+      token: token || "",
       password: "",
+      confirmPassword: "",
     },
   });
 
-  const onSubmit = async (data: LoginFormValues) => {
+  useEffect(() => {
+    if (!token) {
+      toast({
+        title: "Invalid reset link",
+        description: "The reset link is invalid or missing. Please request a new one.",
+        variant: "destructive",
+      });
+      setLocation("/forgot-password");
+    }
+  }, [token, toast, setLocation]);
+
+  const onSubmit = async (data: ResetPasswordFormValues) => {
     try {
-      await apiRequest("POST", "/api/auth/login", data);
-      
-      // Invalidate auth queries to refresh user data
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      await apiRequest("POST", "/api/auth/reset-password", data);
       
       toast({
-        title: "Welcome back!",
-        description: "You've been logged in successfully.",
+        title: "Password reset successful!",
+        description: "Your password has been reset. You can now sign in with your new password.",
       });
       
-      // Redirect to dashboard or home
-      setLocation("/");
+      // Redirect to login page
+      setLocation("/login");
     } catch (error: any) {
-      console.error("Login error:", error);
+      console.error("Reset password error:", error);
       toast({
-        title: "Login failed",
-        description: error.message || "Please check your credentials and try again.",
+        title: "Reset failed",
+        description: error.message || "Failed to reset password. The link may be expired or invalid.",
         variant: "destructive",
       });
     }
   };
+
+  if (!token) {
+    return null; // Will redirect via useEffect
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sage/20 to-terracotta/20 flex items-center justify-center p-4">
@@ -74,15 +90,15 @@ export default function Login() {
             <h1 className="text-3xl font-bold text-forest">Sheridan Jobs</h1>
           </div>
           <p className="text-muted-foreground">
-            Welcome back to Wyoming's premier job board
+            Create your new password
           </p>
         </div>
 
         <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center text-forest">Sign In</CardTitle>
+            <CardTitle className="text-2xl text-center text-forest">Reset Password</CardTitle>
             <CardDescription className="text-center">
-              Enter your credentials to access your account
+              Enter your new password below
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -90,16 +106,20 @@ export default function Login() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="email"
+                  name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>New Password</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="your.email@example.com"
-                          type="email"
-                          {...field}
-                        />
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                          <Input
+                            placeholder="Enter your new password"
+                            type="password"
+                            className="pl-10"
+                            {...field}
+                          />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -107,16 +127,20 @@ export default function Login() {
                 />
                 <FormField
                   control={form.control}
-                  name="password"
+                  name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>Confirm New Password</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Enter your password"
-                          type="password"
-                          {...field}
-                        />
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                          <Input
+                            placeholder="Confirm your new password"
+                            type="password"
+                            className="pl-10"
+                            {...field}
+                          />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -130,10 +154,10 @@ export default function Login() {
                   {form.formState.isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Signing in...
+                      Resetting password...
                     </>
                   ) : (
-                    "Sign In"
+                    "Reset Password"
                   )}
                 </Button>
               </form>
@@ -141,14 +165,9 @@ export default function Login() {
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-sm text-muted-foreground text-center">
-              <Link href="/forgot-password" className="text-forest hover:underline">
-                Forgot your password?
-              </Link>
-            </div>
-            <div className="text-sm text-muted-foreground text-center">
-              Don't have an account?{" "}
-              <Link href="/register" className="text-forest hover:underline font-medium">
-                Sign up
+              Remember your password?{" "}
+              <Link href="/login" className="text-forest hover:underline font-medium">
+                Sign in
               </Link>
             </div>
             <div className="text-sm text-muted-foreground text-center">
