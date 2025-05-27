@@ -190,6 +190,10 @@ const Contact = () => {
                     placeholder="Your message here..."
                     {...register("message", {
                       required: "Message is required",
+                      minLength: {
+                        value: 10,
+                        message: "Message must be at least 10 characters long"
+                      }
                     })}
                   />
                   {errors.message && (

@@ -20,9 +20,11 @@ interface EmailOptions {
 class EmailService {
   private transporter: nodemailer.Transporter | null = null;
   private fromEmail: string;
+  private businessEmail: string;
 
   constructor() {
     this.fromEmail = process.env.EMAIL_FROM || 'noreply@sheridanjobs.com';
+    this.businessEmail = process.env.BUSINESS_EMAIL || 'stonecoaststudios@protonmail.com';
     this.initializeTransporter();
   }
 
@@ -69,7 +71,7 @@ class EmailService {
     }
 
     const emailOptions: EmailOptions = {
-      to: this.fromEmail, // Send to your business email
+      to: this.businessEmail, // Send to your business email
       subject: `Contact Form: ${contactData.subject}`,
       html: this.generateContactEmailHTML(contactData),
       text: this.generateContactEmailText(contactData),
