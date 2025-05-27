@@ -1,0 +1,162 @@
+import nodemailer from "nodemailer";
+
+interface EmailConfig {
+  host: string;
+  port: number;
+  secure: boolean;
+  auth: {
+    user: string;
+    pass: string;
+  };
+}
+
+interface EmailOptions {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+}
+
+class EmailService {
+  private transporter: nodemailer.Transporter | null = null;
+  private fromEmail: string;
+
+  constructor() {
+    this.fromEmail = process.env.EMAIL_FROM || 'noreply@sheridanjobs.com';
+    this.initializeTransporter();
+  }
+
+  private initializeTransporter() {
+    // Only initialize if all required environment variables are present
+    if (!process.env.MAILGUN_SMTP_SERVER || !process.env.MAILGUN_SMTP_LOGIN || !process.env.MAILGUN_SMTP_PASSWORD) {
+      console.log('Email service not configured. Missing Mailgun SMTP credentials.');
+      return;
+    }
+
+    const config: EmailConfig = {
+      host: process.env.MAILGUN_SMTP_SERVER,
+      port: parseInt(process.env.MAILGUN_SMTP_PORT || '587'),
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: process.env.MAILGUN_SMTP_LOGIN,
+        pass: process.env.MAILGUN_SMTP_PASSWORD,
+      },
+    };
+
+    this.transporter = nodemailer.createTransport(config);
+
+    // Verify the connection
+    this.transporter.verify((error, success) => {
+      if (error) {
+        console.error('Mailgun SMTP verification failed:', error);
+        this.transporter = null;
+      } else {
+        console.log('Mailgun email service is ready to send emails');
+      }
+    });
+  }
+
+  async sendPasswordResetEmail(email: string, resetToken: string): Promise<boolean> {
+    if (!this.transporter) {
+      console.log('Email service not available. Reset link logged to console instead.');
+      console.log(`Password reset link: ${process.env.FRONTEND_URL || 'http://localhost:5000'}/reset-password?token=${resetToken}`);
+      return false;
+    }
+
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/reset-password?token=${resetToken}`;
+    
+    const emailOptions: EmailOptions = {
+      to: email,
+      subject: 'Reset Your Sheridan Jobs Password',
+      html: this.generatePasswordResetHTML(resetUrl),
+      text: this.generatePasswordResetText(resetUrl),
+    };
+
+    try {
+      await this.transporter.sendMail({
+        from: this.fromEmail,
+        ...emailOptions,
+      });
+      console.log(`Password reset email sent to ${email}`);
+      return true;
+    } catch (error) {
+      console.error('Failed to send password reset email:', error);
+      console.log(`Fallback - Password reset link: ${resetUrl}`);
+      return false;
+    }
+  }
+
+  private generatePasswordResetHTML(resetUrl: string): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Reset Your Password - Sheridan Jobs</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #2d5a27 0%, #8b4513 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">🏔️ Sheridan Jobs</h1>
+            <p style="color: #f0f0f0; margin: 10px 0 0 0;">Wyoming's Premier Job Board</p>
+          </div>
+          
+          <div style="background: #ffffff; padding: 30px; border: 1px solid #ddd; border-top: none;">
+            <h2 style="color: #2d5a27; margin-top: 0;">Reset Your Password</h2>
+            
+            <p>Hello!</p>
+            
+            <p>We received a request to reset the password for your Sheridan Jobs account. If you made this request, click the button below to set a new password:</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetUrl}" style="background: #2d5a27; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Reset Password</a>
+            </div>
+            
+            <p>This link will expire in 1 hour for security reasons.</p>
+            
+            <p>If you didn't request a password reset, you can safely ignore this email. Your password won't be changed.</p>
+            
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+            
+            <p style="font-size: 14px; color: #666;">
+              If the button doesn't work, copy and paste this link into your browser:<br>
+              <a href="${resetUrl}" style="color: #2d5a27; word-break: break-all;">${resetUrl}</a>
+            </p>
+            
+            <p style="font-size: 14px; color: #666; margin-top: 30px;">
+              Best regards,<br>
+              The Sheridan Jobs Team
+            </p>
+          </div>
+          
+          <div style="background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; border-radius: 0 0 10px 10px;">
+            <p>© 2024 Sheridan Jobs. Connecting Wyoming's workforce.</p>
+          </div>
+        </body>
+      </html>
+    `;
+  }
+
+  private generatePasswordResetText(resetUrl: string): string {
+    return `
+Reset Your Sheridan Jobs Password
+
+Hello!
+
+We received a request to reset the password for your Sheridan Jobs account. If you made this request, visit the following link to set a new password:
+
+${resetUrl}
+
+This link will expire in 1 hour for security reasons.
+
+If you didn't request a password reset, you can safely ignore this email. Your password won't be changed.
+
+Best regards,
+The Sheridan Jobs Team
+
+© 2024 Sheridan Jobs. Connecting Wyoming's workforce.
+    `.trim();
+  }
+}
+
+export const emailService = new EmailService();
