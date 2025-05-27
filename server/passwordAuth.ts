@@ -3,7 +3,8 @@ import bcrypt from "bcryptjs";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
-import { registerSchema, loginSchema } from "@shared/zodSchema";
+import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from "@shared/zodSchema";
+import crypto from "crypto";
 import { z } from "zod";
 
 if (!process.env.SESSION_SECRET) {
@@ -101,8 +102,8 @@ export async function setupAuth(app: Express) {
         return res.status(401).json({ message: "Invalid email or password" });
       }
       
-      // Verify password
-      const isValidPassword = await bcrypt.compare(validatedData.password, user.password);
+      // Verify password - ensure both values are strings
+      const isValidPassword = await bcrypt.compare(validatedData.password, String(user.password));
       if (!isValidPassword) {
         return res.status(401).json({ message: "Invalid email or password" });
       }
@@ -164,6 +165,86 @@ export async function setupAuth(app: Express) {
       res.clearCookie('connect.sid');
       res.json({ message: "Logged out successfully" });
     });
+  });
+
+  // Forgot password endpoint
+  app.post('/api/auth/forgot-password', async (req: Request, res: Response) => {
+    try {
+      const validatedData = forgotPasswordSchema.parse(req.body);
+      
+      // Find user by email
+      const user = await storage.getUserByEmail(validatedData.email);
+      if (!user) {
+        // Don't reveal if email exists or not for security
+        return res.json({ message: "If an account with that email exists, a password reset link has been sent." });
+      }
+      
+      // Generate reset token
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+      
+      // Update user with reset token
+      await storage.upsertUser({
+        ...user,
+        resetToken,
+        resetTokenExpiry
+      });
+      
+      // In a real application, you would send an email here
+      // For now, we'll log the reset link for testing
+      console.log(`Password reset link: /reset-password?token=${resetToken}`);
+      
+      res.json({ 
+        message: "If an account with that email exists, a password reset link has been sent.",
+        // For testing purposes, include the token in development
+        ...(process.env.NODE_ENV === 'development' && { resetToken })
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Forgot password error:", error);
+      res.status(500).json({ message: "Failed to process password reset request" });
+    }
+  });
+
+  // Reset password endpoint
+  app.post('/api/auth/reset-password', async (req: Request, res: Response) => {
+    try {
+      const validatedData = resetPasswordSchema.parse(req.body);
+      
+      // Find user by reset token
+      const user = await storage.getUserByResetToken(validatedData.token);
+      if (!user || !user.resetTokenExpiry || new Date() > user.resetTokenExpiry) {
+        return res.status(400).json({ message: "Invalid or expired reset token" });
+      }
+      
+      // Hash new password
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(validatedData.password, saltRounds);
+      
+      // Update user password and clear reset token
+      await storage.upsertUser({
+        ...user,
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null
+      });
+      
+      res.json({ message: "Password has been reset successfully" });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Reset password error:", error);
+      res.status(500).json({ message: "Failed to reset password" });
+    }
   });
 
   // Role selection endpoint (for users who haven't selected a role yet)

@@ -17,6 +17,8 @@ export interface IUser {
   lastName: string | null;
   profileImageUrl: string | null;
   role: 'business' | 'job_seeker' | null;
+  resetToken?: string | null;
+  resetTokenExpiry?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
   [key: string | symbol | number]: any; // Allow dynamic properties to fix sequelize TypeScript issues
