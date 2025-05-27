@@ -1,4 +1,7 @@
 import { useForm } from "react-hook-form";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import {
   MapPin,
   Phone,
@@ -23,12 +26,35 @@ const Contact = () => {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<ContactFormValues>();
+  
+  const { toast } = useToast();
+
+  const contactMutation = useMutation({
+    mutationFn: async (data: ContactFormValues) => {
+      return apiRequest("POST", "/api/contact", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Message Sent!",
+        description: "Thank you for your message! We'll get back to you soon.",
+      });
+      reset(); // Clear the form
+    },
+    onError: (error: any) => {
+      console.error("Contact form error:", error);
+      toast({
+        title: "Error",
+        description: "Sorry, there was an error sending your message. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const onSubmit = (data: ContactFormValues) => {
-    // Form is styled but non-functional as per requirements
-    console.log(data);
+    contactMutation.mutate(data);
   };
 
   return (
@@ -175,9 +201,10 @@ const Contact = () => {
 
                 <Button
                   type="submit"
-                  className="w-full bg-clay hover:bg-opacity-90 text-white font-medium px-6 py-3 rounded-lg shadow-md transition duration-300"
+                  disabled={contactMutation.isPending}
+                  className="w-full bg-clay hover:bg-opacity-90 text-white font-medium px-6 py-3 rounded-lg shadow-md transition duration-300 disabled:opacity-50"
                 >
-                  Send Message
+                  {contactMutation.isPending ? "Sending..." : "Send Message"}
                 </Button>
               </form>
             </div>
