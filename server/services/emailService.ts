@@ -56,6 +56,56 @@ class EmailService {
     });
   }
 
+  async sendContactEmail(contactData: {
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+  }): Promise<boolean> {
+    if (!this.transporter) {
+      console.log('Email service not available. Contact form submission logged to console instead.');
+      console.log('Contact Form Submission:', contactData);
+      return false;
+    }
+
+    const emailOptions: EmailOptions = {
+      to: this.fromEmail, // Send to your business email
+      subject: `Contact Form: ${contactData.subject}`,
+      html: this.generateContactEmailHTML(contactData),
+      text: this.generateContactEmailText(contactData),
+    };
+
+    // Also send a confirmation email to the person who submitted the form
+    const confirmationOptions: EmailOptions = {
+      to: contactData.email,
+      subject: 'Thank you for contacting Sheridan Jobs',
+      html: this.generateContactConfirmationHTML(contactData),
+      text: this.generateContactConfirmationText(contactData),
+    };
+
+    try {
+      // Send notification to business
+      await this.transporter.sendMail({
+        from: this.fromEmail,
+        replyTo: contactData.email, // Allow easy reply
+        ...emailOptions,
+      });
+
+      // Send confirmation to submitter
+      await this.transporter.sendMail({
+        from: this.fromEmail,
+        ...confirmationOptions,
+      });
+
+      console.log(`Contact form submitted by ${contactData.name} (${contactData.email})`);
+      return true;
+    } catch (error) {
+      console.error('Failed to send contact form email:', error);
+      console.log('Fallback - Contact form submission:', contactData);
+      return false;
+    }
+  }
+
   async sendPasswordResetEmail(email: string, resetToken: string): Promise<boolean> {
     if (!this.transporter) {
       console.log('Email service not available. Reset link logged to console instead.');
@@ -135,6 +185,149 @@ class EmailService {
         </body>
       </html>
     `;
+  }
+
+  private generateContactEmailHTML(contactData: {
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+  }): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Contact Form Submission - Sheridan Jobs</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #2d5a27 0%, #8b4513 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">🏔️ Sheridan Jobs</h1>
+            <p style="color: #f0f0f0; margin: 10px 0 0 0;">Contact Form Submission</p>
+          </div>
+          
+          <div style="background: #ffffff; padding: 30px; border: 1px solid #ddd; border-top: none;">
+            <h2 style="color: #2d5a27; margin-top: 0;">New Contact Form Submission</h2>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
+              <p><strong>Name:</strong> ${contactData.name}</p>
+              <p><strong>Email:</strong> ${contactData.email}</p>
+              <p><strong>Subject:</strong> ${contactData.subject}</p>
+            </div>
+            
+            <h3 style="color: #2d5a27;">Message:</h3>
+            <div style="background: #ffffff; border: 1px solid #ddd; padding: 20px; border-radius: 5px;">
+              <p style="white-space: pre-wrap;">${contactData.message}</p>
+            </div>
+            
+            <p style="margin-top: 30px; color: #666;">
+              You can reply directly to this email to respond to ${contactData.name}.
+            </p>
+          </div>
+          
+          <div style="background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; border-radius: 0 0 10px 10px;">
+            <p>© 2024 Sheridan Jobs. Connecting Wyoming's workforce.</p>
+          </div>
+        </body>
+      </html>
+    `;
+  }
+
+  private generateContactConfirmationHTML(contactData: {
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+  }): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Thank You - Sheridan Jobs</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #2d5a27 0%, #8b4513 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">🏔️ Sheridan Jobs</h1>
+            <p style="color: #f0f0f0; margin: 10px 0 0 0;">Wyoming's Premier Job Board</p>
+          </div>
+          
+          <div style="background: #ffffff; padding: 30px; border: 1px solid #ddd; border-top: none;">
+            <h2 style="color: #2d5a27; margin-top: 0;">Thank You, ${contactData.name}!</h2>
+            
+            <p>We've received your message and will get back to you soon. Here's a copy of what you sent:</p>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
+              <p><strong>Subject:</strong> ${contactData.subject}</p>
+              <p><strong>Message:</strong></p>
+              <p style="white-space: pre-wrap; margin-top: 10px;">${contactData.message}</p>
+            </div>
+            
+            <p>Our team typically responds within 24 hours during business days. If you have urgent questions, feel free to give us a call.</p>
+            
+            <p style="margin-top: 30px;">
+              Best regards,<br>
+              The Sheridan Jobs Team
+            </p>
+          </div>
+          
+          <div style="background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; border-radius: 0 0 10px 10px;">
+            <p>© 2024 Sheridan Jobs. Connecting Wyoming's workforce.</p>
+          </div>
+        </body>
+      </html>
+    `;
+  }
+
+  private generateContactEmailText(contactData: {
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+  }): string {
+    return `
+New Contact Form Submission - Sheridan Jobs
+
+Name: ${contactData.name}
+Email: ${contactData.email}
+Subject: ${contactData.subject}
+
+Message:
+${contactData.message}
+
+You can reply directly to this email to respond to ${contactData.name}.
+
+© 2024 Sheridan Jobs. Connecting Wyoming's workforce.
+    `.trim();
+  }
+
+  private generateContactConfirmationText(contactData: {
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+  }): string {
+    return `
+Thank You for Contacting Sheridan Jobs
+
+Hello ${contactData.name},
+
+We've received your message and will get back to you soon. Here's a copy of what you sent:
+
+Subject: ${contactData.subject}
+
+Message:
+${contactData.message}
+
+Our team typically responds within 24 hours during business days. If you have urgent questions, feel free to give us a call.
+
+Best regards,
+The Sheridan Jobs Team
+
+© 2024 Sheridan Jobs. Connecting Wyoming's workforce.
+    `.trim();
   }
 
   private generatePasswordResetText(resetUrl: string): string {

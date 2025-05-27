@@ -11,6 +11,7 @@ import multer from "multer";
 import { getPriceForPlan, getPriceForAddon, calculateJobPostingPrice } from "./services/pricing";
 import { insertBusinessProfileSchema, insertJobSeekerProfileSchema, insertJobPostingSchema, insertJobApplicationSchema } from "@shared/zodSchema";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./services/paypal";
+import { emailService } from "./services/emailService";
 
 // Helper function to create an object with dynamic fields
 function createJobData(baseData: any, extraFields: Record<string, any> = {}): any {
