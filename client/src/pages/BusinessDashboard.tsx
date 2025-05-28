@@ -249,8 +249,8 @@ export default function BusinessDashboard() {
                 </div>
               </CardContent>
               
-              <CardFooter className="flex justify-between">
-                <div className="flex gap-2">
+              <CardFooter className="flex flex-col gap-3">
+                <div className="flex flex-wrap gap-2 w-full">
                   <Button size="sm" variant="outline" asChild>
                     <Link to={`/business/jobs/${job.id}`}>
                       <Eye className="w-4 h-4 mr-1" />

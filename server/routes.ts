@@ -771,7 +771,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update job application status (business only)
-  app.patch('/api/applications/:id/status', isBusinessUser, async (req: any, res) => {
+  app.put('/api/applications/:id/status', isBusinessUser, async (req: any, res) => {
     try {
       const applicationId = parseInt(req.params.id);
       const { status } = req.body;
