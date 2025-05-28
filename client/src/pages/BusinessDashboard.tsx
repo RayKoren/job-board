@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
+import LogoUpload from "@/components/LogoUpload";
 
 export default function BusinessDashboard() {
   const { isAuthenticated, isBusinessUser } = useAuth();
@@ -184,6 +185,15 @@ export default function BusinessDashboard() {
                 </a>
               )}
             </div>
+          </CardContent>
+          <CardContent>
+            <LogoUpload 
+              currentLogoUrl={businessProfile?.logoData ? `/api/logo/${businessProfile.userId}` : null}
+              onUploadSuccess={() => {
+                // Refresh business profile data
+                queryClient.invalidateQueries({ queryKey: ['/api/business/profile'] });
+              }}
+            />
           </CardContent>
         </Card>
       )}

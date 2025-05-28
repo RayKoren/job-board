@@ -37,6 +37,10 @@ export interface IBusinessProfile {
   contactEmail?: string | null;
   contactPhone?: string | null;
   logoUrl?: string | null;
+  // New fields for database-stored logos
+  logoData?: string | null;
+  logoName?: string | null;
+  logoType?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
   [key: string | symbol | number]: any; // Allow dynamic properties to fix sequelize TypeScript issues
