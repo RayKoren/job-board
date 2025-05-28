@@ -187,52 +187,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { products, jobPostingAddons } = await import('../shared/schema');
         const { eq, and } = await import('drizzle-orm');
         
-        console.log('Creating database relationships for job posting:', {
-          jobId: job.id,
-          plan: jobData.plan,
-          expiresAt: jobData.expiresAt,
-          addons: jobData.addons
-        });
+
         
-        // 1. Use the plan field (which is the plan tier) to look up the corresponding product ID
-        if (jobData.plan) {
-          // Use plan as the product code/tier
-          const [planProduct] = await db.select()
-            .from(products)
-            .where(
-              and(
-                eq(products.code, jobData.plan),
-                eq(products.type, 'plan')
-              )
-            );
-            
-          if (planProduct && planProduct.id !== undefined && job.id !== undefined) {
-            // Update the job with the planCode field - we can't set planId directly through the storage interface
-            const jobUpdate: Partial<IJobPosting> = {
-              planCode: jobData.plan, // Set planCode to match plan for compatibility
-              planId: planProduct.id  // Set the plan ID reference
-            };
-            
-            // Update at database level for planId
-            try {
-              await sequelize.query(
-                `UPDATE "job_postings" SET "planId" = :planId WHERE "id" = :jobId`,
-                {
-                  replacements: {
-                    planId: planProduct.id,
-                    jobId: job.id
-                  },
-                  type: QueryTypes.UPDATE
-                }
-              );
-              console.log(`Updated job ${job.id} with plan product ID ${planProduct.id} (${jobData.plan})`);
-            } catch (updateError) {
-              console.error('Error updating planId:', updateError);
-            }
-            
-            // Update other fields through the storage interface
-            await storage.updateJobPosting(job.id, jobUpdate);
-          }
+        // Set plan code for compatibility
+        if (jobData.plan && job.id !== undefined) {
+          await storage.updateJobPosting(job.id, {
+            planCode: jobData.plan
+          });
         }
         
         // 2. If we have add-ons, create the relationship records
