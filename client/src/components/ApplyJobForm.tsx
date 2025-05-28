@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { 
@@ -124,6 +124,9 @@ export default function ApplyJobForm({
         description: "Your application has been submitted successfully.",
       });
       
+      // Invalidate business jobs cache to update application count
+      queryClient.invalidateQueries({ queryKey: ["/api/business/jobs"] });
+      
       if (onSuccess) {
         onSuccess();
       }
@@ -161,6 +164,9 @@ export default function ApplyJobForm({
         title: "Thank you!",
         description: "We've recorded that you applied directly. Good luck with your application!",
       });
+      
+      // Invalidate business jobs cache to update click count
+      queryClient.invalidateQueries({ queryKey: ["/api/business/jobs"] });
       
       // Close the modal and call success callback
       onClose();
