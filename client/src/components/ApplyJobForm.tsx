@@ -73,6 +73,7 @@ export default function ApplyJobForm({
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmittingDirect, setIsSubmittingDirect] = useState(false);
   const [isProfileShown, setIsProfileShown] = useState(false);
   
   // Get job seeker profile data if user is authenticated
@@ -140,6 +141,43 @@ export default function ApplyJobForm({
     }
   };
   
+  // Handle "I've applied directly" action
+  const handleDirectApplication = async () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to track your application.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmittingDirect(true);
+    try {
+      // Track the click/application
+      await apiRequest("POST", `/api/jobs/${jobId}/track-click`);
+      
+      toast({
+        title: "Thank you!",
+        description: "We've recorded that you applied directly. Good luck with your application!",
+      });
+      
+      // Close the modal and call success callback
+      onClose();
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to record your application. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmittingDirect(false);
+    }
+  };
+
   // Handle showing the contact info (when applying directly)
   const showContactInfo = () => {
     // Track the click for analytics
@@ -380,9 +418,24 @@ export default function ApplyJobForm({
               />
             )}
             
-            <DialogFooter>
+            <DialogFooter className="flex flex-col sm:flex-row gap-2">
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
+              </Button>
+              <Button 
+                type="button" 
+                variant="secondary" 
+                onClick={handleDirectApplication}
+                disabled={isSubmittingDirect}
+              >
+                {isSubmittingDirect ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Recording...
+                  </>
+                ) : (
+                  "I've Applied Directly"
+                )}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
