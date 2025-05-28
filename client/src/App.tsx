@@ -46,27 +46,35 @@ function ProtectedRoute({
   const { isAuthenticated, isBusinessUser, isJobSeeker, user } = useAuth();
   const [, setLocation] = useLocation();
 
-  if (!isAuthenticated) {
-    // Redirect to login page if not authenticated
-    setLocation('/login');
-    return null;
-  }
-  
-  // Check if user needs to select a role
-  if (user && !user.role) {
-    setLocation('/select-role');
-    return null;
-  }
+  useEffect(() => {
+    if (!isAuthenticated) {
+      // Redirect to login page if not authenticated
+      setLocation('/login');
+      return;
+    }
+    
+    // Check if user needs to select a role
+    if (user && !user.role) {
+      setLocation('/select-role');
+      return;
+    }
 
-  if (requiredRole === 'business' && !isBusinessUser) {
-    // Redirect if not a business user
-    setLocation('/');
-    return null;
-  }
+    if (requiredRole === 'business' && !isBusinessUser) {
+      // Redirect if not a business user
+      setLocation('/');
+      return;
+    }
 
-  if (requiredRole === 'job_seeker' && !isJobSeeker) {
-    // Redirect if not a job seeker
-    setLocation('/');
+    if (requiredRole === 'job_seeker' && !isJobSeeker) {
+      // Redirect if not a job seeker
+      setLocation('/');
+      return;
+    }
+  }, [isAuthenticated, user, requiredRole, isBusinessUser, isJobSeeker, setLocation]);
+
+  if (!isAuthenticated || (user && !user.role) || 
+      (requiredRole === 'business' && !isBusinessUser) || 
+      (requiredRole === 'job_seeker' && !isJobSeeker)) {
     return null;
   }
 
