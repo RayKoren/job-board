@@ -331,6 +331,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         jobs.map(async (job) => {
           if (!job.id) return { ...job, applicationCount: 0 };
           const applications = await storage.getJobApplicationsForJob(job.id);
+          console.log(`Job ${job.id} (${job.title}) has ${applications.length} applications:`, applications.map(app => ({ id: app.id, name: app.name, email: app.email })));
           return {
             ...job,
             applicationCount: applications.length
