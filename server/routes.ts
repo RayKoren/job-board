@@ -673,38 +673,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Update job application status (business only)
-  app.put('/api/applications/:id/status', isBusinessUser, async (req: any, res) => {
-    try {
-      const applicationId = parseInt(req.params.id);
-      const { status } = req.body;
-      const userId = req.session.user.id;
-      
-      // Validate status
-      if (!['pending', 'reviewed', 'contacted', 'rejected'].includes(status)) {
-        return res.status(400).json({ message: "Invalid status" });
-      }
-      
-      // Get application to verify ownership
-      const application = await storage.getJobApplication(applicationId);
-      if (!application) {
-        return res.status(404).json({ message: "Application not found" });
-      }
-      
-      // Get job to verify business ownership
-      const job = await storage.getJobPosting(application.jobId);
-      if (!job || job.businessUserId !== userId) {
-        return res.status(403).json({ message: "Not authorized to update this application" });
-      }
-      
-      // Update status
-      const updatedApplication = await storage.updateJobApplicationStatus(applicationId, status);
-      res.json(updatedApplication);
-    } catch (error) {
-      console.error("Error updating application status:", error);
-      res.status(500).json({ message: "Failed to update application status" });
-    }
-  });
+
   
   // Get user's job applications (job seeker only)
   app.get('/api/my-applications', isJobSeeker, async (req: any, res) => {
