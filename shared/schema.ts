@@ -31,6 +31,7 @@ export const users = pgTable("users", {
   role: userRoleEnum("role"),
   resetToken: varchar("reset_token"),
   resetTokenExpiry: timestamp("reset_token_expiry"),
+  mailingListConsent: boolean("mailing_list_consent").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

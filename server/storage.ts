@@ -19,6 +19,7 @@ export interface IUser {
   role: 'business' | 'job_seeker' | null;
   resetToken?: string | null;
   resetTokenExpiry?: Date | null;
+  mailingListConsent?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
   [key: string | symbol | number]: any; // Allow dynamic properties to fix sequelize TypeScript issues
@@ -112,6 +113,7 @@ export interface IStorage {
   getUser(id: string): Promise<IUser | null>;
   getUserByEmail(email: string): Promise<IUser | null>;
   upsertUser(user: IUser): Promise<IUser>;
+  updateMailingListConsent(userId: string, consent: boolean): Promise<IUser>;
   
   // Business profile operations
   getBusinessProfile(userId: string): Promise<IBusinessProfile | null>;
@@ -165,6 +167,20 @@ export class DatabaseStorage implements IStorage {
 
   async upsertUser(userData: IUser): Promise<IUser> {
     const [user, created] = await User.upsert(userData);
+    return user.toJSON() as IUser;
+  }
+
+  async updateMailingListConsent(userId: string, consent: boolean): Promise<IUser> {
+    await User.update(
+      { mailingListConsent: consent },
+      { where: { id: userId } }
+    );
+    
+    const user = await User.findByPk(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
     return user.toJSON() as IUser;
   }
   
