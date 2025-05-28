@@ -96,7 +96,23 @@ export async function setupAuth(app: Express) {
   // Login endpoint
   app.post('/api/auth/login', async (req: Request, res: Response) => {
     try {
-      const validatedData = loginSchema.parse(req.body);
+      const { recaptchaToken, ...loginData } = req.body;
+      
+      // Verify reCAPTCHA
+      if (recaptchaToken) {
+        const recaptchaResponse = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`
+        });
+        const recaptchaResult = await recaptchaResponse.json();
+        
+        if (!recaptchaResult.success) {
+          return res.status(400).json({ message: "reCAPTCHA verification failed" });
+        }
+      }
+      
+      const validatedData = loginSchema.parse(loginData);
       
       // Find user by email
       const user = await storage.getUserByEmail(validatedData.email);

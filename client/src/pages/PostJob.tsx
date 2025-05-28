@@ -304,6 +304,9 @@ export default function PostJob() {
         description: "Your job has been posted and is now live.",
       });
       
+      // Invalidate business jobs cache to ensure fresh data shows up
+      queryClient.invalidateQueries({ queryKey: ["/api/business/jobs"] });
+      
       // Redirect to business dashboard
       setLocation("/business/dashboard");
     } catch (error) {

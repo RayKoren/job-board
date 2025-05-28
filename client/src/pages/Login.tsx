@@ -135,6 +135,14 @@ export default function Login() {
                     </FormItem>
                   )}
                 />
+                
+                <div className="flex justify-center">
+                  <ReCAPTCHA
+                    ref={recaptchaRef}
+                    sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                  />
+                </div>
+                
                 <Button
                   type="submit"
                   className="w-full bg-forest hover:bg-forest/90"
