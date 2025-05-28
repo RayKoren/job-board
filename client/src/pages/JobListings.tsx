@@ -129,6 +129,34 @@ export default function JobListings() {
       }
     }
     
+    // Minimum salary filter
+    if (minSalary > 0) {
+      result = result.filter(job => {
+        if (job.compensationType === 'salary' || job.compensationType === 'both') {
+          if (job.salaryRange) {
+            // Extract minimum salary from range like "$50,000 - $70,000"
+            const match = job.salaryRange.match(/\$?([\d,]+)/);
+            if (match) {
+              const extractedSalary = parseInt(match[1].replace(/,/g, ''));
+              return extractedSalary >= minSalary;
+            }
+          }
+        }
+        if (job.compensationType === 'hourly' || job.compensationType === 'both') {
+          if (job.hourlyRate) {
+            // Convert hourly to annual (assuming 40 hours/week, 52 weeks/year)
+            const match = job.hourlyRate.match(/\$?([\d.]+)/);
+            if (match) {
+              const hourlyAmount = parseFloat(match[1]);
+              const annualEquivalent = hourlyAmount * 40 * 52;
+              return annualEquivalent >= minSalary;
+            }
+          }
+        }
+        return true; // Include jobs without salary info
+      });
+    }
+    
     // Sort results
     if (sortBy === 'dateDesc') {
       result = [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());

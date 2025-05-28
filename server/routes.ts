@@ -747,6 +747,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get applications for each job
       const jobsWithApplications = await Promise.all(
         jobs.map(async (job) => {
+          if (!job.id) return { ...job, applicationCount: 0, applications: [] };
           const applications = await storage.getJobApplicationsForJob(job.id);
           return {
             ...job,
@@ -766,6 +767,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching business applications:", error);
       res.status(500).json({ message: "Failed to fetch business applications" });
+    }
+  });
+
+  // Update job application status (business only)
+  app.patch('/api/applications/:id/status', isBusinessUser, async (req: any, res) => {
+    try {
+      const applicationId = parseInt(req.params.id);
+      const { status } = req.body;
+      const userId = req.session.user.id;
+
+      if (!status) {
+        return res.status(400).json({ message: "Status is required" });
+      }
+
+      // Get the application to verify ownership
+      const application = await storage.getJobApplication(applicationId);
+      if (!application) {
+        return res.status(404).json({ message: "Application not found" });
+      }
+
+      // Get the job to verify business ownership
+      const job = await storage.getJobPosting(application.jobId);
+      if (!job || job.businessUserId !== userId) {
+        return res.status(403).json({ message: "Not authorized to update this application" });
+      }
+
+      // Update the application status
+      const updatedApplication = await storage.updateJobApplicationStatus(applicationId, status);
+
+      // Send email notification to applicant
+      try {
+        await emailService.sendApplicationStatusUpdateEmail({
+          name: application.name,
+          email: application.email,
+          jobTitle: job.title,
+          company: job.company,
+          status: status
+        });
+      } catch (emailError) {
+        console.error("Email notification error:", emailError);
+        // Don't fail the update if email fails
+      }
+
+      res.json(updatedApplication);
+    } catch (error) {
+      console.error("Error updating application status:", error);
+      res.status(500).json({ message: "Failed to update application status" });
     }
   });
   
