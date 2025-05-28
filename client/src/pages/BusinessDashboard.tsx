@@ -35,6 +35,9 @@ export default function BusinessDashboard() {
     enabled: isAuthenticated && isBusinessUser,
   });
 
+  // Type the business profile data properly
+  const profile = businessProfile as any;
+
   const { data: jobPostings, isLoading: isLoadingJobs } = useQuery({
     queryKey: ["/api/business/jobs"],
     enabled: isAuthenticated && isBusinessUser,
@@ -140,42 +143,42 @@ export default function BusinessDashboard() {
       ) : (
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>{businessProfile.companyName}</CardTitle>
+            <CardTitle>{profile?.companyName}</CardTitle>
             <CardDescription>
-              {businessProfile.industry && (
+              {profile?.industry && (
                 <span className="inline-flex items-center mr-4">
                   <Briefcase className="w-4 h-4 mr-1" />
-                  {businessProfile.industry}
+                  {profile.industry}
                 </span>
               )}
-              {businessProfile.location && (
+              {profile?.location && (
                 <span className="inline-flex items-center">
                   <MapPin className="w-4 h-4 mr-1" />
-                  {businessProfile.location}
+                  {profile.location}
                 </span>
               )}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {businessProfile.description && (
-              <p className="text-gray-600 mb-4">{businessProfile.description}</p>
+            {profile?.description && (
+              <p className="text-gray-600 mb-4">{profile.description}</p>
             )}
             <div className="flex flex-wrap gap-4">
-              {businessProfile.contactEmail && (
+              {profile?.contactEmail && (
                 <div className="inline-flex items-center text-gray-600">
                   <Mail className="w-4 h-4 mr-1" />
-                  <span className="break-all">{businessProfile.contactEmail}</span>
+                  <span className="break-all">{profile.contactEmail}</span>
                 </div>
               )}
-              {businessProfile.contactPhone && (
+              {profile?.contactPhone && (
                 <div className="inline-flex items-center text-gray-600">
                   <Phone className="w-4 h-4 mr-1" />
-                  <span>{businessProfile.contactPhone}</span>
+                  <span>{profile.contactPhone}</span>
                 </div>
               )}
-              {businessProfile.website && (
+              {profile?.website && (
                 <a 
-                  href={businessProfile.website} 
+                  href={profile.website} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="inline-flex items-center text-forest hover:underline break-all"
@@ -188,7 +191,7 @@ export default function BusinessDashboard() {
           </CardContent>
           <CardContent>
             <LogoUpload 
-              currentLogoUrl={businessProfile?.logoData ? `/api/logo/${businessProfile.userId}` : null}
+              currentLogoUrl={profile?.logoData ? `/api/logo/${profile.userId}` : null}
               onUploadSuccess={() => {
                 // Refresh business profile data
                 queryClient.invalidateQueries({ queryKey: ['/api/business/profile'] });

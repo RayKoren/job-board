@@ -30,11 +30,11 @@ export default function LogoUpload({ currentLogoUrl, onUploadSuccess }: LogoUplo
       return;
     }
 
-    // Validate file size (2MB limit)
-    if (file.size > 2 * 1024 * 1024) {
+    // Validate file size (500KB limit)
+    if (file.size > 500 * 1024) {
       toast({
         title: "File too large",
-        description: "Please select an image smaller than 2MB.",
+        description: "Please select an image smaller than 500KB.",
         variant: "destructive",
       });
       return;
@@ -173,7 +173,7 @@ export default function LogoUpload({ currentLogoUrl, onUploadSuccess }: LogoUplo
                 Drag and drop your logo here, or click to browse
               </p>
               <p className="text-xs text-gray-400 mt-2">
-                Supports JPEG, PNG, GIF, WebP (max 2MB)
+                Supports JPEG, PNG, GIF, WebP (max 500KB)
               </p>
             </div>
           </div>
