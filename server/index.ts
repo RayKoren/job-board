@@ -64,12 +64,21 @@ app.use((req, res, next) => {
   
   const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  // Comprehensive error handling middleware
+  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+    console.error(`Error in ${req.method} ${req.path}:`, err);
+    
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
+    
+    // Don't expose internal errors in production
+    const isProduction = process.env.NODE_ENV === 'production';
+    const errorResponse = {
+      message: isProduction && status === 500 ? "Internal Server Error" : message,
+      ...(isProduction ? {} : { stack: err.stack, details: err })
+    };
 
-    res.status(status).json({ message });
-    throw err;
+    res.status(status).json(errorResponse);
   });
 
   // importantly only setup vite in development and after
