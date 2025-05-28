@@ -25,6 +25,7 @@ import PaymentSuccess from "@/pages/PaymentSuccess";
 import BusinessJobView from "@/pages/BusinessJobView";
 import BusinessJobEdit from "@/pages/BusinessJobEdit";
 import BusinessJobApplications from "@/pages/BusinessJobApplications";
+import UserProfile from "@/pages/UserProfile";
 
 
 // Components
@@ -136,6 +137,12 @@ function App() {
           <Route 
             path="/job-seeker/dashboard" 
             component={() => <ProtectedRoute component={JobSeekerDashboard} requiredRole="job_seeker" />} 
+          />
+
+          {/* Profile Route (Protected) */}
+          <Route 
+            path="/profile" 
+            component={() => <ProtectedRoute component={UserProfile} />} 
           />
           
           {/* Payment Routes */}

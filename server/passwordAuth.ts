@@ -64,6 +64,7 @@ export async function setupAuth(app: Express) {
         lastName: validatedData.lastName,
         role: validatedData.role,
         profileImageUrl: null,
+        mailingListConsent: validatedData.mailingListConsent || false,
       };
       
       const user = await storage.upsertUser(userData);
