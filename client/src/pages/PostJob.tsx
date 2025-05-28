@@ -698,9 +698,11 @@ export default function PostJob() {
                                 <Input
                                   placeholder="e.g. (307) 555-1234"
                                   type="tel"
+                                  maxLength={20}
                                   {...field}
                                 />
                               </FormControl>
+                              <FormDescription>Maximum 20 characters</FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}

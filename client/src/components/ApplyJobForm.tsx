@@ -264,7 +264,7 @@ export default function ApplyJobForm({
                     <Mail className="h-4 w-4 text-forest" />
                     <a 
                       href={`mailto:${contactInfo.email}?subject=Application for ${jobTitle}`}
-                      className="text-forest hover:underline"
+                      className="text-forest hover:underline break-all"
                     >
                       {contactInfo.email}
                     </a>
@@ -332,7 +332,7 @@ export default function ApplyJobForm({
                 <FormItem>
                   <FormLabel>Full Name</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Your full name" />
+                    <Input {...field} placeholder="Your full name" maxLength={100} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
