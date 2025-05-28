@@ -201,7 +201,7 @@ export default function JobSeekerProfile() {
         skills,
         experience: data.experience,
         education: data.education,
-        phone: data.phone,
+        contactPhone: data.phone, // Map phone to contactPhone for database
         location: data.location
       });
       

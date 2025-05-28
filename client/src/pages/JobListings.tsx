@@ -405,8 +405,14 @@ export default function JobListings() {
 function JobCard({ job }: { job: Job }) {
   const [expanded, setExpanded] = useState(false);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
   
   const handleApplyClick = () => {
+    if (!isAuthenticated) {
+      setLocation('/login');
+      return;
+    }
     setIsApplyModalOpen(true);
   };
   
@@ -501,10 +507,10 @@ function JobCard({ job }: { job: Job }) {
                     {job.description}
                   </p>
                   <Button 
-                    className="bg-forest hover:bg-opacity-90"
+                    className={isAuthenticated ? "bg-forest hover:bg-opacity-90" : "bg-gray-400 hover:bg-gray-500"}
                     onClick={handleApplyClick}
                   >
-                    Apply Now
+                    {isAuthenticated ? "Apply Now" : "Login to Apply"}
                   </Button>
                 </motion.div>
               )}
