@@ -113,6 +113,7 @@ function App() {
           }} />
           <Route path="/post-job" component={PostJob} />
           <Route path="/jobs" component={JobListings} />
+          <Route path="/jobs/:id" component={JobListings} />
           <Route path="/terms" component={TermsOfService} />
           <Route path="/privacy" component={PrivacyPolicy} />
 

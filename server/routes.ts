@@ -216,7 +216,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Update at database level for planId
             try {
               await sequelize.query(
-                `UPDATE "job_postings" SET "plan_id" = :planId WHERE "id" = :jobId`,
+                `UPDATE "job_postings" SET "planId" = :planId WHERE "id" = :jobId`,
                 {
                   replacements: {
                     planId: planProduct.id,
