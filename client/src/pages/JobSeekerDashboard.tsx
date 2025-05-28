@@ -162,10 +162,10 @@ export default function JobSeekerDashboard() {
                 </span>
               )}
               
-              {jobSeekerProfile?.phone && (
+              {(jobSeekerProfile?.contactPhone || jobSeekerProfile?.phone) && (
                 <span className="inline-flex items-center text-gray-600">
                   <Phone className="w-4 h-4 mr-1" />
-                  {jobSeekerProfile.phone}
+                  {jobSeekerProfile?.contactPhone || jobSeekerProfile?.phone}
                 </span>
               )}
             </div>

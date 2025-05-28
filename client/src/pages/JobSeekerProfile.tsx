@@ -79,7 +79,7 @@ export default function JobSeekerProfile() {
         experience: profile.experience || "",
         education: profile.education || "",
         resumeUrl: profile.resumeUrl || "",
-        phone: profile.phone || "",
+        phone: profile.contactPhone || profile.phone || "",
         location: profile.location || "",
       });
     }
