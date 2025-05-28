@@ -773,6 +773,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update job application status (business only)
   app.put('/api/applications/:id/status', isBusinessUser, async (req: any, res) => {
     try {
+      console.log("=== STATUS UPDATE REQUEST ===");
+      console.log("Application ID:", req.params.id);
+      console.log("New status:", req.body.status);
+      console.log("User ID:", req.session.user.id);
+      
       const applicationId = parseInt(req.params.id);
       const { status } = req.body;
       const userId = req.session.user.id;
@@ -783,29 +788,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get the application to verify ownership
       const application = await storage.getJobApplication(applicationId);
+      console.log("Found application:", application?.name, application?.email);
       if (!application) {
         return res.status(404).json({ message: "Application not found" });
       }
 
       // Get the job to verify business ownership
       const job = await storage.getJobPosting(application.jobId);
+      console.log("Found job:", job?.title, job?.company);
       if (!job || job.businessUserId !== userId) {
         return res.status(403).json({ message: "Not authorized to update this application" });
       }
 
       // Update the application status
       const updatedApplication = await storage.updateJobApplicationStatus(applicationId, status);
+      console.log("Application status updated to:", status);
 
       // Send email notification to applicant
       try {
-        console.log("Sending status update email to:", application.email);
-        await emailService.sendApplicationStatusUpdateEmail({
+        console.log("Attempting to send status update email to:", application.email);
+        const emailResult = await emailService.sendApplicationStatusUpdateEmail({
           name: application.name,
           email: application.email,
           jobTitle: job.title,
           company: job.company,
           status: status
         });
+        console.log("Email service result:", emailResult);
         console.log("Status update email sent successfully");
       } catch (emailError) {
         console.error("Email notification error:", emailError);
