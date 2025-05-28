@@ -568,6 +568,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const application = await storage.createJobApplication(applicationData);
+      
+      // Send email notifications
+      try {
+        // Send confirmation email to applicant
+        await emailService.sendApplicationSubmittedEmail({
+          name: application.name,
+          email: application.email,
+          jobTitle: job.title,
+          company: job.company
+        });
+
+        // Send notification to business owner
+        const businessUser = await storage.getUser(job.businessUserId);
+        if (businessUser && businessUser.email) {
+          await emailService.sendNewApplicationNotificationEmail({
+            businessEmail: businessUser.email,
+            applicantName: application.name,
+            jobTitle: job.title,
+            company: job.company,
+            applicationId: application.id || 0
+          });
+        }
+      } catch (emailError) {
+        console.error("Email notification error:", emailError);
+        // Don't fail the application if email fails
+      }
+      
       res.status(201).json(application);
     } catch (error) {
       console.error("Error creating job application:", error);
