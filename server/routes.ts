@@ -322,6 +322,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Get business job postings
   app.get('/api/business/jobs', isBusinessUser, async (req: any, res) => {
+    // Disable caching to ensure fresh application counts
+    res.set('Cache-Control', 'no-store');
     try {
       const userId = req.session.user.id;
       const jobs = await storage.getJobPostings({ businessUserId: userId });
