@@ -334,6 +334,7 @@ declare module 'express-session' {
       firstName: string | null;
       lastName: string | null;
       role: 'business' | 'job_seeker' | null;
+      
     };
   }
 }

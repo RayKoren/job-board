@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus, Edit, Trash2, ExternalLink, Star, Tag, Briefcase, MapPin, Calendar, Home, Eye, MessageSquare, Users } from "lucide-react";
+import { Loader2, Plus, Edit, Trash2, ExternalLink, Star, Tag, Briefcase, MapPin, Calendar, Home, Eye, MessageSquare, Users, Mail, Phone } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -160,12 +160,24 @@ export default function BusinessDashboard() {
               <p className="text-gray-600 mb-4">{businessProfile.description}</p>
             )}
             <div className="flex flex-wrap gap-4">
+              {businessProfile.contactEmail && (
+                <div className="inline-flex items-center text-gray-600">
+                  <Mail className="w-4 h-4 mr-1" />
+                  <span className="break-all">{businessProfile.contactEmail}</span>
+                </div>
+              )}
+              {businessProfile.contactPhone && (
+                <div className="inline-flex items-center text-gray-600">
+                  <Phone className="w-4 h-4 mr-1" />
+                  <span>{businessProfile.contactPhone}</span>
+                </div>
+              )}
               {businessProfile.website && (
                 <a 
                   href={businessProfile.website} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="inline-flex items-center text-forest hover:underline"
+                  className="inline-flex items-center text-forest hover:underline break-all"
                 >
                   <ExternalLink className="w-4 h-4 mr-1" />
                   Website

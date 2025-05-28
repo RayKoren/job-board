@@ -699,10 +699,11 @@ export default function PostJob() {
                                   placeholder="e.g. (307) 555-1234"
                                   type="tel"
                                   maxLength={20}
+                                  pattern="^\(\d{3}\) \d{3}-\d{4}$|^\d{3}-\d{3}-\d{4}$|^\d{10}$"
                                   {...field}
                                 />
                               </FormControl>
-                              <FormDescription>Maximum 20 characters</FormDescription>
+                              <FormDescription>Enter a valid 10-digit phone number (e.g., (307) 555-1234)</FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
