@@ -407,8 +407,13 @@ export default function PostJob() {
                             <FormItem>
                               <FormLabel>Job Title*</FormLabel>
                               <FormControl>
-                                <Input placeholder="e.g. Senior Developer" {...field} />
+                                <Input 
+                                  placeholder="e.g. Senior Developer" 
+                                  maxLength={100}
+                                  {...field} 
+                                />
                               </FormControl>
+                              <FormDescription>Maximum 100 characters</FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}

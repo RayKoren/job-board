@@ -202,9 +202,9 @@ export default function BusinessDashboard() {
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="text-xl">{job.title}</CardTitle>
-                    <CardDescription className="mt-1">
-                      {job.company} • {job.location}
+                    <CardTitle className="text-xl break-words">{job.title}</CardTitle>
+                    <CardDescription className="mt-1 break-words">
+                      <span className="break-all">{job.company}</span> • <span className="break-words">{job.location}</span>
                     </CardDescription>
                   </div>
                   {job.featured && (

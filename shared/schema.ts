@@ -106,7 +106,7 @@ export const jobPostings = pgTable("job_postings", {
   addons: text("addons").array(),
   postedAt: timestamp("posted_at").defaultNow(),
   expiresAt: timestamp("expires_at"),
-  planId: integer("plan_id").references(() => products.id), // Reference to the selected plan product
+  planId: integer("planId").references(() => products.id), // Reference to the selected plan product
   planCode: text("plan_code").notNull(), // For backward compatibility (basic, standard, featured, unlimited)
   plan: text("plan").notNull(), // Legacy field (same value as planCode, kept for backward compatibility)
   status: text("status").default("pending").notNull(), // pending, active, expired, deleted
