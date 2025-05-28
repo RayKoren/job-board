@@ -415,6 +415,20 @@ function JobCard({ job }: { job: Job }) {
       setLocation('/login');
       return;
     }
+    
+    // If job has external application URL, redirect there
+    if (job.applicationUrl) {
+      window.open(job.applicationUrl, '_blank');
+      return;
+    }
+    
+    // If job has contact email but no application URL, open email client
+    if (job.contactEmail && !job.applicationUrl) {
+      window.location.href = `mailto:${job.contactEmail}?subject=Application for ${job.title}`;
+      return;
+    }
+    
+    // Otherwise show the application modal
     setIsApplyModalOpen(true);
   };
   
