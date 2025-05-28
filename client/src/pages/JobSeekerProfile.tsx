@@ -25,7 +25,11 @@ const formSchema = z.object({
   experience: z.string().optional(),
   education: z.string().optional(),
   resumeUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  phone: z.string().optional(),
+  phone: z.string()
+    .refine((phone) => !phone || /^\(\d{3}\) \d{3}-\d{4}$|^\d{3}-\d{3}-\d{4}$|^\d{10}$/.test(phone), {
+      message: "Please enter a valid 10-digit phone number (e.g., (555) 123-4567, 555-123-4567, or 5551234567)"
+    })
+    .optional(),
   location: z.string().optional(),
 });
 

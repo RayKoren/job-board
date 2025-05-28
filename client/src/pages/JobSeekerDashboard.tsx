@@ -8,10 +8,27 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 
+interface JobSeekerProfile {
+  id?: number;
+  userId: string;
+  title?: string;
+  bio?: string;
+  skills?: string[];
+  experience?: string;
+  education?: string;
+  phone?: string;
+  location?: string;
+  resumeData?: string;
+  resumeName?: string;
+  resumeType?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+}
+
 export default function JobSeekerDashboard() {
   const { user, isAuthenticated, isJobSeeker } = useAuth();
 
-  const { data: jobSeekerProfile, isLoading: isLoadingProfile } = useQuery({
+  const { data: jobSeekerProfile, isLoading: isLoadingProfile } = useQuery<JobSeekerProfile>({
     queryKey: ["/api/job-seeker/profile"],
     enabled: isAuthenticated && isJobSeeker,
   });
@@ -97,10 +114,10 @@ export default function JobSeekerDashboard() {
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>
-              {jobSeekerProfile.title || "Job Seeker"}
+              {jobSeekerProfile?.title || "Job Seeker"}
             </CardTitle>
             <CardDescription>
-              {jobSeekerProfile.location && (
+              {jobSeekerProfile?.location && (
                 <span className="inline-flex items-center mr-4">
                   <MapPin className="w-4 h-4 mr-1" />
                   {jobSeekerProfile.location}
@@ -109,15 +126,15 @@ export default function JobSeekerDashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {jobSeekerProfile.bio && (
+            {jobSeekerProfile?.bio && (
               <p className="text-gray-600 mb-4">{jobSeekerProfile.bio}</p>
             )}
             
-            {jobSeekerProfile.skills && jobSeekerProfile.skills.length > 0 && (
+            {jobSeekerProfile?.skills && jobSeekerProfile.skills.length > 0 && (
               <div className="mb-4">
                 <h3 className="text-sm font-medium text-gray-600 mb-2">Skills</h3>
                 <div className="flex flex-wrap gap-2">
-                  {jobSeekerProfile.skills.map((skill) => (
+                  {jobSeekerProfile.skills.map((skill: string) => (
                     <Badge key={skill} variant="secondary">{skill}</Badge>
                   ))}
                 </div>
@@ -126,7 +143,7 @@ export default function JobSeekerDashboard() {
             
             <div className="flex flex-wrap gap-4">
               {/* Resume download now uses API endpoint with userId */}
-              {(jobSeekerProfile.resumeData || jobSeekerProfile.resumeName) && (
+              {(jobSeekerProfile?.resumeData || jobSeekerProfile?.resumeName) && (
                 <a 
                   href={`/api/resume/${user?.id}`}
                   target="_blank" 
@@ -134,21 +151,21 @@ export default function JobSeekerDashboard() {
                   className="inline-flex items-center text-forest hover:underline"
                 >
                   <FileText className="w-4 h-4 mr-1" />
-                  Resume {jobSeekerProfile.resumeName ? `(${jobSeekerProfile.resumeName})` : ''}
+                  Resume {jobSeekerProfile?.resumeName ? `(${jobSeekerProfile.resumeName})` : ''}
                 </a>
               )}
               
-              {(jobSeekerProfile.contactEmail || user?.email) && (
+              {(jobSeekerProfile?.contactEmail || user?.email) && (
                 <span className="inline-flex items-center text-gray-600">
                   <Mail className="w-4 h-4 mr-1" />
-                  {jobSeekerProfile.contactEmail || user?.email}
+                  {jobSeekerProfile?.contactEmail || user?.email}
                 </span>
               )}
               
-              {(jobSeekerProfile.contactPhone || jobSeekerProfile.phone) && (
+              {jobSeekerProfile?.phone && (
                 <span className="inline-flex items-center text-gray-600">
                   <Phone className="w-4 h-4 mr-1" />
-                  {jobSeekerProfile.contactPhone || jobSeekerProfile.phone}
+                  {jobSeekerProfile.phone}
                 </span>
               )}
             </div>
