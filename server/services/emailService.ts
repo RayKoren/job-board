@@ -108,6 +108,104 @@ class EmailService {
     }
   }
 
+  async sendApplicationSubmittedEmail(applicantData: {
+    name: string;
+    email: string;
+    jobTitle: string;
+    company: string;
+  }): Promise<boolean> {
+    if (!this.transporter) {
+      console.log('Email service not available. Application confirmation logged to console instead.');
+      console.log('Application submitted:', applicantData);
+      return false;
+    }
+
+    const emailOptions: EmailOptions = {
+      to: applicantData.email,
+      subject: `Application Submitted: ${applicantData.jobTitle} at ${applicantData.company}`,
+      html: this.generateApplicationSubmittedHTML(applicantData),
+      text: this.generateApplicationSubmittedText(applicantData),
+    };
+
+    try {
+      await this.transporter.sendMail({
+        from: this.fromEmail,
+        ...emailOptions,
+      });
+      console.log(`Application confirmation sent to ${applicantData.email}`);
+      return true;
+    } catch (error) {
+      console.error('Failed to send application confirmation:', error);
+      return false;
+    }
+  }
+
+  async sendApplicationStatusUpdateEmail(applicantData: {
+    name: string;
+    email: string;
+    jobTitle: string;
+    company: string;
+    status: string;
+  }): Promise<boolean> {
+    if (!this.transporter) {
+      console.log('Email service not available. Status update logged to console instead.');
+      console.log('Application status updated:', applicantData);
+      return false;
+    }
+
+    const emailOptions: EmailOptions = {
+      to: applicantData.email,
+      subject: `Application Update: ${applicantData.jobTitle} at ${applicantData.company}`,
+      html: this.generateApplicationStatusHTML(applicantData),
+      text: this.generateApplicationStatusText(applicantData),
+    };
+
+    try {
+      await this.transporter.sendMail({
+        from: this.fromEmail,
+        ...emailOptions,
+      });
+      console.log(`Status update email sent to ${applicantData.email} - Status: ${applicantData.status}`);
+      return true;
+    } catch (error) {
+      console.error('Failed to send status update email:', error);
+      return false;
+    }
+  }
+
+  async sendNewApplicationNotificationEmail(businessData: {
+    businessEmail: string;
+    applicantName: string;
+    jobTitle: string;
+    company: string;
+    applicationId: number;
+  }): Promise<boolean> {
+    if (!this.transporter) {
+      console.log('Email service not available. New application notification logged to console instead.');
+      console.log('New application received:', businessData);
+      return false;
+    }
+
+    const emailOptions: EmailOptions = {
+      to: businessData.businessEmail,
+      subject: `New Application: ${businessData.applicantName} for ${businessData.jobTitle}`,
+      html: this.generateNewApplicationHTML(businessData),
+      text: this.generateNewApplicationText(businessData),
+    };
+
+    try {
+      await this.transporter.sendMail({
+        from: this.fromEmail,
+        ...emailOptions,
+      });
+      console.log(`New application notification sent to ${businessData.businessEmail}`);
+      return true;
+    } catch (error) {
+      console.error('Failed to send new application notification:', error);
+      return false;
+    }
+  }
+
   async sendPasswordResetEmail(email: string, resetToken: string): Promise<boolean> {
     if (!this.transporter) {
       console.log('Email service not available. Reset link logged to console instead.');
@@ -326,6 +424,262 @@ ${contactData.message}
 Our team typically responds within 24 hours during business days. If you have urgent questions, feel free to give us a call.
 
 Best regards,
+The Sheridan Jobs Team
+
+© 2024 Sheridan Jobs. Connecting Wyoming's workforce.
+    `.trim();
+  }
+
+  private generateApplicationSubmittedHTML(applicantData: {
+    name: string;
+    email: string;
+    jobTitle: string;
+    company: string;
+  }): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Application Submitted - Sheridan Jobs</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #2d5a27 0%, #8b4513 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">🏔️ Sheridan Jobs</h1>
+            <p style="color: #f0f0f0; margin: 10px 0 0 0;">Application Submitted Successfully</p>
+          </div>
+          
+          <div style="background: #ffffff; padding: 30px; border: 1px solid #ddd; border-top: none;">
+            <h2 style="color: #2d5a27; margin-top: 0;">Thank You, ${applicantData.name}!</h2>
+            
+            <p>Your application has been successfully submitted and is now being reviewed by the hiring team.</p>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
+              <h3 style="color: #2d5a27; margin-top: 0;">Application Details:</h3>
+              <p><strong>Position:</strong> ${applicantData.jobTitle}</p>
+              <p><strong>Company:</strong> ${applicantData.company}</p>
+              <p><strong>Applied On:</strong> ${new Date().toLocaleDateString()}</p>
+            </div>
+            
+            <p>You'll receive email updates as your application progresses through the review process. The hiring team typically responds within 3-5 business days.</p>
+            
+            <p style="margin-top: 30px;">
+              Best of luck!<br>
+              The Sheridan Jobs Team
+            </p>
+          </div>
+          
+          <div style="background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; border-radius: 0 0 10px 10px;">
+            <p>© 2024 Sheridan Jobs. Connecting Wyoming's workforce.</p>
+          </div>
+        </body>
+      </html>
+    `;
+  }
+
+  private generateApplicationStatusHTML(applicantData: {
+    name: string;
+    email: string;
+    jobTitle: string;
+    company: string;
+    status: string;
+  }): string {
+    const statusMessages = {
+      reviewed: 'Your application has been reviewed and is moving forward in the process.',
+      contacted: 'Great news! The employer would like to contact you directly.',
+      rejected: 'Thank you for your interest. While this position wasn\'t a match, we encourage you to apply for future openings.'
+    };
+
+    const statusColor = applicantData.status === 'contacted' ? '#2d5a27' : 
+                       applicantData.status === 'reviewed' ? '#8b4513' : '#666';
+
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Application Update - Sheridan Jobs</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #2d5a27 0%, #8b4513 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">🏔️ Sheridan Jobs</h1>
+            <p style="color: #f0f0f0; margin: 10px 0 0 0;">Application Status Update</p>
+          </div>
+          
+          <div style="background: #ffffff; padding: 30px; border: 1px solid #ddd; border-top: none;">
+            <h2 style="color: #2d5a27; margin-top: 0;">Hello ${applicantData.name},</h2>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
+              <p><strong>Position:</strong> ${applicantData.jobTitle}</p>
+              <p><strong>Company:</strong> ${applicantData.company}</p>
+              <p style="margin: 15px 0;"><strong>Status:</strong> 
+                <span style="color: ${statusColor}; font-weight: bold; text-transform: capitalize;">${applicantData.status}</span>
+              </p>
+            </div>
+            
+            <p>${statusMessages[applicantData.status as keyof typeof statusMessages] || 'Your application status has been updated.'}</p>
+            
+            ${applicantData.status === 'contacted' ? 
+              '<p style="background: #e8f5e8; padding: 15px; border-radius: 5px; border-left: 4px solid #2d5a27;">Please keep an eye on your email and phone for communication from the employer.</p>' : ''}
+            
+            <p style="margin-top: 30px;">
+              Thank you for using Sheridan Jobs!<br>
+              The Sheridan Jobs Team
+            </p>
+          </div>
+          
+          <div style="background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; border-radius: 0 0 10px 10px;">
+            <p>© 2024 Sheridan Jobs. Connecting Wyoming's workforce.</p>
+          </div>
+        </body>
+      </html>
+    `;
+  }
+
+  private generateNewApplicationHTML(businessData: {
+    businessEmail: string;
+    applicantName: string;
+    jobTitle: string;
+    company: string;
+    applicationId: number;
+  }): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>New Job Application - Sheridan Jobs</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #2d5a27 0%, #8b4513 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">🏔️ Sheridan Jobs</h1>
+            <p style="color: #f0f0f0; margin: 10px 0 0 0;">New Job Application Received</p>
+          </div>
+          
+          <div style="background: #ffffff; padding: 30px; border: 1px solid #ddd; border-top: none;">
+            <h2 style="color: #2d5a27; margin-top: 0;">New Application Alert</h2>
+            
+            <p>You've received a new job application for your posting!</p>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
+              <h3 style="color: #2d5a27; margin-top: 0;">Application Details:</h3>
+              <p><strong>Applicant:</strong> ${businessData.applicantName}</p>
+              <p><strong>Position:</strong> ${businessData.jobTitle}</p>
+              <p><strong>Company:</strong> ${businessData.company}</p>
+              <p><strong>Application ID:</strong> #${businessData.applicationId}</p>
+              <p><strong>Received:</strong> ${new Date().toLocaleDateString()}</p>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:5000'}/business/dashboard" 
+                 style="background: #2d5a27; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                Review Application
+              </a>
+            </div>
+            
+            <p>Log in to your business dashboard to review the application, view the candidate's resume, and manage your hiring process.</p>
+            
+            <p style="margin-top: 30px;">
+              Happy hiring!<br>
+              The Sheridan Jobs Team
+            </p>
+          </div>
+          
+          <div style="background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; border-radius: 0 0 10px 10px;">
+            <p>© 2024 Sheridan Jobs. Connecting Wyoming's workforce.</p>
+          </div>
+        </body>
+      </html>
+    `;
+  }
+
+  private generateApplicationSubmittedText(applicantData: {
+    name: string;
+    email: string;
+    jobTitle: string;
+    company: string;
+  }): string {
+    return `
+Application Submitted Successfully - Sheridan Jobs
+
+Thank You, ${applicantData.name}!
+
+Your application has been successfully submitted and is now being reviewed by the hiring team.
+
+Application Details:
+Position: ${applicantData.jobTitle}
+Company: ${applicantData.company}
+Applied On: ${new Date().toLocaleDateString()}
+
+You'll receive email updates as your application progresses through the review process. The hiring team typically responds within 3-5 business days.
+
+Best of luck!
+The Sheridan Jobs Team
+
+© 2024 Sheridan Jobs. Connecting Wyoming's workforce.
+    `.trim();
+  }
+
+  private generateApplicationStatusText(applicantData: {
+    name: string;
+    email: string;
+    jobTitle: string;
+    company: string;
+    status: string;
+  }): string {
+    const statusMessages = {
+      reviewed: 'Your application has been reviewed and is moving forward in the process.',
+      contacted: 'Great news! The employer would like to contact you directly.',
+      rejected: 'Thank you for your interest. While this position wasn\'t a match, we encourage you to apply for future openings.'
+    };
+
+    return `
+Application Status Update - Sheridan Jobs
+
+Hello ${applicantData.name},
+
+Position: ${applicantData.jobTitle}
+Company: ${applicantData.company}
+Status: ${applicantData.status.toUpperCase()}
+
+${statusMessages[applicantData.status as keyof typeof statusMessages] || 'Your application status has been updated.'}
+
+${applicantData.status === 'contacted' ? 'Please keep an eye on your email and phone for communication from the employer.' : ''}
+
+Thank you for using Sheridan Jobs!
+The Sheridan Jobs Team
+
+© 2024 Sheridan Jobs. Connecting Wyoming's workforce.
+    `.trim();
+  }
+
+  private generateNewApplicationText(businessData: {
+    businessEmail: string;
+    applicantName: string;
+    jobTitle: string;
+    company: string;
+    applicationId: number;
+  }): string {
+    return `
+New Job Application Received - Sheridan Jobs
+
+You've received a new job application for your posting!
+
+Application Details:
+Applicant: ${businessData.applicantName}
+Position: ${businessData.jobTitle}
+Company: ${businessData.company}
+Application ID: #${businessData.applicationId}
+Received: ${new Date().toLocaleDateString()}
+
+Log in to your business dashboard to review the application, view the candidate's resume, and manage your hiring process.
+
+Dashboard: ${process.env.FRONTEND_URL || 'http://localhost:5000'}/business/dashboard
+
+Happy hiring!
 The Sheridan Jobs Team
 
 © 2024 Sheridan Jobs. Connecting Wyoming's workforce.
