@@ -325,7 +325,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.session.user.id;
       const jobs = await storage.getJobPostings({ businessUserId: userId });
-      res.json(jobs);
+      
+      // Add application count to each job
+      const jobsWithCounts = await Promise.all(
+        jobs.map(async (job) => {
+          if (!job.id) return { ...job, applicationCount: 0 };
+          const applications = await storage.getJobApplicationsForJob(job.id);
+          return {
+            ...job,
+            applicationCount: applications.length
+          };
+        })
+      );
+      
+      res.json(jobsWithCounts);
     } catch (error) {
       console.error("Error fetching business job postings:", error);
       res.status(500).json({ message: "Failed to fetch business job postings" });

@@ -284,9 +284,17 @@ export default function ApplyJobForm({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={showContactInfo}
+                  onClick={handleDirectApplication}
+                  disabled={isSubmittingDirect}
                 >
-                  I've Applied Directly
+                  {isSubmittingDirect ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Recording...
+                    </>
+                  ) : (
+                    "I've Applied Directly"
+                  )}
                 </Button>
               </div>
             </div>
@@ -418,24 +426,9 @@ export default function ApplyJobForm({
               />
             )}
             
-            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
-              </Button>
-              <Button 
-                type="button" 
-                variant="secondary" 
-                onClick={handleDirectApplication}
-                disabled={isSubmittingDirect}
-              >
-                {isSubmittingDirect ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Recording...
-                  </>
-                ) : (
-                  "I've Applied Directly"
-                )}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
