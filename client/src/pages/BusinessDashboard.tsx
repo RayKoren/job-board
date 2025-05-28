@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus, Edit, Trash2, ExternalLink, Star, Tag, Briefcase, MapPin, Calendar, Home, Eye, MessageSquare } from "lucide-react";
+import { Loader2, Plus, Edit, Trash2, ExternalLink, Star, Tag, Briefcase, MapPin, Calendar, Home, Eye, MessageSquare, Users } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -217,6 +217,18 @@ export default function BusinessDashboard() {
               </CardHeader>
               
               <CardContent>
+                {/* Job Stats */}
+                <div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
+                  <span className="flex items-center gap-1">
+                    <Eye className="w-4 h-4" />
+                    {job.clickCount || 0} views
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Users className="w-4 h-4" />
+                    {job.applicationCount || 0} applications
+                  </span>
+                </div>
+                
                 <div className="flex flex-wrap gap-2 mb-4">
                   <Badge variant="secondary">{job.type}</Badge>
                   {job.compensationType === "Salary" && job.salaryRange && (
