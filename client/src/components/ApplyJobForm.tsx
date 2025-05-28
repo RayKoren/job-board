@@ -5,6 +5,7 @@ import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
+import { phoneInputProps } from "@/lib/phoneValidation";
 import { useQuery } from "@tanstack/react-query";
 import { 
   Dialog,
@@ -360,7 +361,7 @@ export default function ApplyJobForm({
                 <FormItem>
                   <FormLabel>Phone (Optional)</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Your phone number" maxLength={20} />
+                    <Input {...phoneInputProps} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

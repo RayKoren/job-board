@@ -7,6 +7,7 @@ import { Check, Info, X, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
+import { phoneInputProps } from "@/lib/phoneValidation";
 
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -696,10 +697,7 @@ export default function PostJob() {
                               <FormLabel>Contact Phone (Optional)</FormLabel>
                               <FormControl>
                                 <Input
-                                  placeholder="e.g. (307) 555-1234"
-                                  type="tel"
-                                  maxLength={20}
-                                  pattern="^\(\d{3}\) \d{3}-\d{4}$|^\d{3}-\d{3}-\d{4}$|^\d{10}$"
+                                  {...phoneInputProps}
                                   {...field}
                                 />
                               </FormControl>

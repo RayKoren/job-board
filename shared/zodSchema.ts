@@ -61,19 +61,21 @@ export const resetPasswordSchema = z.object({
 
 export const insertUserSchema = userSchema.omit({ createdAt: true, updatedAt: true });
 
-// Business profile schema
+// Business profile schema with proper validation
 export const businessProfileSchema = z.object({
   id: z.number().optional(),
   userId: z.string(),
-  companyName: z.string(),
-  companySize: z.string().nullable().optional(),
-  industry: z.string().nullable().optional(),
-  location: z.string().nullable().optional(),
-  website: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  contactEmail: z.string().nullable().optional(),
-  contactPhone: z.string().nullable().optional(),
-  logoUrl: z.string().nullable().optional(),
+  companyName: z.string().min(1, "Company name is required").max(80, "Company name must be 80 characters or less"),
+  companySize: z.string().max(50, "Company size must be 50 characters or less").nullable().optional(),
+  industry: z.string().max(50, "Industry must be 50 characters or less").nullable().optional(),
+  location: z.string().max(60, "Location must be 60 characters or less").nullable().optional(),
+  website: z.string().url("Please enter a valid URL").max(200, "Website URL must be 200 characters or less").nullable().optional(),
+  description: z.string().max(1000, "Description must be 1000 characters or less").nullable().optional(),
+  contactEmail: z.string().email("Please enter a valid email").max(100, "Email must be 100 characters or less").nullable().optional(),
+  contactPhone: z.string().refine((phone) => !phone || phoneSchema.safeParse(phone).success, {
+    message: "Please enter a valid 10-digit phone number"
+  }).nullable().optional(),
+  logoUrl: z.string().url("Please enter a valid logo URL").max(500, "Logo URL must be 500 characters or less").nullable().optional(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
 });
