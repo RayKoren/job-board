@@ -95,6 +95,17 @@ export default function ApplyJobForm({
   
   // Handle form submission
   const onSubmit = async (data: FormValues) => {
+    // Check if user is authenticated before allowing submission
+    if (!isAuthenticated) {
+      toast({
+        title: "Login Required",
+        description: "You must be logged in to apply for jobs.",
+        variant: "destructive",
+      });
+      onClose();
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {

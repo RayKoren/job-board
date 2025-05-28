@@ -16,12 +16,24 @@ export const userSchema = z.object({
   updatedAt: z.date().optional(),
 });
 
+// Strong password validation
+const strongPasswordSchema = z.string()
+  .min(8, "Password must be at least 8 characters")
+  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+  .regex(/[0-9]/, "Password must contain at least one number")
+  .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character");
+
+// Phone number validation (US format)
+const phoneSchema = z.string()
+  .regex(/^\(\d{3}\) \d{3}-\d{4}$|^\d{3}-\d{3}-\d{4}$|^\d{10}$/, "Please enter a valid 10-digit phone number");
+
 export const registerSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: strongPasswordSchema,
   confirmPassword: z.string(),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
+  firstName: z.string().min(1, "First name is required").max(50, "First name too long"),
+  lastName: z.string().min(1, "Last name is required").max(50, "Last name too long"),
   role: userRoleEnum,
   mailingListConsent: z.boolean().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -40,7 +52,7 @@ export const forgotPasswordSchema = z.object({
 
 export const resetPasswordSchema = z.object({
   token: z.string().min(1, "Reset token is required"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: strongPasswordSchema,
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -72,19 +84,23 @@ export const insertBusinessProfileSchema = businessProfileSchema.omit({
   updatedAt: true 
 });
 
-// Job seeker profile schema
+// Job seeker profile schema with proper validation
 export const jobSeekerProfileSchema = z.object({
   id: z.number().optional(),
   userId: z.string(),
-  title: z.string().nullable().optional(),
-  bio: z.string().nullable().optional(),
+  title: z.string().max(100, "Title too long").nullable().optional(),
+  bio: z.string().max(1000, "Bio too long").nullable().optional(),
   skills: z.array(z.string()).nullable().optional(),
   experience: z.any().nullable().optional(),
   education: z.any().nullable().optional(),
-  location: z.string().nullable().optional(),
-  contactEmail: z.string().nullable().optional(),
-  contactPhone: z.string().nullable().optional(),
-  phone: z.string().nullable().optional(),
+  location: z.string().max(100, "Location too long").nullable().optional(),
+  contactEmail: z.string().email("Please enter a valid email address").nullable().optional(),
+  contactPhone: z.string().refine((phone) => !phone || phoneSchema.safeParse(phone).success, {
+    message: "Please enter a valid 10-digit phone number"
+  }).nullable().optional(),
+  phone: z.string().refine((phone) => !phone || phoneSchema.safeParse(phone).success, {
+    message: "Please enter a valid 10-digit phone number"
+  }).nullable().optional(),
   // Database stored resume fields
   resumeData: z.string().nullable().optional(),
   resumeName: z.string().nullable().optional(), 

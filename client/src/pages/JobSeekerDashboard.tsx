@@ -138,10 +138,17 @@ export default function JobSeekerDashboard() {
                 </a>
               )}
               
-              {jobSeekerProfile.phone && (
+              {(jobSeekerProfile.contactEmail || user?.email) && (
+                <span className="inline-flex items-center text-gray-600">
+                  <Mail className="w-4 h-4 mr-1" />
+                  {jobSeekerProfile.contactEmail || user?.email}
+                </span>
+              )}
+              
+              {(jobSeekerProfile.contactPhone || jobSeekerProfile.phone) && (
                 <span className="inline-flex items-center text-gray-600">
                   <Phone className="w-4 h-4 mr-1" />
-                  {jobSeekerProfile.phone}
+                  {jobSeekerProfile.contactPhone || jobSeekerProfile.phone}
                 </span>
               )}
             </div>
