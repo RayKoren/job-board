@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -49,6 +50,7 @@ export default function Register() {
       firstName: "",
       lastName: "",
       role: undefined,
+      mailingListConsent: false,
     },
   });
 
@@ -181,6 +183,31 @@ export default function Register() {
                     </FormItem>
                   )}
                 />
+                
+                {form.watch("role") === "job_seeker" && (
+                  <FormField
+                    control={form.control}
+                    name="mailingListConsent"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 bg-sage/5">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="text-sm font-normal">
+                            Join our mailing list for job alerts and updates
+                          </FormLabel>
+                          <p className="text-xs text-muted-foreground">
+                            Get notified about new job opportunities that match your interests. You can opt out anytime.
+                          </p>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                )}
                 
                 <FormField
                   control={form.control}

@@ -675,6 +675,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
 
   
+  // Update mailing list consent
+  app.put('/api/auth/mailing-consent', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.user.id;
+      const { consent } = req.body;
+
+      if (typeof consent !== 'boolean') {
+        return res.status(400).json({ message: "Consent must be a boolean value" });
+      }
+
+      const updatedUser = await storage.updateMailingListConsent(userId, consent);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating mailing list consent:", error);
+      res.status(500).json({ message: "Failed to update mailing list consent" });
+    }
+  });
+
   // Get user's job applications (job seeker only)
   app.get('/api/my-applications', isJobSeeker, async (req: any, res) => {
     try {

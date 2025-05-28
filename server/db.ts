@@ -79,6 +79,11 @@ export const User = sequelize.define('User', {
   resetTokenExpiry: {
     type: DataTypes.DATE,
     allowNull: true
+  },
+  mailingListConsent: {
+    type: DataTypes.BOOLEAN,
+    allowNull: true,
+    defaultValue: false
   }
 }, {
   tableName: 'users',
