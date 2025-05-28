@@ -428,9 +428,11 @@ export default function PostJob() {
                               <FormControl>
                                 <Input
                                   placeholder="e.g. Acme Corporation"
+                                  maxLength={80}
                                   {...field}
                                 />
                               </FormControl>
+                              <FormDescription>Maximum 80 characters</FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -445,9 +447,11 @@ export default function PostJob() {
                               <FormControl>
                                 <Input
                                   placeholder="e.g. Sheridan, WY or Remote"
+                                  maxLength={60}
                                   {...field}
                                 />
                               </FormControl>
+                              <FormDescription>Maximum 60 characters</FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -578,12 +582,12 @@ export default function PostJob() {
                                 <Textarea
                                   placeholder="Describe the responsibilities, qualifications, and other details about the position..."
                                   className="min-h-[150px]"
+                                  maxLength={2000}
                                   {...field}
                                 />
                               </FormControl>
                               <FormDescription>
-                                Be specific about day-to-day responsibilities and
-                                expectations.
+                                Be specific about day-to-day responsibilities and expectations. Maximum 2000 characters.
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
@@ -600,9 +604,11 @@ export default function PostJob() {
                                 <Textarea
                                   placeholder="List the skills, experience, and qualifications needed..."
                                   className="min-h-[100px]"
+                                  maxLength={1500}
                                   {...field}
                                 />
                               </FormControl>
+                              <FormDescription>Maximum 1500 characters</FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -618,12 +624,12 @@ export default function PostJob() {
                                 <Textarea
                                   placeholder="Describe any benefits, perks, or other incentives..."
                                   className="min-h-[100px]"
+                                  maxLength={1000}
                                   {...field}
                                 />
                               </FormControl>
                               <FormDescription>
-                                Highlighting benefits can make your job posting
-                                more attractive.
+                                Highlighting benefits can make your job posting more attractive. Maximum 1000 characters.
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
@@ -650,9 +656,11 @@ export default function PostJob() {
                                 <Input
                                   placeholder="e.g. jobs@company.com"
                                   type="email"
+                                  maxLength={100}
                                   {...field}
                                 />
                               </FormControl>
+                              <FormDescription>Maximum 100 characters</FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -668,11 +676,12 @@ export default function PostJob() {
                                 <Input
                                   placeholder="e.g. company.com/careers"
                                   type="text"
+                                  maxLength={200}
                                   {...field}
                                 />
                               </FormControl>
                               <FormDescription>
-                                External link where candidates can apply. You can enter just the domain (e.g., company.com/careers) without http://.
+                                External link where candidates can apply. Maximum 200 characters.
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
