@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ApplyJobForm from '@/components/ApplyJobForm';
+import { useAuth } from '@/hooks/useAuth';
+import { useLocation } from 'wouter';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
