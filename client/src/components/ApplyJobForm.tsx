@@ -346,7 +346,7 @@ export default function ApplyJobForm({
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Your email address" />
+                    <Input {...field} placeholder="Your email address" maxLength={100} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -360,7 +360,7 @@ export default function ApplyJobForm({
                 <FormItem>
                   <FormLabel>Phone (Optional)</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Your phone number" />
+                    <Input {...field} placeholder="Your phone number" maxLength={20} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
