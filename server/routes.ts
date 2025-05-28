@@ -1105,6 +1105,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: 'Failed to upload resume' });
     }
   });
+
+  // Logo upload endpoint for business users
+  app.post('/api/logo-upload', isBusinessUser, async (req: any, res: Response) => {
+    try {
+      // Handle single file upload in memory
+      const bufferStorage = multer.memoryStorage();
+      const upload = multer({
+        storage: bufferStorage,
+        limits: {
+          fileSize: 2 * 1024 * 1024 // 2MB limit for images
+        },
+        fileFilter: (req, file, cb) => {
+          // Accept only image files
+          const allowedMimeTypes = [
+            'image/jpeg',
+            'image/jpg', 
+            'image/png',
+            'image/gif',
+            'image/webp'
+          ];
+          
+          if (allowedMimeTypes.includes(file.mimetype)) {
+            cb(null, true);
+          } else {
+            cb(new Error('Invalid file type. Only image files (JPEG, PNG, GIF, WebP) are allowed.'));
+          }
+        }
+      }).single('logo');
+
+      // Process the upload
+      upload(req, res, async (err) => {
+        if (err) {
+          console.error('Multer error:', err);
+          return res.status(400).json({ message: err.message });
+        }
+
+        if (!req.file) {
+          return res.status(400).json({ message: 'No logo file uploaded' });
+        }
+
+        const userId = req.session.user.id;
+        
+        try {
+          // Convert buffer to base64 string for storage
+          const logoData = req.file.buffer.toString('base64');
+          
+          // Get the current business profile
+          const profile = await storage.getBusinessProfile(userId);
+          
+          if (profile) {
+            console.log("Updating existing business profile with logo data");
+            // Update the profile with logo data
+            await storage.upsertBusinessProfile({
+              ...profile,
+              logoData: logoData,
+              logoName: req.file.originalname,
+              logoType: req.file.mimetype
+            });
+          } else {
+            console.log("Creating new business profile with logo data");
+            // Create a new profile with the logo data if none exists
+            await storage.upsertBusinessProfile({
+              userId: userId,
+              companyName: 'Company Name', // Will be updated when they complete profile
+              logoData: logoData,
+              logoName: req.file.originalname,
+              logoType: req.file.mimetype
+            });
+          }
+          
+          // Return success response
+          return res.status(200).json({
+            message: 'Logo uploaded successfully',
+            fileName: req.file.originalname,
+            fileSize: req.file.size
+          });
+        } catch (dbError) {
+          console.error('Error saving logo to database:', dbError);
+          return res.status(500).json({ message: 'Failed to save logo to database' });
+        }
+      });
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      return res.status(500).json({ message: 'Failed to upload logo' });
+    }
+  });
+
+  // Endpoint to serve logo from database by user ID
+  app.get('/api/logo/:userId', async (req: Request, res: Response) => {
+    try {
+      const userId = req.params.userId;
+      
+      // Get the business profile
+      const profile = await storage.getBusinessProfile(userId);
+      
+      if (!profile || !profile.logoData) {
+        return res.status(404).json({ message: 'Logo not found' });
+      }
+
+      // Convert base64 back to buffer
+      const logoBuffer = Buffer.from(profile.logoData, 'base64');
+      
+      // Set appropriate headers
+      res.set({
+        'Content-Type': profile.logoType || 'image/jpeg',
+        'Content-Length': logoBuffer.length.toString(),
+        'Cache-Control': 'public, max-age=86400' // Cache for 24 hours
+      });
+
+      // Send the file data
+      return res.send(logoBuffer);
+    } catch (error) {
+      console.error('Error downloading logo:', error);
+      return res.status(500).json({ message: 'Failed to download logo' });
+    }
+  });
   
   // Track job application clicks
   app.post('/api/jobs/:id/track-click', async (req, res) => {

@@ -47,6 +47,9 @@ export const businessProfiles = pgTable("business_profiles", {
   description: text("description"),
   phone: text("phone"),
   logoUrl: text("logo_url"), // Store company logo URL or base64 data
+  logoData: text("logo_data"), // Store base64 encoded logo data
+  logoName: text("logo_name"), // Original filename
+  logoType: text("logo_type"), // MIME type
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
