@@ -320,7 +320,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get business job postings
+  /**
+   * Retrieves all job postings for the authenticated business user
+   * Includes application count for each job posting for dashboard analytics
+   * @route GET /api/business/jobs
+   * @access Business users only
+   * @returns {Array} Array of job postings with application counts
+   */
   app.get('/api/business/jobs', isBusinessUser, async (req: any, res) => {
     // Disable caching to ensure fresh application counts
     res.set('Cache-Control', 'no-store');
@@ -333,9 +339,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         jobs.map(async (job) => {
           if (!job.id) return { ...job, applicationCount: 0 };
           const applications = await storage.getJobApplicationsForJob(job.id);
-          console.log(`=== APPLICATION COUNT DEBUG ===`);
-          console.log(`Job ${job.id} (${job.title}) has ${applications.length} applications:`, applications.map(app => ({ id: app.id, name: app.name, email: app.email })));
-          console.log(`=== END DEBUG ===`);
+
           return {
             ...job,
             applicationCount: applications.length
@@ -564,8 +568,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Job application routes
-  // Route for the main Apply form
+  /**
+   * Submits a new job application from a job seeker
+   * Sends confirmation email to applicant and notification to employer
+   * @route POST /api/job-applications
+   * @access Authenticated users only
+   * @body {Object} Application data including jobId, name, email, phone, coverLetter
+   * @returns {Object} Created application record
+   */
   app.post('/api/job-applications', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.session.user.id;

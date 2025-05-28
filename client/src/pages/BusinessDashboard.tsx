@@ -227,10 +227,7 @@ export default function BusinessDashboard() {
                     <Users className="w-4 h-4" />
                     {job.applicationCount || 0} applications
                   </span>
-                  {/* Debug info */}
-                  <span className="text-xs text-red-500">
-                    DEBUG: {JSON.stringify({clickCount: job.clickCount, applicationCount: job.applicationCount})}
-                  </span>
+
                 </div>
                 
                 <div className="flex flex-wrap gap-2 mb-4">

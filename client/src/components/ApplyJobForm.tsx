@@ -94,7 +94,11 @@ export default function ApplyJobForm({
     },
   });
   
-  // Handle form submission
+  /**
+   * Handles the submission of a job application form
+   * @param {FormValues} data - The form data containing applicant information
+   * @returns {Promise<void>} Resolves when application is successfully submitted
+   */
   const onSubmit = async (data: FormValues) => {
     // Check if user is authenticated before allowing submission
     if (!isAuthenticated) {
@@ -144,7 +148,11 @@ export default function ApplyJobForm({
     }
   };
   
-  // Handle "I've applied directly" action
+  /**
+   * Handles when a user indicates they've applied directly to the employer
+   * This tracks the interaction for analytics without creating a formal application record
+   * @returns {Promise<void>} Resolves when the click tracking is completed
+   */
   const handleDirectApplication = async () => {
     if (!isAuthenticated) {
       toast({
@@ -184,7 +192,11 @@ export default function ApplyJobForm({
     }
   };
 
-  // Handle showing the contact info (when applying directly)
+  /**
+   * Shows employer contact information and tracks the interaction
+   * Called when user wants to see contact details for direct application
+   * @returns {void}
+   */
   const showContactInfo = () => {
     // Track the click for analytics
     apiRequest("POST", `/api/jobs/${jobId}/track-click`);
