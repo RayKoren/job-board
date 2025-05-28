@@ -798,6 +798,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Send email notification to applicant
       try {
+        console.log("Sending status update email to:", application.email);
         await emailService.sendApplicationStatusUpdateEmail({
           name: application.name,
           email: application.email,
@@ -805,6 +806,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           company: job.company,
           status: status
         });
+        console.log("Status update email sent successfully");
       } catch (emailError) {
         console.error("Email notification error:", emailError);
         // Don't fail the update if email fails
