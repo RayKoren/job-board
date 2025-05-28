@@ -62,6 +62,7 @@
     "connect-session-sequelize": "^7.1.7",
     "date-fns": "^3.6.0",
     "dotenv": "^16.5.0",
+    "drizzle-kit": "^0.31.1",
     "drizzle-orm": "^0.43.1",
     "drizzle-zod": "^0.7.1",
     "embla-carousel-react": "^8.6.0",

@@ -110,7 +110,11 @@ export default function JobListings() {
     
     // Job type filter
     if (jobType.length > 0) {
-      result = result.filter(job => jobType.includes(job.type));
+      result = result.filter(job => 
+        jobType.some(selectedType => 
+          selectedType.toLowerCase() === job.type.toLowerCase()
+        )
+      );
     }
     
     // Location filter
