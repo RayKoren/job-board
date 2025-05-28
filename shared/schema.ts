@@ -46,6 +46,7 @@ export const businessProfiles = pgTable("business_profiles", {
   website: text("website"),
   description: text("description"),
   phone: text("phone"),
+  logoUrl: text("logo_url"), // Store company logo URL or base64 data
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
