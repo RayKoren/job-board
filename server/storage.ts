@@ -206,7 +206,11 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  // Job seeker profile operations
+  /**
+   * Retrieves a job seeker profile by user ID
+   * @param {string} userId - The unique identifier for the user
+   * @returns {Promise<IJobSeekerProfile | null>} The job seeker profile or null if not found
+   */
   async getJobSeekerProfile(userId: string): Promise<IJobSeekerProfile | null> {
     const profile = await JobSeekerProfile.findOne({
       where: { userId }
@@ -214,6 +218,11 @@ export class DatabaseStorage implements IStorage {
     return profile ? profile.toJSON() as IJobSeekerProfile : null;
   }
 
+  /**
+   * Creates or updates a job seeker profile
+   * @param {IJobSeekerProfile} profileData - The profile data to save
+   * @returns {Promise<IJobSeekerProfile>} The created or updated profile
+   */
   async upsertJobSeekerProfile(profileData: IJobSeekerProfile): Promise<IJobSeekerProfile> {
     const existingProfile = await JobSeekerProfile.findOne({
       where: { userId: profileData.userId }
@@ -228,12 +237,26 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  // Job posting operations
+  /**
+   * Retrieves a single job posting by its ID
+   * @param {number} id - The unique identifier for the job posting
+   * @returns {Promise<IJobPosting | null>} The job posting or null if not found
+   */
   async getJobPosting(id: number): Promise<IJobPosting | null> {
     const posting = await JobPosting.findByPk(id);
     return posting ? posting.toJSON() as IJobPosting : null;
   }
 
+  /**
+   * Retrieves job postings with optional filtering and pagination
+   * @param {Object} options - Query options for filtering and pagination
+   * @param {string} options.businessUserId - Filter by specific business user
+   * @param {boolean} options.featured - Filter by featured status
+   * @param {number} options.limit - Maximum number of results to return
+   * @param {number} options.offset - Number of results to skip for pagination
+   * @param {boolean} options.includeExpired - Whether to include expired postings
+   * @returns {Promise<IJobPosting[]>} Array of job postings matching the criteria
+   */
   async getJobPostings(options: { 
     businessUserId?: string;
     featured?: boolean;
@@ -319,6 +342,11 @@ export class DatabaseStorage implements IStorage {
     return applications.map(app => app.toJSON() as IJobApplication);
   }
 
+  /**
+   * Creates a new job application record
+   * @param {IJobApplication} applicationData - The application data to save
+   * @returns {Promise<IJobApplication>} The created application record
+   */
   async createJobApplication(applicationData: IJobApplication): Promise<IJobApplication> {
     const application = await JobApplication.create(applicationData);
     return application.toJSON() as IJobApplication;

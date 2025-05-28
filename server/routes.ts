@@ -216,7 +216,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Update at database level for planId
             try {
               await sequelize.query(
-                `UPDATE "JobPostings" SET "planId" = :planId WHERE "id" = :jobId`,
+                `UPDATE "job_postings" SET "plan_id" = :planId WHERE "id" = :jobId`,
                 {
                   replacements: {
                     planId: planProduct.id,
@@ -703,7 +703,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
 
   
-  // Update mailing list consent
+  /**
+   * Updates a user's mailing list consent preference
+   * @route PUT /api/auth/mailing-consent
+   * @access Authenticated users only
+   * @body {boolean} consent - Whether user consents to mailing list
+   * @returns {Object} Updated user record
+   */
   app.put('/api/auth/mailing-consent', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.session.user.id;
@@ -721,7 +727,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get user's job applications (job seeker only)
+  /**
+   * Retrieves all job applications submitted by the authenticated job seeker
+   * Includes job details for each application for dashboard display
+   * @route GET /api/my-applications
+   * @access Job seekers only
+   * @returns {Array} Array of applications with associated job information
+   */
   app.get('/api/my-applications', isJobSeeker, async (req: any, res) => {
     try {
       const userId = req.session.user.id;

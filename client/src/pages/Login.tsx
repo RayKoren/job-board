@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema } from "@shared/zodSchema";
@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { Link } from "wouter";
+import ReCAPTCHA from "react-google-recaptcha";
 import {
   Card,
   CardContent,
@@ -32,6 +33,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function Login() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -43,7 +45,18 @@ export default function Login() {
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      await apiRequest("POST", "/api/auth/login", data);
+      // Verify reCAPTCHA
+      const recaptchaToken = recaptchaRef.current?.getValue();
+      if (!recaptchaToken) {
+        toast({
+          title: "Please verify you're not a robot",
+          description: "Complete the reCAPTCHA verification",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await apiRequest("POST", "/api/auth/login", { ...data, recaptchaToken });
       
       // Invalidate auth queries to refresh user data
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
