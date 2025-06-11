@@ -8,13 +8,20 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 interface LogoUploadProps {
   currentLogoUrl?: string | null;
   onUploadSuccess?: () => void;
+  userId?: string;
 }
 
-export default function LogoUpload({ currentLogoUrl, onUploadSuccess }: LogoUploadProps) {
+export default function LogoUpload({ currentLogoUrl, onUploadSuccess, userId }: LogoUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [logoUrl, setLogoUrl] = useState(currentLogoUrl);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  // Update local state when prop changes
+  React.useEffect(() => {
+    setLogoUrl(currentLogoUrl);
+  }, [currentLogoUrl]);
 
   const handleFileUpload = async (file: File) => {
     if (!file) return;
@@ -111,6 +118,37 @@ export default function LogoUpload({ currentLogoUrl, onUploadSuccess }: LogoUplo
     fileInputRef.current?.click();
   };
 
+  const handleRemoveLogo = async () => {
+    try {
+      setIsUploading(true);
+      
+      await apiRequest("DELETE", "/api/logo-upload");
+      
+      // Clear the current logo URL and invalidate cache
+      setLogoUrl(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/business/profile"] });
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: [`/api/logo/${userId}`] });
+      }
+      
+      toast({
+        title: "Success",
+        description: "Logo removed successfully",
+      });
+      
+      onUploadSuccess?.();
+    } catch (error: any) {
+      console.error("Error removing logo:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove logo",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -119,9 +157,8 @@ export default function LogoUpload({ currentLogoUrl, onUploadSuccess }: LogoUplo
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              // Remove logo functionality could be added here
-            }}
+            onClick={handleRemoveLogo}
+            disabled={isUploading}
           >
             <X className="h-4 w-4 mr-2" />
             Remove

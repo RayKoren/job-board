@@ -1192,6 +1192,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Logo removal endpoint for business users
+  app.delete('/api/logo-upload', isBusinessUser, async (req: any, res: Response) => {
+    try {
+      const userId = req.session.user.id;
+      
+      // Get the current business profile
+      const profile = await storage.getBusinessProfile(userId);
+      
+      if (!profile) {
+        return res.status(404).json({ message: 'Business profile not found' });
+      }
+
+      // Remove logo data from the profile
+      await storage.upsertBusinessProfile({
+        ...profile,
+        logoData: null,
+        logoName: null,
+        logoType: null
+      });
+      
+      return res.status(200).json({
+        message: 'Logo removed successfully'
+      });
+    } catch (error) {
+      console.error('Error removing logo:', error);
+      return res.status(500).json({ message: 'Failed to remove logo' });
+    }
+  });
+
   // Endpoint to serve logo from database by user ID
   app.get('/api/logo/:userId', async (req: Request, res: Response) => {
     try {
