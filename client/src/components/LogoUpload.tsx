@@ -73,6 +73,12 @@ export default function LogoUpload({ currentLogoUrl, onUploadSuccess, userId }: 
       // Invalidate business profile cache to refresh the data
       queryClient.invalidateQueries({ queryKey: ['/api/business/profile'] });
       
+      // Force refresh the logo with a timestamp to bypass cache
+      const timestamp = Date.now();
+      if (userId) {
+        setLogoUrl(`/api/logo/${userId}?t=${timestamp}`);
+      }
+      
       if (onUploadSuccess) {
         onUploadSuccess();
       }
@@ -167,11 +173,11 @@ export default function LogoUpload({ currentLogoUrl, onUploadSuccess, userId }: 
       </div>
 
       {/* Current logo display */}
-      {currentLogoUrl && (
+      {logoUrl && (
         <Card className="w-32 h-32 mx-auto">
           <CardContent className="p-2 h-full">
             <img
-              src={currentLogoUrl}
+              src={logoUrl}
               alt="Company logo"
               className="w-full h-full object-contain rounded"
             />

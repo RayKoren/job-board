@@ -439,7 +439,7 @@ function JobCard({ job }: { job: Job }) {
                   <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                     {job.businessUserId ? (
                       <img
-                        src={`/api/logo/${job.businessUserId}`}
+                        src={`/api/logo/${job.businessUserId}?t=${Date.now()}`}
                         alt={`${job.company} logo`}
                         className="w-full h-full object-cover"
                         onError={(e) => {

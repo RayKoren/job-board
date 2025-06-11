@@ -191,10 +191,12 @@ export default function BusinessDashboard() {
           </CardContent>
           <CardContent>
             <LogoUpload 
-              currentLogoUrl={profile?.logoData ? `/api/logo/${profile.userId}` : null}
+              currentLogoUrl={profile?.logoData ? `/api/logo/${profile.userId}?t=${Date.now()}` : null}
+              userId={profile?.userId}
               onUploadSuccess={() => {
                 // Refresh business profile data
                 queryClient.invalidateQueries({ queryKey: ['/api/business/profile'] });
+                queryClient.invalidateQueries({ queryKey: [`/api/logo/${profile?.userId}`] });
               }}
             />
           </CardContent>

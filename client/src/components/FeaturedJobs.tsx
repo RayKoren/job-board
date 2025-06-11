@@ -172,7 +172,7 @@ const FeaturedJobs = () => {
 
   // Process jobs to select featured ones first and then random selection
   const processJobs = () => {
-    if (!jobs || jobs.length === 0) return [];
+    if (!jobs || !Array.isArray(jobs) || jobs.length === 0) return [];
     
     // Filter for active jobs
     const activeJobs = jobs.filter((job: Job) => job.status === 'active');
