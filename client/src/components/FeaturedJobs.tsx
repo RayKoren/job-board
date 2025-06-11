@@ -78,24 +78,52 @@ const JobCard = ({ job }: JobCardProps) => {
       `}>
         <CardContent className="p-6">
           <div className="flex justify-between items-start mb-4">
-            <div>
-              <div className="flex flex-wrap gap-1 mb-2">
-                <Badge variant="outline" className={`px-3 py-1 rounded-full text-xs font-medium ${colorClass}`}>
-                  {job.type}
-                </Badge>
-                {job.addons?.includes('urgent') && (
-                  <Badge className="bg-red-600 text-white flex items-center gap-1 rounded-full">
-                    <span className="animate-pulse">⚡</span> Urgent
-                  </Badge>
-                )}
-                {job.addons?.includes('top-of-search') && (
-                  <Badge className="bg-forest text-white rounded-full">
-                    Promoted
-                  </Badge>
+            <div className="flex items-start gap-3 flex-grow">
+              {/* Company Logo */}
+              <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                {job.businessUserId ? (
+                  <img
+                    src={`/api/logo/${job.businessUserId}`}
+                    alt={`${job.company} logo`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback to company initial if logo fails to load
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const parent = target.parentElement;
+                      if (parent && !parent.querySelector('.logo-fallback')) {
+                        const fallback = document.createElement('div');
+                        fallback.className = 'logo-fallback w-full h-full bg-forest text-white flex items-center justify-center text-sm font-bold';
+                        fallback.textContent = job.company.charAt(0).toUpperCase();
+                        parent.appendChild(fallback);
+                      }
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-forest text-white flex items-center justify-center text-sm font-bold">
+                    {job.company.charAt(0).toUpperCase()}
+                  </div>
                 )}
               </div>
-              <h3 className="text-xl font-bold text-forest">{job.title}</h3>
-              <p className="text-gray-600">{job.company}</p>
+              <div>
+                <div className="flex flex-wrap gap-1 mb-2">
+                  <Badge variant="outline" className={`px-3 py-1 rounded-full text-xs font-medium ${colorClass}`}>
+                    {job.type}
+                  </Badge>
+                  {job.addons?.includes('urgent') && (
+                    <Badge className="bg-red-600 text-white flex items-center gap-1 rounded-full">
+                      <span className="animate-pulse">⚡</span> Urgent
+                    </Badge>
+                  )}
+                  {job.addons?.includes('top-of-search') && (
+                    <Badge className="bg-forest text-white rounded-full">
+                      Promoted
+                    </Badge>
+                  )}
+                </div>
+                <h3 className="text-xl font-bold text-forest">{job.title}</h3>
+                <p className="text-gray-600">{job.company}</p>
+              </div>
             </div>
             <motion.button 
               className="text-gray-400 hover:text-clay" 

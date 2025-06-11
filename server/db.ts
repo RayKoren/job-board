@@ -140,6 +140,18 @@ export const BusinessProfile = sequelize.define('BusinessProfile', {
   logoUrl: {
     type: DataTypes.STRING,
     allowNull: true
+  },
+  logoData: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  logoName: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  logoType: {
+    type: DataTypes.STRING,
+    allowNull: true
   }
 }, {
   tableName: 'business_profiles',

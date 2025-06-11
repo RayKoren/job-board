@@ -434,11 +434,39 @@ function JobCard({ job }: { job: Job }) {
             {/* Job info */}
             <div className="flex-grow">
               <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-xl font-bold text-forest">{job.title}</h2>
-                  <div className="flex items-center text-gray-600 mt-1">
-                    <Building className="h-4 w-4 mr-1" />
-                    <span>{job.company}</span>
+                <div className="flex items-start gap-3">
+                  {/* Company Logo */}
+                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                    {job.businessUserId ? (
+                      <img
+                        src={`/api/logo/${job.businessUserId}`}
+                        alt={`${job.company} logo`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Fallback to company initial if logo fails to load
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent && !parent.querySelector('.logo-fallback')) {
+                            const fallback = document.createElement('div');
+                            fallback.className = 'logo-fallback w-full h-full bg-forest text-white flex items-center justify-center text-sm font-bold';
+                            fallback.textContent = job.company.charAt(0).toUpperCase();
+                            parent.appendChild(fallback);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-forest text-white flex items-center justify-center text-sm font-bold">
+                        {job.company.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-forest">{job.title}</h2>
+                    <div className="flex items-center text-gray-600 mt-1">
+                      <Building className="h-4 w-4 mr-1" />
+                      <span>{job.company}</span>
+                    </div>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1">
