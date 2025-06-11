@@ -38,7 +38,7 @@ export default function BusinessDashboard() {
   // Type the business profile data properly
   const profile = businessProfile as any;
 
-  const { data: jobPostings, isLoading: isLoadingJobs } = useQuery({
+  const { data: jobPostings, isLoading: isLoadingJobs } = useQuery<any[]>({
     queryKey: ["/api/business/jobs"],
     enabled: isAuthenticated && isBusinessUser,
   });
@@ -210,7 +210,7 @@ export default function BusinessDashboard() {
         <div className="flex justify-center items-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-forest" />
         </div>
-      ) : !jobPostings || jobPostings.length === 0 ? (
+      ) : !jobPostings || !Array.isArray(jobPostings) || jobPostings.length === 0 ? (
         <Card className="border-gray-200 bg-gray-50">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="text-gray-500 mb-4">You haven't posted any jobs yet.</p>
@@ -265,7 +265,7 @@ export default function BusinessDashboard() {
                   {job.compensationType === "Hourly" && job.hourlyRate && (
                     <Badge variant="secondary">{job.hourlyRate}/hr</Badge>
                   )}
-                  {job.tags?.map((tag) => (
+                  {job.tags?.map((tag: string) => (
                     <Badge key={tag} variant="outline" className="flex items-center gap-1">
                       <Tag className="w-3 h-3" />
                       {tag}
