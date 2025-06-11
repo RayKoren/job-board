@@ -13,12 +13,15 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { phoneInputProps } from "@/lib/phoneValidation";
 
 const formSchema = z.object({
-  companyName: z.string().min(2, "Company name must be at least 2 characters"),
-  industry: z.string().optional(),
-  location: z.string().optional(),
+  companyName: z.string().min(2, "Company name must be at least 2 characters").max(80, "Company name must be 80 characters or less"),
+  industry: z.string().max(50, "Industry must be 50 characters or less").optional(),
+  location: z.string().max(60, "Location must be 60 characters or less").optional(),
   website: z.string()
+    .optional()
+    .or(z.literal(""))
     .transform(val => {
       // If empty string, return it as is
       if (!val) return val;
@@ -30,17 +33,17 @@ const formSchema = z.object({
     })
     .refine(val => {
       if (!val) return true; // Empty string is allowed
+      if (val.length > 200) return false;
       try {
         new URL(val);
         return true;
       } catch (e) {
         return false;
       }
-    }, "Must be a valid URL")
-    .optional()
-    .or(z.literal("")),
-  description: z.string().optional(),
-  phone: z.string().optional(),
+    }, "Must be a valid URL (max 200 characters)"),
+  description: z.string().max(1000, "Description must be 1000 characters or less").optional(),
+  contactPhone: z.string().optional(),
+  contactEmail: z.string().email("Please enter a valid email").max(100, "Email must be 100 characters or less").optional().or(z.literal("")),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -59,6 +62,7 @@ export default function BusinessProfile() {
     website?: string;
     description?: string;
     contactPhone?: string;
+    contactEmail?: string;
   }
 
   // Fetch existing profile data
@@ -75,7 +79,8 @@ export default function BusinessProfile() {
       location: "",
       website: "",
       description: "",
-      phone: "",
+      contactPhone: "",
+      contactEmail: "",
     },
   });
 
@@ -88,7 +93,8 @@ export default function BusinessProfile() {
         location: profileData.location || "",
         website: profileData.website || "",
         description: profileData.description || "",
-        phone: profileData.contactPhone || "",
+        contactPhone: profileData.contactPhone || "",
+        contactEmail: profileData.contactEmail || "",
       });
     }
   }, [profileData, form.formState.isDirty, form.reset]);
@@ -222,12 +228,26 @@ export default function BusinessProfile() {
 
               <FormField
                 control={form.control}
-                name="phone"
+                name="contactPhone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone</FormLabel>
+                    <FormLabel>Contact Phone</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} {...phoneInputProps} placeholder="(555) 123-4567" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="contactEmail"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contact Email</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="email" placeholder="contact@company.com" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
