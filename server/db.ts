@@ -137,10 +137,6 @@ export const BusinessProfile = sequelize.define('BusinessProfile', {
     type: DataTypes.STRING,
     allowNull: true
   },
-  logoUrl: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
   logoData: {
     type: DataTypes.TEXT,
     allowNull: true

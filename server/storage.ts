@@ -36,8 +36,7 @@ export interface IBusinessProfile {
   description?: string | null;
   contactEmail?: string | null;
   contactPhone?: string | null;
-  logoUrl?: string | null;
-  // New fields for database-stored logos
+  // Database-stored logo fields
   logoData?: string | null;
   logoName?: string | null;
   logoType?: string | null;
