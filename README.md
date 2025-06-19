@@ -250,13 +250,6 @@ This application is optimized for Replit deployment with:
 - **Slack/Teams** - Notification integrations
 - **ATS Integration** - Enterprise recruiting systems
 
-## 📞 Support & Contact
-
-For technical support or business inquiries:
-- **Email**: stonecoaststudios@protonmail.com
-- **Website**: [Your Website URL]
-- **Location**: Sheridan, Wyoming
-
 ## 📄 License
 
 This project is proprietary software developed for Sheridan Jobs platform.
